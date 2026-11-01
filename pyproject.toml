@@ -1,0 +1,37 @@
+[project]
+name = "job-matching"
+version = "0.1.0"
+description = "AI Job Matching - Team 5: matching CV-JD hai chieu"
+readme = "README.md"
+authors = [
+    { name = "NguyenHoangDuy15", email = "nguyenhoangduy004bn@gmail.com" }
+]
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "flashtext>=2.7",
+    "pydantic>=2.14.2",
+    "pydantic-settings>=2.16.2",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-benchmark>=5.3.1",
+    "ruff>=0.17.3",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --benchmark-disable"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]

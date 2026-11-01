@@ -1,0 +1,36 @@
+cat > .gitignore << 'EOF'
+# Bí mật – không bao giờ commit
+.env
+.env.*
+!.env.example
+kaggle.json
+*.pem
+*.key
+
+# Dữ liệu và CV – không lên git
+data/*
+!data/README.md
+*.pdf
+*.docx
+*.doc
+*.zip
+models/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.benchmarks/
+
+# dbt / Airflow
+dbt/target/
+dbt/logs/
+logs/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+EOF
