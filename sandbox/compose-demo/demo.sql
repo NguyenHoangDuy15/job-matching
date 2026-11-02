@@ -1,4 +1,7 @@
--- Chạy: docker compose -f sandbox/compose-demo/compose.yaml exec -T db psql -U demo -d demo < sandbox/compose-demo/demo.sql
+-- Chạy (bash / Git Bash):
+--   docker compose -f sandbox/compose-demo/compose.yaml exec -T db psql -U demo -d demo < sandbox/compose-demo/demo.sql
+-- Chạy (PowerShell, không có toán tử <):
+--   Get-Content -Raw sandbox/compose-demo/demo.sql | docker compose -f sandbox/compose-demo/compose.yaml exec -T db psql -U demo -d demo
 
 -- 1. Extension đã bật chưa, phiên bản nào
 SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';

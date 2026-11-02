@@ -13,6 +13,15 @@
 
 `--wait` chờ tới khi healthcheck báo `healthy`, nên lệnh sau không bị "connection refused".
 
+PowerShell không có toán tử `<` (báo `The '<' operator is reserved for future use`). Thay dòng chạy `demo.sql` bằng:
+
+    Get-Content -Raw sandbox/compose-demo/demo.sql | docker compose -f sandbox/compose-demo/compose.yaml exec -T db psql -U demo -d demo
+
+hoặc chép file vào container rồi dùng `psql -f` (chạy được trên mọi shell):
+
+    docker compose -f sandbox/compose-demo/compose.yaml cp sandbox/compose-demo/demo.sql db:/tmp/demo.sql
+    docker compose -f sandbox/compose-demo/compose.yaml exec -T db psql -U demo -d demo -f /tmp/demo.sql
+
 ## Điều rút ra
 
 | Khái niệm | Ghi nhớ |
