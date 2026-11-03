@@ -1,4 +1,3 @@
-cat > .gitignore << 'EOF'
 # Bí mật – không bao giờ commit
 .env
 .env.*
@@ -10,6 +9,10 @@ kaggle.json
 # Dữ liệu và CV – không lên git
 data/*
 !data/README.md
+# Thư mục lưu file của compose: giữ thư mục (.gitkeep), bỏ nội dung
+!data/storage/
+data/storage/*
+!data/storage/.gitkeep
 *.pdf
 *.docx
 *.doc
@@ -33,4 +36,3 @@ logs/
 .idea/
 .vscode/
 .DS_Store
-EOF
