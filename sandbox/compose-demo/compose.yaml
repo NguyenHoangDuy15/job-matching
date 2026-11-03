@@ -1,0 +1,29 @@
+# Spike TH1.L1 – chỉ để học, KHÔNG phải compose.yaml thật của dự án (đó là TH1.1).
+# Chạy: docker compose -f sandbox/compose-demo/compose.yaml up -d
+name: compose-demo
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${DEMO_DB_USER:-demo}
+      POSTGRES_PASSWORD: ${DEMO_DB_PASSWORD:-demo}
+      POSTGRES_DB: ${DEMO_DB_NAME:-demo}
+    ports:
+      # 5433 để không đụng Postgres cài sẵn trên máy hoặc compose thật (5432).
+      - "${DEMO_DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Script trong initdb/ chỉ chạy khi volume còn trống (lần up đầu tiên).
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # -h 127.0.0.1 ép đi qua TCP: trong lúc chạy initdb, Postgres tạm chỉ nghe
+      # unix socket, nên pg_isready qua socket sẽ báo "ready" quá sớm.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  pgdata:
