@@ -1,5 +1,5 @@
-# Spike TH1.L1 – chỉ để học, KHÔNG phải compose.yaml thật của dự án (đó là TH1.1).
-# Chạy: docker compose -f sandbox/compose-demo/compose.yaml up -d
+# Spike TASK-H001 – chỉ để học, KHÔNG phải compose.yaml thật của dự án (đó là TASK-H002).
+# Chạy: cd sandbox/compose-demo && docker compose up -d --wait
 name: compose-demo
 
 services:
