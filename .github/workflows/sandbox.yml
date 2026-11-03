@@ -1,0 +1,28 @@
+# Spike TASK-H003 – chỉ để học, XÓA trước khi mở PR.
+name: sandbox
+
+on:
+  push:
+    branches: ["spike/**"]   # chỉ chạy khi push lên nhánh spike/...
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lấy code
+        uses: actions/checkout@v7
+
+      - name: Cài uv (có cache)
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: In trạng thái cache
+        run: echo "cache-hit = ${{ steps.setup-uv.outputs.cache-hit }}"
+
+      - name: Cài thư viện
+        run: uv sync --locked
+
+      - name: Chạy test
+        run: uv run pytest
