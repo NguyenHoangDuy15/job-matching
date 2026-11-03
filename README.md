@@ -2,11 +2,11 @@
 
 Matching CV–JD hai chiều: ứng viên nhận K JD phù hợp nhất, HR lọc N CV phù hợp nhất; giải thích được, có benchmark.
 
-| Thành viên | Vai trò |
-| --- | --- |
-| Nguyễn Hoàng Duy | Tech lead, Ranking, Backend API |
-| Đào Việt Tùng | Data, Retrieval |
-| Nguyễn Xuân Thịnh | Đánh giá, UI, QA, DevOps |
+| Thành viên        | Vai trò                         |
+| ----------------- | ------------------------------- |
+| Nguyễn Hoàng Duy  | Tech lead, Ranking, Backend API |
+| Đào Việt Tùng     | Data, Retrieval                 |
+| Nguyễn Xuân Thịnh | Đánh giá, UI, QA, DevOps        |
 
 ## Bắt đầu
 
@@ -17,6 +17,8 @@ Cần Python 3.11 và uv.
     uv run pytest
 
 ## Cấu trúc
+
+- Đã chạy được trên máy Thịnh (Windows 11, uv 0.13.6, Docker 28.4)
 
 - `config/` cấu hình: skills.yaml, ranker_config.yaml, sources.yaml
 - `src/` mỗi thư mục là một module; module chỉ gọi nhau qua hàm công khai trong `__init__.py`
