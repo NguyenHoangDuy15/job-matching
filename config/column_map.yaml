@@ -1,0 +1,121 @@
+dataset:
+  name: Vietnam IT Jobs Raw Data from TopCV 2026
+  author: baocgb
+  url: https://www.kaggle.com/datasets/baocgb/vietnam-it-jobs-raw-data-from-topcv-2026
+  license: CC BY 4.0
+
+raw_job_fields:
+  - title
+  - company
+  - description
+  - location
+  - salary
+  - posted_at
+  - deadline
+  - source_url
+
+# Tên cột CSV -> trường raw_job. Giá trị null: raw_job chưa có trường tương ứng.
+columns:
+  title: title
+  company: company
+  location: location
+  experience: null
+  salary: salary
+  date_posted: posted_at
+  url: source_url
+
+# Xét theo thứ tự từ trên xuống, tiêu đề khớp nhóm đầu tiên thì dừng.
+# Tiêu đề không khớp nhóm nào được đếm vào "other".
+job_groups:
+  qa_test:
+    - tester
+    - test
+    - testing
+    - qa
+    - qc
+    - quality control
+    - kiểm thử
+  ba_pm:
+    - business analyst
+    - ba
+    - phân tích nghiệp vụ
+    - phân tích kinh doanh
+    - project manager
+    - product manager
+    - product owner
+    - pm
+    - po
+    - scrum master
+    - quản lý dự án
+    - quản trị dự án
+    - brse
+    - comtor
+    - consultant
+    - triển khai phần mềm
+  it_sales:
+    - sale
+    - sales
+    - presale
+    - presales
+    - pre-sales
+    - kinh doanh
+    - account manager
+    - telesales
+    - business development
+    - tư vấn giải pháp
+  data_ai:
+    - data
+    - dữ liệu
+    - ai
+    - machine learning
+    - ml
+    - bi
+  infra_support:
+    - devops
+    - sre
+    - system
+    - hệ thống
+    - network
+    - mạng
+    - cloud
+    - helpdesk
+    - it support
+    - hỗ trợ kỹ thuật
+    - hỗ trợ cntt
+    - hạ tầng
+    - security
+    - an toàn thông tin
+    - an ninh mạng
+    - dba
+  software_dev:
+    - developer
+    - dev
+    - lập trình
+    - phát triển phần mềm
+    - software engineer
+    - kỹ sư phần mềm
+    - backend
+    - back-end
+    - frontend
+    - front-end
+    - fullstack
+    - full-stack
+    - full stack
+    - mobile
+    - android
+    - ios
+    - java
+    - javascript
+    - python
+    - .net
+    - c#
+    - c++
+    - php
+    - golang
+    - nodejs
+    - reactjs
+    - flutter
+    - unity
+    - tech lead
+    - technical leader
+    - engineer
