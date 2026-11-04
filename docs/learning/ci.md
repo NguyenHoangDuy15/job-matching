@@ -82,3 +82,4 @@ Số đo ngày 03/11/2026 (tab Actions, workflow `sandbox`, nhánh `spike/TASK-H
   `Failed to parse uv.lock ... has missing source field but has more than one matching package`.
   CI với `uv sync --locked` sẽ bắt được lỗi này ngay ở PR nếu đã có required check. Đã sửa ở nhánh `fix/uv-lock`.
 - Bài học: khi xung đột ở `uv.lock`, **không sửa tay**; giữ bản của `main` rồi chạy `uv lock` để uv tự tính lại.
+- Từ TASK-H004, `main` có required check `lint`, `test`, `gitleaks`: PR nào có check đỏ sẽ không bấm Merge được.
