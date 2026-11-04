@@ -24,7 +24,8 @@ File này ghi những gì tôi thực sự gặp trong S1: lỗi, cách sửa, m
 
 ## Tự tạo và giải 1 xung đột
 
-<!-- Thịnh điền sau khi làm: lệnh đã chạy, git báo gì, file trông thế nào, chọn giữ gì và vì sao. -->
+- Commit khi chưa sửa file: git diff --check đã cảnh báo, nhưng git add và git commit vẫn chạy. Git không chặn, CI cũng không bắt. Cách sửa: sửa file, rồi git commit -a --amend --no-edit.
+- Xóa nhầm dấu trong file ví dụ của Tùng: nhắc lại 2 điều đáng ghi ở trên.
 
 ## Review chéo
 
