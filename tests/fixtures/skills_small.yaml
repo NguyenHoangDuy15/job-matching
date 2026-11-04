@@ -1,0 +1,20 @@
+skills:
+  - id: programming
+    level: 1
+  - id: javascript
+    level: 2
+    parent: programming
+    aliases: [js]
+  - id: python
+    level: 2
+    parent: programming
+  - id: react
+    level: 3
+    parent: javascript
+    aliases: [reactjs]
+  - id: vue
+    level: 3
+    parent: javascript
+  - id: django
+    level: 3
+    parent: python

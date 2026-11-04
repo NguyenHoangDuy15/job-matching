@@ -1,0 +1,8 @@
+skills:
+  - id: programming
+    level: 1
+  - id: golang
+    level: 2
+    parent: programming
+    aliases: [go]
+    ambiguous: true
