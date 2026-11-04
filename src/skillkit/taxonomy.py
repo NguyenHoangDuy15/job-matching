@@ -50,6 +50,10 @@ class Skill(BaseModel):
 class Taxonomy:
     def __init__(self, skills: list[Skill]) -> None:
         self._by_id = {s.id: s for s in skills}
+        self._children: dict[str, list[str]] = {s.id: [] for s in skills}
+        for s in sorted(skills, key=lambda s: s.id):
+            if s.parent is not None:
+                self._children[s.parent].append(s.id)
 
     def __contains__(self, skill_id: str) -> bool:
         return skill_id in self._by_id
@@ -59,6 +63,29 @@ class Taxonomy:
 
     def get(self, skill_id: str) -> Skill:
         return self._by_id[skill_id]
+
+    def ancestors(self, skill_id: str) -> list[str]:
+        """Các mục tổ tiên, từ cha đi lên gốc."""
+        result: list[str] = []
+        current = self._by_id[skill_id].parent
+        while current is not None:
+            result.append(current)
+            current = self._by_id[current].parent
+        return result
+
+    def children(self, skill_id: str) -> list[str]:
+        """Con trực tiếp, sắp theo id."""
+        return list(self._children[skill_id])
+
+    def family_members(self, skill_id: str) -> list[str]:
+        """Chính nó + tổ tiên + mọi hậu duệ, sắp theo id; không gồm anh em cùng cha."""
+        members = {skill_id, *self.ancestors(skill_id)}
+        stack = self.children(skill_id)
+        while stack:
+            current = stack.pop()
+            members.add(current)
+            stack.extend(self._children[current])
+        return sorted(members)
 
 
 def _norm(text: str) -> str:
@@ -93,6 +120,35 @@ def _check_unique_terms(skills: list[Skill]) -> None:
                 raise TaxonomyError(f"alias '{term}' trùng giữa {owner} và {s.id}")
 
 
+def _check_parents(skills: list[Skill]) -> None:
+    by_id = {s.id: s for s in skills}
+    for s in skills:
+        if s.parent is not None and s.parent not in by_id:
+            raise TaxonomyError(f"{s.id}: parent '{s.parent}' không tồn tại")
+
+    # Kiểm vòng lặp trước luật level: mọi vòng lặp đều vi phạm luật level, nên làm ngược lại
+    # thì thông điệp sẽ báo sai level thay vì nguyên nhân thật.
+    for s in skills:
+        seen = {s.id}
+        current = s.parent
+        while current is not None:
+            if current in seen:
+                raise TaxonomyError(f"{s.id}: vòng lặp parent qua '{current}'")
+            seen.add(current)
+            current = by_id[current].parent
+
+    for s in skills:
+        if s.level == 1 and s.parent is not None:
+            raise TaxonomyError(f"{s.id}: level 1 không được có parent")
+        if s.level > 1 and s.parent is None:
+            raise TaxonomyError(f"{s.id}: level {s.level} bắt buộc có parent")
+        if s.parent is not None and by_id[s.parent].level != s.level - 1:
+            raise TaxonomyError(
+                f"{s.id}: level {s.level} phải có parent level {s.level - 1}, "
+                f"nhưng '{s.parent}' là level {by_id[s.parent].level}"
+            )
+
+
 def load_taxonomy(path: str | Path) -> Taxonomy:
     try:
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
@@ -104,4 +160,5 @@ def load_taxonomy(path: str | Path) -> Taxonomy:
     skills = [_parse_skill(entry, i) for i, entry in enumerate(raw["skills"])]
     _check_unique_ids(skills)
     _check_unique_terms(skills)
+    _check_parents(skills)
     return Taxonomy(skills)
