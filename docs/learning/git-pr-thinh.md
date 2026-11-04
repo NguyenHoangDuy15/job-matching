@@ -24,8 +24,28 @@ File này ghi những gì tôi thực sự gặp trong S1: lỗi, cách sửa, m
 
 ## Tự tạo và giải 1 xung đột
 
-- Commit khi chưa sửa file: git diff --check đã cảnh báo, nhưng git add và git commit vẫn chạy. Git không chặn, CI cũng không bắt. Cách sửa: sửa file, rồi git commit -a --amend --no-edit.
-- Xóa nhầm dấu trong file ví dụ của Tùng: nhắc lại 2 điều đáng ghi ở trên.
+**Cách tạo:** hai nhánh `practice/h-a` và `practice/h-b` tách từ cùng một commit, cùng sửa dòng "Tên nhánh".
+`git merge practice/h-a` chạy êm (Fast-forward). `git merge practice/h-b` báo:
+
+```
+CONFLICT (content): Merge conflict in docs/learning/git-pr-thinh.md
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**Đọc dấu xung đột:** phần giữa `<<<<<<< HEAD` và `=======` là bản của nhánh đang đứng (đã có h-a),
+phần giữa `=======` và `>>>>>>> practice/h-b` là bản của nhánh đang merge vào.
+Hai bản bổ sung cho nhau nên tôi gộp thành một dòng và xóa cả 3 dấu.
+
+**Sai lầm đã gặp:**
+
+- `git diff --check` báo `leftover conflict marker` nhưng tôi vẫn `git add` và commit. Git không chặn,
+  CI cũng không bắt (ruff chỉ kiểm `.py`). Sửa: xóa dấu trong file, rồi `git commit -a --amend --no-edit`
+  (chỉ amend khi chưa push).
+- Khi quét cả thư mục bằng `git grep "^<<<<<<<"`, tôi xóa nhầm dấu trong `git-pr.md` của Tùng.
+  Ở đó dấu nằm trong khối code ví dụ, không phải xung đột thật. Đã khôi phục bằng `git checkout main -- docs/learning/git-pr.md`.
+
+**Bài học:** dùng `git diff --check` (chỉ kiểm file đang xung đột) trước khi `git add`;
+không phải dấu `<<<<<<<` nào cũng là xung đột.
 
 ## Review chéo
 
