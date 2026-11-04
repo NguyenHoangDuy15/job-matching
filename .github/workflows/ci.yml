@@ -1,0 +1,61 @@
+# CI chặn PR lỗi (TASK-H004, US-01.06/AC1).
+# Tên 3 job (lint, test, gitleaks) là tên required status check trong ruleset main: đổi tên job phải sửa ruleset.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Push thêm vào cùng PR thì hủy run cũ đang chạy, chỉ giữ run mới nhất.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Kiểm uv.lock khớp pyproject.toml
+        run: uv sync --locked
+      - name: ruff check
+        run: uv run ruff check .
+      - name: ruff format --check
+        run: uv run ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Cài thư viện
+        run: uv sync --locked
+      - name: pytest
+        run: uv run pytest -q
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    # gitleaks-action gọi API "list commits on a PR" nên cần pull-requests: read.
+    # Khai báo ở job sẽ thay hẳn permissions chung, nên phải ghi lại contents: read.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Lấy toàn bộ lịch sử để gitleaks quét mọi commit của PR, không chỉ commit cuối.
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Comment vào PR cần quyền ghi; tắt đi, chi tiết leak vẫn có trong log và Job summary.
+          GITLEAKS_ENABLE_COMMENTS: false
