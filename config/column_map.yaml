@@ -119,3 +119,9 @@ job_groups:
     - tech lead
     - technical leader
     - engineer
+
+# TASK-U005: tham so lay mau snapshot, doi gia tri thi snapshot va sha256 se doi.
+snapshot:
+  size: 200
+  min_per_group: 20
+  seed: 42
