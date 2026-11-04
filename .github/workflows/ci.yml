@@ -44,6 +44,11 @@ jobs:
 
   gitleaks:
     runs-on: ubuntu-latest
+    # gitleaks-action gọi API "list commits on a PR" nên cần pull-requests: read.
+    # Khai báo ở job sẽ thay hẳn permissions chung, nên phải ghi lại contents: read.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -52,3 +57,5 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Comment vào PR cần quyền ghi; tắt đi, chi tiết leak vẫn có trong log và Job summary.
+          GITLEAKS_ENABLE_COMMENTS: false
