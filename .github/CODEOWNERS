@@ -1,0 +1,52 @@
+# .github/CODEOWNERS — dòng khớp CUỐI CÙNG thắng
+* @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
+
+# Thịnh: hạ tầng, CI, UI, đánh giá (phụ: Tùng cho hạ tầng, Duy cho đánh giá/UI)
+/compose*.yaml @nguyenxuanthinh281204 @v1ettung511
+/Dockerfile* @nguyenxuanthinh281204 @v1ettung511
+/deploy/ @nguyenxuanthinh281204 @v1ettung511
+/.github/ @nguyenxuanthinh281204 @v1ettung511
+/ui/ @nguyenxuanthinh281204 @NguyenHoangDuy15
+/src/eval/ @nguyenxuanthinh281204 @NguyenHoangDuy15
+/docs/labeling/ @nguyenxuanthinh281204 @NguyenHoangDuy15
+/labels/ @nguyenxuanthinh281204 @v1ettung511
+/runs/ @nguyenxuanthinh281204 @NguyenHoangDuy15
+/src/common/pii.py @nguyenxuanthinh281204 @NguyenHoangDuy15
+/labels/holdout* @nguyenxuanthinh281204
+/scripts/run_holdout.py @nguyenxuanthinh281204 @v1ettung511
+
+# Tùng: dữ liệu, DB, truy hồi, parser, auth, lô CV (phụ: Duy cho dữ liệu/ML, Thịnh cho BE người dùng)
+/src/ingestion/ @v1ettung511 @NguyenHoangDuy15
+/src/retrieval/ @v1ettung511 @NguyenHoangDuy15
+/src/cvparser/ @v1ettung511 @NguyenHoangDuy15
+/src/common/storage.py @v1ettung511 @nguyenxuanthinh281204
+/src/common/corpus.py @v1ettung511 @NguyenHoangDuy15
+/src/db/ @v1ettung511 @NguyenHoangDuy15
+/migrations/ @v1ettung511 @NguyenHoangDuy15
+/src/auth/ @v1ettung511 @nguyenxuanthinh281204
+/src/batch/ @v1ettung511 @nguyenxuanthinh281204
+/src/api/routers/auth.py @v1ettung511 @nguyenxuanthinh281204
+/src/api/routers/admin.py @v1ettung511 @nguyenxuanthinh281204
+/src/api/routers/hr_jobs.py @v1ettung511 @NguyenHoangDuy15
+/src/api/routers/batches.py @v1ettung511 @nguyenxuanthinh281204
+/src/api/routers/consents.py @v1ettung511 @nguyenxuanthinh281204
+/tests/data/ @v1ettung511 @NguyenHoangDuy15
+/tests/security/ @v1ettung511 @nguyenxuanthinh281204
+
+# Duy: AI/ML và endpoint xếp hạng (phụ: Tùng cho API, Thịnh cho phần đánh giá)
+/src/skillkit/ @NguyenHoangDuy15 @v1ettung511
+/src/ranking/ @NguyenHoangDuy15 @nguyenxuanthinh281204
+/src/explain/ @NguyenHoangDuy15 @nguyenxuanthinh281204
+/src/screening/ @NguyenHoangDuy15 @v1ettung511
+/config/ @NguyenHoangDuy15 @nguyenxuanthinh281204
+/src/api/routers/profiles.py @NguyenHoangDuy15 @v1ettung511
+/src/api/routers/matches.py @NguyenHoangDuy15 @nguyenxuanthinh281204
+/src/api/routers/screenings.py @NguyenHoangDuy15 @v1ettung511
+/src/api/routers/apply.py @NguyenHoangDuy15 @v1ettung511
+/docs/adr/ @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
+
+# Hợp đồng dùng chung — để cuối file
+/src/common/contracts.py @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
+/src/api/schemas/ @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
+/fixtures/api/ @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
+/openapi.json @NguyenHoangDuy15 @v1ettung511 @nguyenxuanthinh281204
