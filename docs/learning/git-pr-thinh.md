@@ -6,7 +6,7 @@ File này ghi những gì tôi thực sự gặp trong S1: lỗi, cách sửa, m
 ## Quy ước nhóm
 
 - 1 task = 1 issue = 1 nhánh = 1 PR.
-- Tên nhánh: `feat/TASK-xxx-mo-ta`.
+- Tên nhánh: `feat/TASK-xxx-mo-ta`; task spike dùng `spike/TASK-xxx-mo-ta`.
 - Tiêu đề PR: `[TASK-xxx] mô tả ngắn`, mô tả có `Closes #<số issue>` để issue tự đóng khi merge vào `main`.
 - `main` có ruleset: không push thẳng, cần 1 approve của code owner, 3 check `lint`, `test`, `gitleaks` phải xanh.
 
