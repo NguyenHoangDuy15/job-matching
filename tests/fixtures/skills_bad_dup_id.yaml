@@ -1,0 +1,9 @@
+skills:
+  - id: programming
+    level: 1
+  - id: python
+    level: 2
+    parent: programming
+  - id: python
+    level: 2
+    parent: programming
