@@ -1,0 +1,202 @@
+<!doctype html>
+<!--
+  Nguồn của docs/ui/wireframe.png (TASK-H007, US-11.06/AC1).
+  Sửa file này rồi xuất lại PNG (PowerShell, tại thư mục gốc repo):
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1640,1810 --screenshot="$PWD\docs\ui\wireframe.png" "$PWD\docs\ui\wireframe.html"
+  Dữ liệu trong hình là giả lập; tên công ty, ứng viên đều tự đặt.
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 5 màn hình – job-matching</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 1810px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; height: 560px; display: flex; flex-direction: column; overflow: hidden; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .body { flex: 1; display: flex; min-height: 0; }
+  .side { width: 150px; background: #f1f1f1; border-right: 1px solid #ccc; padding: 10px; }
+  .side div { padding: 5px 6px; border-radius: 4px; color: #555; }
+  .side .on { background: #d6d6d6; color: #000; font-weight: 600; }
+  .side .role { font-size: 11px; color: #888; margin-bottom: 6px; padding: 0 6px; }
+  .main { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; }
+  .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; background: #fff; }
+  .btn.dis { border-color: #bbb; color: #bbb; }
+  .btn.pri { background: #333; color: #fff; }
+  .chip { display: inline-block; border: 1px solid #666; border-radius: 12px; padding: 1px 8px; margin: 2px 3px 2px 0; }
+  .chip.weak { border-style: dashed; color: #555; }
+  .drop { border: 2px dashed #999; border-radius: 6px; padding: 14px; text-align: center; color: #666; }
+  .bar { height: 10px; background: #eee; border: 1px solid #bbb; border-radius: 2px; overflow: hidden; display: flex; }
+  .bar span { display: block; height: 100%; border-right: 1px solid #fff; }
+  .s1 { background: #222; } .s2 { background: #555; } .s3 { background: #888; } .s4 { background: #aaa; } .s5 { background: #ccc; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .err { border: 1px solid #c33; color: #c33; border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 5px; text-align: left; vertical-align: top; }
+  th { background: #eee; font-weight: 600; }
+  .ok { font-weight: 600; } .part { font-style: italic; } .miss { color: #c33; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .card { border: 1px solid #999; border-radius: 4px; padding: 6px 8px; display: grid; grid-template-columns: 1fr 190px; gap: 4px 10px; }
+  .score { font-size: 18px; font-weight: 700; }
+  .legend { grid-column: 1 / -1; }
+  .legend .frame { height: auto; }
+  ol, ul { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<h1>Wireframe 5 màn hình – CV ↔ JD matching</h1>
+<p class="sub">TASK-H007 · US-11.06 · Bản nháp xin góp ý của Duy và Tùng · Khung Streamlit: menu trái theo vai trò, nội dung bên phải. Dòng xám dưới mỗi màn là API màn đó cần.</p>
+
+<div class="grid">
+
+  <!-- 1. Tải CV -->
+  <div class="frame">
+    <div class="title">1 · Tải CV (ứng viên) — US-11.01, US-11.04</div>
+    <div class="body">
+      <div class="side"><div class="role">Ứng viên</div><div class="on">1. Tải CV</div><div>2. Kỹ năng</div><div>3. Kết quả</div><div>Cách tính điểm</div><div>Đăng xuất</div></div>
+      <div class="main">
+        <h2>Tải CV của bạn</h2>
+        <div class="box">
+          <b>Thông báo về AI</b> <span class="muted small">(văn bản từ /legal/ai-notice, v1)</span><br>
+          AI đọc CV và chấm mức phù hợp với tin tuyển dụng. Mục đích: gợi ý việc làm. CV lưu 30 ngày, bạn có thể xóa hoặc rút đồng ý bất cứ lúc nào, và có quyền yêu cầu người xem lại kết quả.
+          <div style="margin-top:6px">☐ Tôi đã đọc và đồng ý cho hệ thống xử lý CV theo mục đích trên.</div>
+        </div>
+        <div class="drop">Kéo thả tệp vào đây hoặc <u>chọn tệp</u><br><span class="small">PDF hoặc DOCX · tối đa 5 MB · CV 1 hoặc 2 cột</span></div>
+        <div class="row"><span class="btn dis">Tải lên</span><span class="muted small">Nút bị khóa cho tới khi tick đồng ý (checkbox không tick sẵn)</span></div>
+        <div class="box small">Đang đọc CV… <div class="bar" style="margin-top:4px"><span class="s2" style="width:60%"></span></div></div>
+        <div class="err">Tệp quá lớn (tối đa 5 MB).  ·  Định dạng không hỗ trợ, chỉ nhận PDF hoặc DOCX.</div>
+        <div class="note">Thứ tự gọi API: POST /consents trước, xong mới POST /profiles. Lỗi 413/415 hiện tiếng Việt, trang không crash.</div>
+      </div>
+    </div>
+    <div class="api">POST /consents · POST /profiles → 202 + profile_id · GET /legal/ai-notice</div>
+  </div>
+
+  <!-- 2. Xác nhận kỹ năng -->
+  <div class="frame">
+    <div class="title">2 · Xác nhận kỹ năng (ứng viên) — US-11.01</div>
+    <div class="body">
+      <div class="side"><div class="role">Ứng viên</div><div>1. Tải CV</div><div class="on">2. Kỹ năng</div><div>3. Kết quả</div><div>Cách tính điểm</div><div>Đăng xuất</div></div>
+      <div class="main">
+        <h2>Hệ thống đọc được từ CV của bạn</h2>
+        <div class="row"><div class="box" style="flex:1">Vị trí gần nhất<br><b>Backend Developer (thực tập)</b></div><div class="box" style="width:170px">Tổng kinh nghiệm<br><b>0,3 năm</b> <span class="small muted">(sửa được)</span></div></div>
+        <div class="box">
+          <b>Kỹ năng có bằng chứng</b> <span class="small muted">(xuất hiện trong Kinh nghiệm/Dự án)</span><br>
+          <span class="chip">Java ×</span><span class="chip">Spring Boot ×</span><span class="chip">MySQL ×</span><span class="chip">REST API ×</span>
+        </div>
+        <div class="box">
+          <b>Kỹ năng chỉ được liệt kê</b> <span class="small muted">(chỉ có ở mục Kỹ năng)</span><br>
+          <span class="chip weak">Docker ×</span><span class="chip weak">Git ×</span><span class="chip weak">Redis ×</span>
+        </div>
+        <div class="row"><div class="box" style="flex:1">+ Thêm kỹ năng: <span class="muted">gõ để tìm trong từ điển kỹ năng…</span></div><span class="btn">Thêm</span></div>
+        <div class="small muted">Di chuột vào một kỹ năng để xem câu trích từ CV làm bằng chứng.</div>
+        <div class="row" style="margin-top:auto"><span class="btn">← Tải CV khác</span><span class="btn pri">Xác nhận và xem kết quả →</span></div>
+      </div>
+    </div>
+    <div class="api">GET /profiles/{id} (skills[], evidence, total_years) · PATCH /profiles/{id} · GET /skills?q= (gợi ý)</div>
+  </div>
+
+  <!-- 3. Kết quả top-K -->
+  <div class="frame">
+    <div class="title">3 · Kết quả top-K (ứng viên) — US-11.02/AC1–AC2</div>
+    <div class="body">
+      <div class="side"><div class="role">Ứng viên</div><div>1. Tải CV</div><div>2. Kỹ năng</div><div class="on">3. Kết quả</div><div>Cách tính điểm</div><div>Đăng xuất</div></div>
+      <div class="main">
+        <div class="row"><h2 style="flex:1">Việc làm phù hợp</h2>Số việc: <span class="btn">10</span><span class="btn">20</span><span class="btn pri">25</span><span class="btn">35</span></div>
+        <div class="card">
+          <div><b>#1 Fresher Java Developer</b><br><span class="muted">Công ty A · Hà Nội · 0–1 năm</span><br><span class="small">Must đạt 3/3 · Nice 1/2</span></div>
+          <div><span class="score">82,5</span> / 100<div class="bar"><span class="s1" style="width:38%"></span><span class="s2" style="width:20%"></span><span class="s3" style="width:12%"></span><span class="s4" style="width:6%"></span><span class="s5" style="width:7%"></span></div><span class="small">m · e · t · k · x</span><div class="row" style="margin-top:3px"><span class="btn">Chi tiết</span><span class="btn">Ứng tuyển ↗</span></div></div>
+        </div>
+        <div class="card">
+          <div><b>#2 Junior Backend Developer (Node.js)</b><br><span class="muted">Công ty B · TP.HCM · 1 năm</span><br><span class="small">Must đạt 2/3 · Nice 0/1</span></div>
+          <div><span class="score">64,1</span> / 100<div class="bar"><span class="s1" style="width:25%"></span><span class="s2" style="width:18%"></span><span class="s3" style="width:10%"></span><span class="s4" style="width:5%"></span><span class="s5" style="width:6%"></span></div><span class="small">m · e · t · k · x</span><div class="row" style="margin-top:3px"><span class="btn">Chi tiết</span><span class="btn">Ứng tuyển ↗</span></div></div>
+        </div>
+        <div class="card">
+          <div><b>#3 Java Intern</b> <span class="chip weak small">Tin đã đóng</span><br><span class="muted">Công ty C · Đà Nẵng · không yêu cầu</span><br><span class="small">Must đạt 2/2</span></div>
+          <div><span class="score">61,7</span> / 100<div class="bar"><span class="s1" style="width:30%"></span><span class="s2" style="width:14%"></span><span class="s3" style="width:9%"></span><span class="s4" style="width:4%"></span><span class="s5" style="width:5%"></span></div><span class="small">m · e · t · k · x</span><div class="row" style="margin-top:3px"><span class="btn">Chi tiết</span><span class="muted small">(tin đóng: không có nút Ứng tuyển)</span></div></div>
+        </div>
+        <div class="row small" style="margin-top:auto"><span class="btn">‹</span> Trang 1 / 3 (10 việc/trang) <span class="btn">›</span></div><div class="small muted">Thanh điểm: m kỹ năng · x kinh nghiệm · e, t, k thành phần truy hồi (định nghĩa theo ranker_config)</div>
+      </div>
+    </div>
+    <div class="api">GET /matches?profile_id=&k=25 → [job_id, title, company, location, status, H, m, e, t, k, x, must_met, must_total] · GET /jobs/{id}/apply</div>
+  </div>
+
+  <!-- 4. Chi tiết JD -->
+  <div class="frame">
+    <div class="title">4 · Chi tiết JD + giải thích (ứng viên) — US-11.02/AC3, US-09.02</div>
+    <div class="body">
+      <div class="side"><div class="role">Ứng viên</div><div>1. Tải CV</div><div>2. Kỹ năng</div><div class="on">3. Kết quả</div><div>Cách tính điểm</div><div>Đăng xuất</div></div>
+      <div class="main">
+        <div class="row"><div style="flex:1"><h2>Fresher Java Developer</h2><span class="muted">Công ty A · Hà Nội · 0–1 năm · Lương: thỏa thuận · Nguồn: TopCV</span></div><div style="text-align:right"><span class="score">82,5</span> / 100<br><span class="btn">Ứng tuyển ↗</span></div></div>
+        <div class="box"><b>▾ Vì sao việc này hợp với bạn</b>
+          <table style="margin-top:4px">
+            <tr><th>Yêu cầu trong JD</th><th>Loại</th><th>Trạng thái</th><th>Trích từ CV (≤ 200 ký tự)</th><th>Đóng góp</th></tr>
+            <tr><td>Java, OOP</td><td>must</td><td class="ok">Đạt</td><td>"Xây REST API bằng Java Spring Boot cho đồ án…"</td><td>+18,2</td></tr>
+            <tr><td>Spring Boot</td><td>must</td><td class="ok">Đạt</td><td>"…Spring Boot, JPA, kết nối MySQL"</td><td>+15,4</td></tr>
+            <tr><td>SQL</td><td>must</td><td class="part">Một phần</td><td>"MySQL"</td><td>+6,1</td></tr>
+            <tr><td>Docker</td><td>nice</td><td class="part">Một phần</td><td>"Docker (cơ bản)"</td><td>+2,0</td></tr>
+            <tr><td>Kubernetes</td><td>nice</td><td class="miss">Thiếu</td><td class="muted">—</td><td>0</td></tr>
+          </table>
+          <div class="small muted" style="margin-top:3px">Tổng đóng góp các yêu cầu + kinh nghiệm + truy hồi = 82,5 (= H, sai lệch ≤ 1%)</div>
+        </div>
+        <div class="box small"><b>▸ Mô tả công việc gốc</b> (thu gọn)</div>
+        <div class="err">Khi API giải thích lỗi: "Chưa tải được phần giải thích, thử lại sau." Phần còn lại của trang vẫn hiện.</div>
+        <div class="row small" style="margin-top:auto"><span class="btn">← Quay lại kết quả</span><span class="muted">Link: Cách chúng tôi tính điểm</span></div>
+      </div>
+    </div>
+    <div class="api">GET /jobs/{id} · GET /matches/{match_id}/explanation → requirements[{text, type, status, quote, contribution}]</div>
+  </div>
+
+  <!-- 5. HR sàng lọc -->
+  <div class="frame" style="grid-column: 1 / -1; height: 380px">
+    <div class="title">5 · HR sàng lọc lô CV — US-11.05, US-07.04, US-10.04</div>
+    <div class="body">
+      <div class="side"><div class="role">HR (đã được duyệt)</div><div>JD của tôi</div><div class="on">Sàng lọc</div><div>Nhật ký quyết định</div><div>Đăng xuất</div></div>
+      <div class="main">
+        <div class="row">
+          <div class="box" style="width:330px">JD: <b>Backend Java (Mid) ▾</b> <span class="small muted">chỉ JD của tôi</span></div>
+          <div class="box" style="flex:1">Tải lô CV (.zip): <span class="btn">Chọn tệp</span> &nbsp; ☐ <b>Tôi xác nhận đã có đồng ý của các ứng viên trong lô</b> (bắt buộc) &nbsp; <span class="btn dis">Chấm lô</span></div>
+          <div class="box small" style="width:230px">Tiến độ: 18/20 tệp <div class="bar" style="margin-top:3px"><span class="s2" style="width:90%"></span></div>2 tệp lỗi: không có lớp văn bản</div>
+        </div>
+        <table>
+          <tr><th>Ứng viên (đã che PII)</th><th>H</th><th>Java (must)</th><th>Spring Boot (must)</th><th>SQL (must)</th><th>2+ năm (must)</th><th>Docker (nice)</th><th>Kafka (nice)</th><th>Trạng thái</th><th>Quyết định của HR</th></tr>
+          <tr><td>Ứng viên #07</td><td>78,0</td><td class="ok">Đạt</td><td class="ok">Đạt</td><td class="ok">Đạt</td><td class="ok">Đạt</td><td class="part">Một phần</td><td class="miss">Thiếu</td><td>Chờ HR duyệt</td><td><span class="btn">Shortlist</span> <span class="btn">Loại…</span> <span class="btn">Xem CV</span></td></tr>
+          <tr><td>Ứng viên #02</td><td>71,4</td><td class="ok">Đạt</td><td class="part">Một phần</td><td class="ok">Đạt</td><td class="ok">Đạt</td><td class="miss">Thiếu</td><td class="miss">Thiếu</td><td>Chờ HR duyệt</td><td><span class="btn">Shortlist</span> <span class="btn">Loại…</span> <span class="btn">Xem CV</span></td></tr>
+          <tr><td>Ứng viên #15</td><td>55,9</td><td class="ok">Đạt</td><td class="miss">Thiếu</td><td class="part">Một phần</td><td class="miss">Thiếu</td><td class="ok">Đạt</td><td class="miss">Thiếu</td><td><b>Shortlist</b> (HR, 14:05)</td><td><span class="btn">Hoàn tác</span></td></tr>
+          <tr><td>Ứng viên #11</td><td>40,2</td><td class="part">Một phần</td><td class="miss">Thiếu</td><td class="miss">Thiếu</td><td class="miss">Thiếu</td><td class="miss">Thiếu</td><td class="miss">Thiếu</td><td>Chờ HR duyệt</td><td><span class="btn">Shortlist</span> <span class="btn">Loại…</span> <span class="btn">Xem CV</span></td></tr>
+        </table>
+        <div class="row">
+          <span class="btn">Tải CSV</span>
+          <div class="note" style="flex:1">Mọi ứng viên mặc định "Chờ HR duyệt". Không có nút loại hàng loạt; hệ thống không tự loại, không tự gửi thư. "Loại…" mở hộp nhập lý do, mỗi quyết định ghi 1 dòng vào decision_log. Tên, giới tính, năm sinh bị ẩn trong ma trận.</div>
+        </div>
+      </div>
+    </div>
+    <div class="api">GET /hr/jobs · POST /hr/jobs/{id}/batches {consent_confirmed: true} · POST /hr/jobs/{id}/screenings · GET …/matrix · POST …/decisions {candidate_id, decision, reason} · GET …/export.csv</div>
+  </div>
+
+  <!-- Câu hỏi góp ý -->
+  <div class="frame legend" style="height:auto">
+    <div class="title">Câu hỏi xin góp ý (trả lời trong issue)</div>
+    <div class="main" style="padding:8px 14px">
+      <ol style="columns:2; column-gap:40px; margin:0">
+        <li><b>Duy:</b> 5 thành phần m, e, t, k, x có đúng tên và thứ tự trong ranker_config không? Hiện thanh điểm dạng chồng có ổn không?</li>
+        <li><b>Duy:</b> Khối giải thích (màn 4) cần trường nào khác ngoài text, type, status, quote, contribution?</li>
+        <li><b>Tùng:</b> /profiles có trả được "kỹ năng có bằng chứng" và "chỉ liệt kê" (STRONG/LISTED) riêng như màn 2 không?</li>
+        <li><b>Tùng:</b> Ma trận HR (màn 5) lấy từ 1 endpoint hay ghép từ screenings + explanation từng CV?</li>
+        <li><b>Cả hai:</b> Màn 2 có cần cho sửa số năm kinh nghiệm không, hay chỉ sửa kỹ năng?</li>
+        <li><b>Cả hai:</b> Kết quả có cần lọc theo địa điểm/lương không? (liên quan câu hỏi mở của hướng dẫn nhãn v0)</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
