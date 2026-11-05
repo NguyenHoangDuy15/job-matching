@@ -30,6 +30,6 @@ Cần Python 3.11 và uv.
 ## Quy ước
 
 - `main` được bảo vệ. Mỗi hạng mục một nhánh `feat/<mã>-<mô-tả>`, ví dụ `feat/D1.1-skillkit-schema`.
-- PR cần 3 check lint, test, gitleaks xanh, nên dưới 400 dòng.
+- PR cần 1 approve của code owner, nên dưới 400 dòng.
 - Không commit `.env`, `kaggle.json`, API key, CV thật. Không log nội dung CV. Không gửi PII cho LLM.
 - Trọng số, ngưỡng, nguồn nằm trong `config/*.yaml`, không viết cứng trong code.
