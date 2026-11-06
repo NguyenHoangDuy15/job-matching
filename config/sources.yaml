@@ -1,0 +1,15 @@
+# Nháp TASK-U008. Chỉ đổi allowed: true khi nguồn đã đồng ý bằng văn bản.
+# Không nguồn nào công bố giới hạn tốc độ; rate_limit_s là mức nhóm tự đặt. Xem docs/data_sources.md.
+sources:
+  - name: topcv
+    base_url: https://www.topcv.vn
+    allowed: false
+    rate_limit_s: 5
+  - name: itviec
+    base_url: https://itviec.com
+    allowed: false
+    rate_limit_s: 5
+  - name: vietnamworks
+    base_url: https://www.vietnamworks.com
+    allowed: false
+    rate_limit_s: 5
