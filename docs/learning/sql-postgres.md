@@ -285,3 +285,51 @@ job_id |         title         | cosine_distance
 - **`ROW_NUMBER` với giá trị bằng nhau.** Delta Cloud có hai tin cùng 38 triệu; thêm `job_id` vào `ORDER BY` để kết quả ổn định.
 - **Lọc bảng bên phải của LEFT JOIN trong WHERE** làm mất các dòng không khớp, nên kết quả giống INNER JOIN. Muốn giữ các dòng đó, đặt điều kiện trong `ON`.
 - **Thứ tự chuỗi phụ thuộc collation.** Cùng một `ORDER BY city`, môi trường khác có thể xếp `Đà Nẵng` ở vị trí khác. Không nên để test hoặc logic phụ thuộc vào thứ tự chuỗi khi chưa chỉ định collation.
+
+## Alembic (spike TASK-U007)
+
+- Phiên bản: Alembic 1.20.1, SQLAlchemy 2.1.8, psycopg 3.3.8
+- URL lấy từ `common.settings.settings.database_url` (biến môi trường `DATABASE_URL`), không ghi mật khẩu vào `alembic.ini`.
+- `alembic.ini` đặt `prepend_sys_path = src` để `migrations/env.py` import được `common`.
+- Revision thử đã được xóa trước khi merge; migration thật bắt đầu ở TASK-U011.
+
+### Khái niệm
+
+- **revision:** mã của một migration, ví dụ `11e63f190da8`.
+- **down_revision:** migration đứng ngay trước. `None` nghĩa là migration đầu tiên.
+- **head:** migration mới nhất, chưa có migration nào nối tiếp.
+- **`alembic_version`:** bảng ghi DB đang ở revision nào. Bảng này vẫn còn sau khi downgrade về base.
+
+### Vòng đời đã chạy
+
+Revision thử: `11e63f190da8` (practice table), `down_revision = None`. Container `pgtest` (`pgvector/pgvector:pg16`, cổng 5433).
+
+    set DATABASE_URL=postgresql+psycopg://postgres:<mật khẩu>@localhost:5433/postgres
+    uv run alembic upgrade head
+    uv run alembic downgrade -1
+
+| Bước | Kết quả `\dt` |
+|---|---|
+| Trước `upgrade head` | `company`, `job`, `job_embedding` (3 bảng) |
+| Sau `upgrade head` | Thêm `alembic_version` và `practice` (5 bảng); `alembic current` → `11e63f190da8 (head)` |
+| Sau `downgrade -1` | Mất `practice`, còn `alembic_version` (4 bảng) |
+
+### Lỗi Multiple heads
+
+Hai người cùng tạo migration từ một revision thì lịch sử có hai `head`.
+
+Đã thử: tạo `branch a` (nối tiếp `11e63f190da8`) và `branch b` (`--head base`, tức `down_revision = None`) → `alembic heads` ra `35b511455880` và `a4d967a70a94`; `alembic upgrade head` báo:
+
+    FAILED: Multiple head revisions are present for given argument 'head'; please specify a specific target revision, '<branchname>@head' to narrow to a specific head, or 'heads' for all heads
+
+Cách sửa thường dùng là đổi `down_revision` của migration chưa merge để nối tiếp `head` mới, hoặc tạo migration gộp bằng `alembic merge heads`. Đây là lý do cần luật một người viết migration của US-03.01.
+
+### Lỗi đã gặp
+
+- **`ModuleNotFoundError: No module named 'common.settings'`:** `src/common/settings.py` chưa có (chép nhầm file khác vào thư mục). Thêm đúng file thì chạy được.
+- **`database_url Field required`:** chưa `set DATABASE_URL` trong cửa sổ CMD hiện tại.
+
+### Bẫy
+
+- Xóa file revision khi DB vẫn đang ở revision đó sẽ khiến Alembic báo `Can't locate revision`. Phải `downgrade` trước rồi mới xóa file.
+- `set DATABASE_URL` chỉ có hiệu lực trong cửa sổ CMD đang mở.
