@@ -20,6 +20,8 @@ LD_JSON = re.compile(
 CANONICAL = re.compile(r"<link\b[^>]*rel=[\"']?canonical[\"']?[^>]*>", re.IGNORECASE)
 HREF = re.compile(r"href=[\"']?([^\"'\s>]+)", re.IGNORECASE)
 SAVED_FROM = re.compile(r"<!--\s*saved from url=\(\d+\)(\S+?)\s*-->", re.IGNORECASE)
+EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+PHONE = re.compile(r"(?<![\d.,])(?:\+?84|0)(?:[\s.-]?\d){8,10}(?![\d])")
 
 
 def html_to_text(fragment: str) -> str:
@@ -28,6 +30,11 @@ def html_to_text(fragment: str) -> str:
     text = html.unescape(re.sub(r"<[^>]+>", "", text))
     lines = (" ".join(line.split()) for line in text.splitlines())
     return "\n".join(line for line in lines if line)
+
+
+def mask_contacts(text: str) -> str:
+    """Che email và số điện thoại để mô tả không mang PII sang bước embedding hay LLM."""
+    return PHONE.sub("[phone]", EMAIL.sub("[email]", text))
 
 
 def find_job_posting(page: str) -> dict | None:
@@ -84,7 +91,7 @@ def import_pages(snapshot: list[dict], pages_dir: Path) -> tuple[dict[str, dict]
             records[jd_id] = {
                 "jd_id": jd_id,
                 "status": "ok",
-                "description": description,
+                "description": mask_contacts(description),
                 "title_on_page": html_to_text(posting.get("title") or ""),
             }
     return records, problems

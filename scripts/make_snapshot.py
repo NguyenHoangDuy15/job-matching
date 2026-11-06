@@ -123,7 +123,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--input", type=Path, required=True, help="File CSV hoặc thư mục chứa CSV")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Đường dẫn file JSONL")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="File cấu hình YAML")
-    parser.add_argument("--descriptions", type=Path, help="File JSONL từ fetch_descriptions")
+    parser.add_argument("--descriptions", type=Path, help="File JSONL từ import_saved_pages")
     parser.add_argument("--stats", action="store_true", help="In bảng phân bố theo nhóm nghề")
     args = parser.parse_args(argv)
 

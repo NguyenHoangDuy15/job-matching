@@ -9,6 +9,7 @@ from scripts.import_saved_pages import (
     html_to_text,
     import_pages,
     main,
+    mask_contacts,
 )
 
 SNAPSHOT = [
@@ -126,3 +127,32 @@ def test_main_is_repeatable_and_updates_checklist(tmp_path, capsys):
     assert "Còn 1/2 tin" in page_html
     assert "/tester/111.html" in page_html
     assert "dev-j222" not in page_html
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Gửi CV tới hr.team@example.com.vn", "Gửi CV tới [email]"),
+        ("Liên hệ 0912 345 678 hoặc +84.912.345.678", "Liên hệ [phone] hoặc [phone]"),
+        ("Lương 10.000.000 - 20.000.000 VND, 5 năm", "Lương 10.000.000 - 20.000.000 VND, 5 năm"),
+    ],
+)
+def test_mask_contacts(text, expected):
+    assert mask_contacts(text) == expected
+
+
+def test_import_masks_contacts_in_description(tmp_path):
+    posting = {
+        "@type": "JobPosting",
+        "title": "Tester",
+        "description": "<p>Gửi CV tới hr@example.com</p>",
+    }
+    (tmp_path / "a.html").write_text(
+        '<link rel="canonical" href="https://www.topcv.vn/viec-lam/tester/111.html">'
+        f'<script type="application/ld+json">{json.dumps(posting)}</script>',
+        encoding="utf-8",
+    )
+
+    records, _ = import_pages(SNAPSHOT, tmp_path)
+
+    assert records["topcv_111"]["description"] == "Gửi CV tới [email]"
