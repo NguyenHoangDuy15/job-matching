@@ -1,0 +1,165 @@
+<!doctype html>
+<!--
+  Nguồn của docs/ui/wireframe_jobs.png (S1-H09 · US-03, US-05, US-06).
+  Xuất lại PNG (PowerShell, tại thư mục gốc repo):
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1640,1640 --screenshot="$PWD\docs\ui\wireframe_jobs.png" "$PWD\docs\ui\wireframe_jobs.html"
+  Dữ liệu trong hình là giả lập.
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe Việc làm: tìm kiếm, bộ lọc, chi tiết</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 1640px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .wide { grid-column: 1 / -1; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .url { background: #eee; border-bottom: 1px solid #ccc; padding: 3px 12px; font: 12px Consolas, monospace; color: #555; }
+  .nav { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-bottom: 1px solid #bbb; }
+  .nav .logo { font-weight: 700; margin-right: 10px; } .nav .on { font-weight: 700; text-decoration: underline; }
+  .nav .soon { color: #aaa; } .nav .sp { flex: 1; } .nav .user { border: 1px solid #999; border-radius: 14px; padding: 2px 10px; }
+  .body { flex: 1; display: flex; min-height: 0; }
+  .filters { width: 250px; border-right: 1px solid #ccc; padding: 10px 12px; display: flex; flex-direction: column; gap: 9px; background: #fafafa; }
+  .main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; } h3 { margin: 0 0 3px; font-size: 13px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; } .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; background: #fff; }
+  .btn.pri { background: #333; color: #fff; } .btn.dis { border-color: #bbb; color: #bbb; }
+  .input { border: 1px solid #999; border-radius: 4px; padding: 5px 8px; color: #888; background: #fff; }
+  .chip { display: inline-block; border: 1px solid #666; border-radius: 12px; padding: 1px 8px; margin: 2px 3px 2px 0; font-size: 12px; }
+  .chip.pref { border-style: dashed; color: #555; }
+  .chip.on { background: #333; color: #fff; border-color: #333; }
+  .tag { display: inline-block; border: 1px solid #999; border-radius: 3px; padding: 0 6px; margin-right: 3px; font-size: 11px; background: #f3f3f3; }
+  .warn { border: 1px solid #c33; color: #c33; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .card { border: 1px solid #999; border-radius: 4px; padding: 7px 10px; display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; }
+  .ttl { font-weight: 700; font-size: 14px; }
+  .skel { background: #e6e6e6; border-radius: 3px; height: 10px; margin: 4px 0; }
+  .sec { border-top: 1px solid #ddd; padding-top: 6px; }
+  .tip { border: 1px solid #333; background: #333; color: #fff; border-radius: 4px; padding: 2px 6px; font-size: 11px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  ol { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<h1>Wireframe Việc làm: tìm kiếm, bộ lọc, chi tiết</h1>
+<p class="sub">S1-H09 · US-03, US-05, US-06 · Web Next.js · Khách và mọi vai trò đều xem được · Dòng xám dưới mỗi màn là view/RPC Supabase cần. Dữ liệu giả lập.</p>
+
+<div class="grid">
+
+  <!-- 1. Danh sách + bộ lọc -->
+  <div class="frame wide" style="height:640px">
+    <div class="title">1 · Việc làm: tìm kiếm + bộ lọc — US-03/AC1–AC4, US-05/AC1–AC3</div>
+    <div class="url">/viec-lam?q=lap+trinh+vien&amp;tinh=1&amp;ky-nang=python&amp;luong=20000000&amp;hinh-thuc=hybrid,remote&amp;cap-bac=junior,middle&amp;trang=1</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span class="on">Việc làm</span><span class="soon">Việc phù hợp</span><span class="soon">Kỹ năng hot</span><span class="sp"></span><span class="user">Minh ▾</span></div>
+    <div class="body">
+      <div class="filters">
+        <h3>Bộ lọc</h3>
+        <div><b class="small">Tỉnh/thành (34 tỉnh mới)</b><div class="input small">Tìm tỉnh… (gõ không dấu)</div><div class="small">☑ Hà Nội &nbsp; ☐ TP. Hồ Chí Minh &nbsp; ☐ Đà Nẵng<br>☐ Remote &nbsp; <u>+ 31 tỉnh khác</u></div></div>
+        <div><b class="small">Kỹ năng</b><div class="input small">Python ×  | thêm kỹ năng…</div></div>
+        <div><b class="small">Lương tối thiểu</b><div class="small">○ Tất cả ○ 10 tr ● 20 tr ○ 30 tr ○ 50 tr<br>☐ Chỉ tin công bố lương</div></div>
+        <div><b class="small">Hình thức làm việc</b><div class="small">☐ Tại văn phòng ☑ Hybrid ☑ Remote</div></div>
+        <div><b class="small">Cấp bậc</b><div class="small">☐ Intern ☐ Fresher ☑ Junior ☑ Middle<br>☐ Senior ☐ Lead ☐ Manager</div></div>
+        <span class="btn">Xóa tất cả bộ lọc</span>
+        <div class="note">Mọi lựa chọn ghi lên URL: tải lại trang hoặc gửi link cho người khác vẫn giữ nguyên bộ lọc (US-05/AC3).</div>
+      </div>
+      <div class="main">
+        <div class="row"><div class="input" style="flex:1">lap trinh vien</div><span class="btn pri">Tìm</span></div>
+        <div class="row small"><span class="chip on">Hà Nội ×</span><span class="chip on">Python ×</span><span class="chip on">≥ 20 tr ×</span><span class="chip on">Hybrid, Remote ×</span><span class="chip on">Junior, Middle ×</span><span style="flex:1"></span><b>148 việc</b> · trong 0,3 giây · Sắp xếp: <u>Liên quan ▾</u> (Mới nhất)</div>
+
+        <div class="card">
+          <div><span class="ttl">Lập trình viên Python (Backend)</span> <span class="warn">Sắp hết hạn</span><br><span class="muted">Công ty A · Hà Nội · Hybrid · Junior</span><br><span class="tag">Python</span><span class="tag">Django</span><span class="tag">PostgreSQL</span><span class="tag">Docker</span><span class="tag">REST API</span><span class="tag">Git</span></div>
+          <div style="text-align:right"><b>20–35 triệu</b><br><span class="small muted">Hạn nộp 14/11 · Nguồn: ITviec</span><br><span class="small muted">Cập nhật lúc 02:15</span><br><span class="btn">Xem tin gốc ↗</span></div>
+        </div>
+        <div class="card">
+          <div><span class="ttl">Data Engineer (Python, Spark)</span><br><span class="muted">Công ty B · Hà Nội · Remote · Middle</span><br><span class="tag">Python</span><span class="tag">Spark</span><span class="tag">Airflow</span><span class="tag">SQL</span><span class="tag">AWS</span></div>
+          <div style="text-align:right"><b>Thỏa thuận</b><br><span class="small muted">Hạn nộp 30/11 · Nguồn: VietnamWorks</span><br><span class="small muted">Cập nhật lúc 02:10 · Có trên 2 trang</span><br><span class="btn">Xem tin gốc ↗</span></div>
+        </div>
+        <div class="card">
+          <div><span class="ttl">Kỹ sư AI/ML (Python)</span><br><span class="muted">Công ty C · Hà Nội · Hybrid · Middle</span><br><span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">NLP</span><span class="tag">FastAPI</span></div>
+          <div style="text-align:right"><b>1.500–2.500 USD</b> <span class="small muted">≈ 38–63 tr</span><br><span class="small muted">Hạn nộp 05/12 · Nguồn: CareerViet</span><br><span class="small muted">Cập nhật lúc 02:12</span><br><span class="btn">Xem tin gốc ↗</span></div>
+        </div>
+        <div class="small muted">Thẻ: tối đa 6 kỹ năng đã chuẩn hóa · bấm cả thẻ để mở trang chi tiết · "Xem tin gốc" mở tab mới · không hiện tin đã quá hạn</div>
+        <div class="row small" style="margin-top:auto"><span class="btn">‹</span><span class="btn pri">1</span><span class="btn">2</span><span class="btn">3</span>…<span class="btn">8</span><span class="btn">›</span><span class="muted">20 tin mỗi trang · mới nhất trước khi không gõ từ khóa</span></div>
+      </div>
+    </div>
+    <div class="api">rpc api.search_jobs(q, provinces[], skills[], salary_min, modes[], levels[], page, page_size=20) · ref.provinces (34) · ref.skills (gợi ý) · thiếu: tổng số kết quả, kỹ năng, tỉnh, nguồn trên mỗi dòng → xem câu hỏi 1</div>
+  </div>
+
+  <!-- 2. Rỗng + đang tải -->
+  <div class="frame" style="height:530px">
+    <div class="title">2 · Không có kết quả + đang tải — US-05/AC4</div>
+    <div class="url">/viec-lam?q=rust&amp;tinh=46&amp;luong=50000000</div>
+    <div class="nav"><span class="logo">JobMatch</span><span class="on">Việc làm</span><span class="sp"></span><span class="user">Minh ▾</span></div>
+    <div class="main">
+      <div class="row small"><span class="chip on">Huế ×</span><span class="chip on">≥ 50 tr ×</span><span style="flex:1"></span><b>0 việc</b></div>
+      <div class="box" style="text-align:center; padding:16px">
+        <h2>Không có việc nào khớp từ khóa "rust" với bộ lọc hiện tại</h2>
+        <div class="muted" style="margin:6px 0">Thử bỏ bớt bộ lọc:</div>
+        <div><span class="btn">Bỏ "≥ 50 tr" (còn 3 việc)</span> <span class="btn">Bỏ "Huế" (còn 17 việc)</span> <span class="btn">Xóa tất cả bộ lọc</span></div>
+      </div>
+      <h3 style="margin-top:8px">Trạng thái đang tải (skeleton)</h3>
+      <div class="card"><div><div class="skel" style="width:60%"></div><div class="skel" style="width:40%"></div><div class="skel" style="width:75%"></div></div><div style="width:110px"><div class="skel"></div><div class="skel"></div></div></div>
+      <div class="card"><div><div class="skel" style="width:55%"></div><div class="skel" style="width:35%"></div><div class="skel" style="width:70%"></div></div><div style="width:110px"><div class="skel"></div><div class="skel"></div></div></div>
+      <div class="note">Lỗi mạng/API: "Chưa tải được danh sách việc, thử lại" + nút Thử lại; bộ lọc vẫn giữ.</div>
+    </div>
+    <div class="api">Gợi ý "còn N việc": gọi lại search_jobs bỏ từng bộ lọc (hoặc RPC đếm riêng) → câu hỏi 2</div>
+  </div>
+
+  <!-- 3. Chi tiết -->
+  <div class="frame" style="height:530px">
+    <div class="title">3 · Chi tiết việc — US-06/AC1–AC4</div>
+    <div class="url">/viec-lam/8f3c…e21 (public_id)</div>
+    <div class="nav"><span class="logo">JobMatch</span><span class="on">Việc làm</span><span class="sp"></span><span class="user">Minh ▾</span></div>
+    <div class="main" style="gap:6px">
+      <div class="row"><div style="flex:1"><h2>Lập trình viên Python (Backend) <span class="warn">Sắp hết hạn</span></h2><span class="muted">Công ty A · Hà Nội · Hybrid · Junior · ≥ 1 năm kinh nghiệm</span></div>
+        <div style="text-align:right"><span class="btn pri">Ứng tuyển ở trang gốc ↗</span><br><span class="btn dis small">Chấm độ khớp với CV (S5)</span></div></div>
+      <div class="row small"><b>20–35 triệu VND/tháng</b> <span class="tip">rê chuột: "20,000,000 - 35,000,000 VND"</span> · Hạn nộp 14/11 (còn 2 ngày) · Cập nhật lúc 02:15 · Nguồn: ITviec · <u>Có trên 2 trang ▾</u></div>
+      <div class="box small"><b>Kỹ năng bắt buộc:</b> <span class="chip">Python</span><span class="chip">Django</span><span class="chip">PostgreSQL</span><span class="chip">REST API</span><br><b>Kỹ năng ưu tiên:</b> <span class="chip pref">Docker</span><span class="chip pref">Redis</span><span class="chip pref">AWS</span></div>
+      <div class="sec"><h3>Mô tả công việc</h3><div class="skel" style="width:95%"></div><div class="skel" style="width:85%"></div></div>
+      <div class="sec"><h3>Yêu cầu</h3><div class="skel" style="width:90%"></div><div class="skel" style="width:70%"></div></div>
+      <div class="sec"><h3>Quyền lợi</h3><div class="skel" style="width:80%"></div><div class="skel" style="width:60%"></div></div>
+      <div class="small muted">Tin không công bố lương: hiện "Thỏa thuận". Tin không tách được 3 phần: hiện toàn văn trong "Mô tả".</div>
+    </div>
+    <div class="api">api.v_open_jobs (theo public_id) + core.jobs.description/requirements/benefits + core.job_skills.level (required/preferred) + core.job_sources</div>
+  </div>
+
+  <!-- 4. Bảng ánh xạ -->
+  <div class="frame wide">
+    <div class="title">Ánh xạ giao diện → dữ liệu (schema.sql v2.0) và câu hỏi góp ý</div>
+    <div class="main" style="flex-direction:row; gap:20px">
+      <table style="width:62%">
+        <tr><th>Trên giao diện</th><th>Lấy từ</th><th>Có sẵn?</th></tr>
+        <tr><td>Từ khóa không dấu</td><td>search_jobs(q) · search_tsv (vn_simple = simple + unaccent)</td><td>Có</td></tr>
+        <tr><td>Lọc tỉnh, kỹ năng, lương, hình thức, cấp bậc</td><td>search_jobs(provinces, skills, salary_min, modes, levels)</td><td>Có</td></tr>
+        <tr><td>Tổng "148 việc" để phân trang</td><td>—</td><td><b>Thiếu</b></td></tr>
+        <tr><td>Thẻ kỹ năng, tỉnh, tên nguồn trên thẻ</td><td>core.job_skills, core.job_locations, core.job_sources</td><td><b>Thiếu trong kết quả search_jobs</b></td></tr>
+        <tr><td>Cấp bậc, công ty logo trên thẻ</td><td>core.jobs.seniority, core.companies.logo_url</td><td><b>Thiếu trong search_jobs</b> (có trong v_open_jobs)</td></tr>
+        <tr><td>"Sắp hết hạn"</td><td>v_open_jobs.is_expiring_soon (≤ 3 ngày) hoặc tính từ valid_through</td><td>Có</td></tr>
+        <tr><td>Lương chuẩn + chuỗi gốc</td><td>salary_min_vnd, salary_max_vnd, salary_is_negotiable, salary_raw</td><td>Có</td></tr>
+        <tr><td>3 phần Mô tả / Yêu cầu / Quyền lợi</td><td>core.jobs.description, requirements, benefits</td><td>Có (không có trong v_open_jobs)</td></tr>
+        <tr><td>"Có trên N trang" + danh sách link</td><td>v_open_jobs.source_count + core.job_sources.url</td><td>Có</td></tr>
+      </table>
+      <ol style="flex:1; margin:0">
+        <li><b>Tùng:</b> mở rộng search_jobs trả thêm total_count, seniority, provinces[], top 6 skills, source name? Hay web gọi thêm v_open_jobs theo danh sách id?</li>
+        <li><b>Tùng:</b> gợi ý "bỏ bộ lọc X còn N việc" có cần ở S2 không? Nếu có cần RPC đếm theo từng bộ lọc.</li>
+        <li><b>Duy:</b> thẻ trên danh sách lấy 6 kỹ năng theo thứ tự nào: required trước, rồi theo confidence?</li>
+        <li><b>Duy:</b> lương USD đổi VND theo tỷ giá cấu hình (US-09): hiện cả số gốc USD như thẻ 3 có ổn không?</li>
+        <li><b>Cả hai:</b> sắp xếp mặc định khi có từ khóa là "Liên quan" (rank) như search_jobs đang làm, đúng ý chưa?</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
