@@ -1,0 +1,204 @@
+<!doctype html>
+<!--
+  Nguồn của docs/ui/wireframe_auth.png (S1-H08 · US-01, US-02).
+  Xuất lại PNG (PowerShell, tại thư mục gốc repo):
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1640,1900 --screenshot="$PWD\docs\ui\wireframe_auth.png" "$PWD\docs\ui\wireframe_auth.html"
+  Dữ liệu trong hình là giả lập.
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe Đăng nhập + 3 trang chủ theo vai trò</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 1900px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; height: 470px; display: flex; flex-direction: column; overflow: hidden; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .url { background: #eee; border-bottom: 1px solid #ccc; padding: 3px 12px; font: 12px Consolas, monospace; color: #555; }
+  .nav { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-bottom: 1px solid #bbb; }
+  .nav .logo { font-weight: 700; margin-right: 10px; }
+  .nav .on { font-weight: 700; text-decoration: underline; }
+  .nav .soon { color: #aaa; }
+  .nav .sp { flex: 1; }
+  .nav .user { border: 1px solid #999; border-radius: 14px; padding: 2px 10px; }
+  .main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .center { align-items: center; justify-content: center; }
+  .tall { height: 560px; }
+  .top { align-items: center; justify-content: flex-start; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; } .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 4px 12px; background: #fff; text-align: center; }
+  .btn.pri { background: #333; color: #fff; } .btn.dis { border-color: #bbb; color: #bbb; }
+  .input { border: 1px solid #999; border-radius: 4px; padding: 5px 8px; color: #888; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .err { border: 1px solid #c33; color: #c33; border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .card { border: 1px solid #999; border-radius: 4px; padding: 8px; min-height: 74px; }
+  .card.soon { border-style: dashed; color: #888; }
+  .big { font-size: 20px; font-weight: 700; }
+  .form { width: 330px; display: flex; flex-direction: column; gap: 7px; }
+  .or { text-align: center; color: #888; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 6px; text-align: left; }
+  th { background: #eee; }
+  .legend { grid-column: 1 / -1; }
+  ol { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<h1>Wireframe Đăng ký/Đăng nhập + 3 trang chủ theo vai trò</h1>
+<p class="sub">S1-H08 · US-01, US-02 · Web Next.js: thanh menu trên cùng đổi theo vai trò trong JWT (user_role, account_status). Mục xám nhạt là chức năng sprint sau, hiện sẵn để thấy vị trí. Dòng xám dưới mỗi màn là API/RPC Supabase cần.</p>
+
+<div class="grid">
+
+  <!-- 1. Đăng ký -->
+  <div class="frame tall">
+    <div class="title">1 · Đăng ký (khách) — US-01/AC1, AC3</div>
+    <div class="url">/dang-ky</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Việc làm</span><span class="sp"></span><span>Đăng nhập</span><span class="btn pri">Đăng ký</span></div>
+    <div class="main top">
+      <div class="form">
+        <h2>Tạo tài khoản người tìm việc</h2>
+        <span class="btn">G&nbsp; Tiếp tục với Google</span>
+        <div class="or">hoặc dùng email</div>
+        <div class="input">Email</div>
+        <div class="input">Mật khẩu (ít nhất 8 ký tự)</div>
+        <div class="input">Nhập lại mật khẩu</div>
+        <div class="small">☐ Tôi đồng ý Điều khoản và Chính sách quyền riêng tư</div>
+        <span class="btn pri">Đăng ký</span>
+        <div class="err">Email này đã được đăng ký. <u>Đăng nhập</u></div>
+        <div class="note">Sau khi bấm Đăng ký: "Kiểm tra hộp thư để xác nhận email." Vai trò mặc định = Người tìm việc.</div>
+        <div class="small muted">Bạn là nhà tuyển dụng? <u>Đăng ký tài khoản HR</u> (cần admin duyệt, US-22)</div>
+      </div>
+    </div>
+    <div class="api">supabase.auth.signUp / signInWithOAuth('google') → trigger on_auth_user_created tạo app.profiles (role = seeker)</div>
+  </div>
+
+  <!-- 2. Đăng nhập -->
+  <div class="frame tall">
+    <div class="title">2 · Đăng nhập + Quên mật khẩu (khách) — US-01/AC2</div>
+    <div class="url">/dang-nhap  ·  /quen-mat-khau</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Việc làm</span><span class="sp"></span><span class="btn pri">Đăng nhập</span><span>Đăng ký</span></div>
+    <div class="main top">
+      <div class="form">
+        <h2>Đăng nhập</h2>
+        <span class="btn">G&nbsp; Tiếp tục với Google</span>
+        <div class="or">hoặc</div>
+        <div class="input">Email</div>
+        <div class="input">Mật khẩu</div>
+        <div class="row small"><span>☐ Ghi nhớ đăng nhập</span><span style="flex:1"></span><u>Quên mật khẩu?</u></div>
+        <span class="btn pri">Đăng nhập</span>
+        <div class="err">Email hoặc mật khẩu không đúng.</div>
+        <div class="err">Tài khoản đang bị khóa. Liên hệ quản trị viên.</div>
+        <div class="box small"><b>Quên mật khẩu:</b> nhập email → "Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu." (không tiết lộ email có tồn tại hay không)</div>
+        <div class="note">Đăng nhập xong chuyển theo vai trò: seeker → / · hr → /hr · admin → /admin</div>
+      </div>
+    </div>
+    <div class="api">supabase.auth.signInWithPassword · resetPasswordForEmail → trigger on_auth_user_login · rpc api.get_my_profile()</div>
+  </div>
+
+  <!-- 3. Trang chủ Người tìm việc -->
+  <div class="frame">
+    <div class="title">3 · Trang chủ Người tìm việc — US-02/AC1</div>
+    <div class="url">/</div>
+    <div class="nav"><span class="logo">JobMatch</span><span class="on">Trang chủ</span><span>Việc làm</span><span class="soon">Việc phù hợp</span><span class="soon">Hồ sơ CV</span><span class="soon">Kỹ năng hot</span><span class="sp"></span><span class="user">Minh ▾</span></div>
+    <div class="main">
+      <h2>Chào Minh 👋</h2>
+      <div class="row"><div class="input" style="flex:1">Tìm việc: chức danh, kỹ năng, công ty… (gõ không dấu được)</div><span class="btn pri">Tìm</span></div>
+      <div class="cards">
+        <div class="card"><div class="muted small">Việc IT đang mở</div><div class="big">2.140</div><div class="small">từ 3 nguồn · cập nhật 02:15</div></div>
+        <div class="card"><div class="muted small">Việc mới 24 giờ</div><div class="big">126</div><div class="small"><u>Xem ngay →</u></div></div>
+        <div class="card soon"><div class="small">Tải CV để nhận Top N việc phù hợp</div><div class="small">(Sprint 3–4)</div></div>
+      </div>
+      <div class="box"><b>Việc mới nhất</b><div class="small">• Backend Developer (Java) · Công ty A · Hà Nội · 20–35 triệu · Nguồn: ITviec</div><div class="small">• Data Engineer · Công ty B · TP. Hồ Chí Minh · Thỏa thuận · Nguồn: VietnamWorks</div><div class="small">• QA Engineer · Công ty C · Đà Nẵng · 15–25 triệu · Nguồn: CareerViet</div></div>
+      <div class="box small" style="margin-top:auto">Menu tài khoản (Minh ▾): Hồ sơ của tôi · <b>Đăng xuất</b> · ☐ Đăng xuất khỏi mọi thiết bị</div>
+    </div>
+    <div class="api">JWT claims: user_role = seeker, account_status = active · api.v_open_jobs (5 tin mới nhất, đếm tin mở)</div>
+  </div>
+
+  <!-- 4. Trang chủ HR -->
+  <div class="frame">
+    <div class="title">4 · Trang chủ HR — US-02/AC1 (khung; chức năng ở S5–S6)</div>
+    <div class="url">/hr</div>
+    <div class="nav"><span class="logo">JobMatch <span class="small muted">HR</span></span><span class="on">Tổng quan</span><span class="soon">JD của tôi</span><span class="soon">Ứng viên</span><span class="soon">Công ty</span><span class="sp"></span><span class="user">Lan · Công ty X ▾</span></div>
+    <div class="main">
+      <div class="note"><b>Trạng thái pending_hr:</b> "Yêu cầu tài khoản nhà tuyển dụng đang chờ admin duyệt." Chỉ thấy banner này, các mục HR bị khóa.</div>
+      <h2>Công ty X — Tổng quan tuyển dụng</h2>
+      <div class="cards">
+        <div class="card soon"><div class="small">JD đang tuyển</div><div class="big">—</div><div class="small">Đăng JD (S5)</div></div>
+        <div class="card soon"><div class="small">CV ứng viên đã tải</div><div class="big">—</div><div class="small">Tải lô CV (S6)</div></div>
+        <div class="card soon"><div class="small">Shortlist</div><div class="big">—</div><div class="small">(S6)</div></div>
+      </div>
+      <div class="box small">HR chỉ thấy dữ liệu của <b>org_id công ty mình</b>. HR công ty khác không xem được JD hay CV ở đây.</div>
+      <div class="box small" style="margin-top:auto">Menu tài khoản: Hồ sơ công ty · <b>Đăng xuất</b></div>
+    </div>
+    <div class="api">JWT claims: user_role = hr, org_id, account_status (active | pending_hr) · Edge middleware chặn /hr nếu role ≠ hr</div>
+  </div>
+
+  <!-- 5. Trang chủ Admin -->
+  <div class="frame">
+    <div class="title">5 · Trang chủ Admin — US-02/AC1 (khung; số liệu đầy đủ ở S4)</div>
+    <div class="url">/admin</div>
+    <div class="nav"><span class="logo">JobMatch <span class="small muted">Admin</span></span><span class="on">Tổng quan</span><span class="soon">Người dùng</span><span class="soon">Nguồn thu thập</span><span class="soon">Tin nghi trùng</span><span class="sp"></span><span class="user">admin ▾</span></div>
+    <div class="main">
+      <h2>Sức khỏe hệ thống</h2>
+      <div class="cards">
+        <div class="card"><div class="small muted">Tin đang mở theo nguồn</div><div class="small">VietnamWorks 1.020 · ITviec 760 · CareerViet 360</div></div>
+        <div class="card"><div class="small muted">Lần crawl gần nhất</div><div class="small">02:00 hôm nay · 3/3 nguồn thành công</div></div>
+        <div class="card"><div class="small muted">Người dùng theo vai trò</div><div class="small">seeker 42 · hr 3 · admin 2</div></div>
+      </div>
+      <div class="box"><b>Yêu cầu HR chờ duyệt (2)</b><div class="small">Công ty X · lan@x.vn · <span class="btn">Duyệt</span> <span class="btn">Từ chối</span> <span class="muted">(S5, US-22)</span></div></div>
+      <div class="box small">Admin <b>không đọc được CV</b> (đặc quyền tối thiểu). Mọi thao tác ghi app.audit_log.</div>
+    </div>
+    <div class="api">JWT claims: user_role = admin · mart.system_daily (S4) · api.admin_review_hr_request (S5)</div>
+  </div>
+
+  <!-- 6. 403 + Đăng xuất -->
+  <div class="frame">
+    <div class="title">6 · Chặn sai vai trò (403) + Đăng xuất — US-02/AC2–AC3, US-01/AC4</div>
+    <div class="url">/admin  (đang đăng nhập bằng tài khoản người tìm việc)</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="sp"></span><span class="user">Minh ▾</span></div>
+    <div class="main center" style="gap:10px">
+      <div class="big">403</div>
+      <h2>Bạn không có quyền truy cập trang này</h2>
+      <div class="muted">Trang dành cho vai trò khác. Không có dữ liệu nào của trang được tải.</div>
+      <span class="btn pri">Về trang chủ của tôi</span>
+      <div class="box small" style="width:520px">
+        <b>Đăng xuất:</b> gọi api.logout_user(p_all_devices) → thu hồi phiên trong auth.sessions, ghi app.audit_log → về trang công khai /. Bấm Back không mở lại được trang cá nhân.<br>
+        <b>Tài khoản bị khóa:</b> app.is_active_user() chặn mọi truy vấn ngay, kể cả khi JWT cũ chưa hết hạn → đưa về /dang-nhap với thông báo "Tài khoản đang bị khóa".
+      </div>
+    </div>
+    <div class="api">Edge middleware đọc user_role trong JWT · rpc api.logout_user(p_all_devices) · RLS + app.is_active_user()</div>
+  </div>
+
+  <!-- Bảng route -->
+  <div class="frame legend" style="height:auto">
+    <div class="title">Bảng route × vai trò (Edge middleware) và câu hỏi góp ý</div>
+    <div class="main" style="flex-direction:row; gap:24px">
+      <table style="width:58%">
+        <tr><th>Route</th><th>Khách</th><th>Người tìm việc</th><th>HR</th><th>Admin</th><th>Sprint</th></tr>
+        <tr><td>/ , /viec-lam , /viec-lam/[id]</td><td>Xem</td><td>Xem</td><td>Xem</td><td>Xem</td><td>S2</td></tr>
+        <tr><td>/dang-ky , /dang-nhap , /quen-mat-khau</td><td>Có</td><td colspan="3">Đã đăng nhập → chuyển về trang chủ theo vai trò</td><td>S2</td></tr>
+        <tr><td>/ho-so , /viec-phu-hop</td><td>→ /dang-nhap</td><td>Có</td><td>403</td><td>403</td><td>S3–S4</td></tr>
+        <tr><td>/hr/**</td><td>→ /dang-nhap</td><td>403</td><td>Có (pending_hr: chỉ banner)</td><td>403</td><td>S5–S6</td></tr>
+        <tr><td>/admin/**</td><td>→ /dang-nhap</td><td>403</td><td>403</td><td>Có</td><td>S4, S7</td></tr>
+      </table>
+      <ol style="flex:1; margin:0">
+        <li><b>Tùng:</b> trang chủ sau đăng nhập dùng / chung (nội dung đổi theo vai trò) hay tách /hr, /admin như hình?</li>
+        <li><b>Tùng:</b> "Đăng xuất khỏi mọi thiết bị" có đưa vào S2 không, hay chỉ đăng xuất phiên hiện tại?</li>
+        <li><b>Cả hai:</b> tên route tiếng Việt không dấu (/viec-lam) hay tiếng Anh (/jobs)?</li>
+        <li><b>Duy:</b> thẻ "Việc IT đang mở" và "Việc mới 24 giờ" lấy từ v_open_jobs hay cần RPC đếm riêng?</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
