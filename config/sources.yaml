@@ -1,15 +1,38 @@
-# Nháp TASK-U008. Chỉ đổi allowed: true khi nguồn đã đồng ý bằng văn bản.
-# Không nguồn nào công bố giới hạn tốc độ; rate_limit_s là mức nhóm tự đặt. Xem docs/data_sources.md.
+# TASK-U008 — chỉ bật nguồn đã được phê duyệt theo docs/data_sources.md.
+# rate_limit_s là khoảng cách tối thiểu nhóm áp dụng cho request chủ động.
+# source_id khớp ops.sources.id trong db/seed/seed_reference_data.sql.
+# listing.url + job_url_pattern dùng cho crawler S2-T03 (scripts/crawl.py);
+# job_url_pattern: regex tìm link tin trong trang danh sách, nhóm 1 = mã tin của nguồn.
+# Đổi listing.url / job_url_pattern xong thì chạy: uv run python scripts/crawl.py probe --source <tên>
 sources:
   - name: topcv
+    source_id: 4
     base_url: https://www.topcv.vn
-    allowed: false
-    rate_limit_s: 5
+    allowed: true
+    # Một chuỗi điều hướng cách nhau 15 giây đã gặp HTTP 429 ngày 07/11/2026.
+    # Giữ mức tối thiểu thận trọng hơn; CLI --delay không thể hạ giá trị này.
+    rate_limit_s: 30
+
   - name: itviec
+    source_id: 2
     base_url: https://itviec.com
-    allowed: false
+    allowed: true
+    permission_ref: ""  # TODO: link issue US-02.06 chứa văn bản đồng ý của ITviec
     rate_limit_s: 5
+    listing:
+      url: https://itviec.com/it-jobs?page={page}
+      max_pages: 20
+    job_url_pattern: '/it-jobs/[a-z0-9-]*?-(\d+)(?![\w-])'
+
   - name: vietnamworks
+    source_id: 1
     base_url: https://www.vietnamworks.com
-    allowed: false
+    allowed: true
+    permission_ref: ""  # TODO: link issue US-02.06 chứa văn bản đồng ý của VietnamWorks
     rate_limit_s: 5
+    listing:
+      # Kiểm bằng probe. Nếu ra 0 link: mở trang VietnamWorks, lọc ngành IT – Phần mềm,
+      # sang trang 2 rồi copy URL trên thanh địa chỉ vào đây, thay số trang bằng {page}.
+      url: https://www.vietnamworks.com/viec-lam?g=5&page={page}
+      max_pages: 20
+    job_url_pattern: '/[a-z0-9-]+-(\d+)-jv(?![\w-])'
