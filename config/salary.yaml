@@ -1,0 +1,11 @@
+# Chuẩn hóa lương (S2-D02). Không ghi tỷ giá cứng: job tỷ giá lấy giá mới mỗi ngày.
+fx:
+  # Thử theo thứ tự; nguồn đầu tiên thành công được dùng.
+  sources: [vietcombank, open_er_api]
+  # Cột giá Vietcombank: Buy / Transfer / Sell. Transfer nằm giữa giá mua và bán.
+  vietcombank_rate: Transfer
+  timeout_seconds: 10
+  # Hai nguồn đều lỗi: dùng tỷ giá đã lưu nếu chưa quá số ngày này, quá thì cảnh báo.
+  max_age_days: 7
+  # Lịch sử tỷ giá khi chạy offline (khi có DB thì ghi vào ref.fx_rates).
+  store_path: data/storage/fx_rates.json

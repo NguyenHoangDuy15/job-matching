@@ -1,0 +1,20 @@
+{
+  "result": "success",
+  "provider": "https://www.exchangerate-api.com",
+  "documentation": "https://www.exchangerate-api.com/docs/free",
+  "terms_of_use": "https://www.exchangerate-api.com/terms",
+  "time_last_update_unix": 1794182551,
+  "time_last_update_utc": "Mon, 09 Nov 2026 00:02:31 +0000",
+  "time_next_update_unix": 1794269821,
+  "time_next_update_utc": "Tue, 10 Nov 2026 00:17:01 +0000",
+  "time_eol_unix": 0,
+  "base_code": "USD",
+  "rates": {
+    "USD": 1,
+    "VND": 25611.565139,
+    "EUR": 0.896919,
+    "JPY": 158.326221,
+    "SGD": 1.282886,
+    "GBP": 0.748366
+  }
+}
