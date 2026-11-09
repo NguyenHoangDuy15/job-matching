@@ -85,7 +85,22 @@ insert into ref.province_legacy (alias_norm, province_code) values
   -- Các tỉnh giữ nguyên
   ('cao bang', 4), ('dien bien', 11), ('lai chau', 12), ('son la', 14),
   ('lang son', 20), ('quang ninh', 22), ('ha long', 22),
-  ('thanh hoa', 38), ('nghe an', 40), ('vinh', 40), ('ha tinh', 42)
+  ('thanh hoa', 38), ('nghe an', 40), ('vinh', 40), ('ha tinh', 42),
+  -- Quận/huyện/thị xã cũ hay gặp trong tin IT (S2-D01, đo trên data/interim/vietjobs_it.csv).
+  -- Tin tuyển dụng vẫn ghi tên quận cũ thay vì tỉnh.
+  -- Trùng tên ở tỉnh khác, chọn theo nơi tập trung tin IT:
+  --   'tan phu' (cũng có ở Đồng Nai), 'binh tan' (Vĩnh Long), 'hoang mai' (Nghệ An).
+  ('ba dinh', 1), ('hoan kiem', 1), ('dong da', 1), ('hai ba trung', 1), ('cau giay', 1),
+  ('thanh xuan', 1), ('tay ho', 1), ('long bien', 1), ('hoang mai', 1), ('ha dong', 1),
+  ('nam tu liem', 1), ('bac tu liem', 1), ('thanh tri', 1), ('gia lam', 1), ('dong anh', 1),
+  ('thanh oai', 1), ('hoai duc', 1),
+  ('quan 1', 79), ('quan 2', 79), ('quan 3', 79), ('quan 4', 79), ('quan 5', 79),
+  ('quan 6', 79), ('quan 7', 79), ('quan 8', 79), ('quan 9', 79), ('quan 10', 79),
+  ('quan 11', 79), ('quan 12', 79), ('thu duc', 79), ('binh thanh', 79), ('tan binh', 79),
+  ('phu nhuan', 79), ('go vap', 79), ('tan phu', 79), ('binh tan', 79), ('binh chanh', 79),
+  ('nha be', 79), ('hoc mon', 79), ('cu chi', 79),
+  ('song cong', 19), ('tu son', 24), ('binh xuyen', 25), ('yen my', 33),
+  ('dien ban', 48), ('long khanh', 75), ('can giuoc', 80)
 on conflict (alias_norm) do update set province_code = excluded.province_code;
 
 -- 3. Nhóm nghề IT (Job Families)
