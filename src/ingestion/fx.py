@@ -4,8 +4,9 @@ Phương án: lưu sẵn lương VND trong core.jobs, tính lại khi tỷ giá 
 Job tỷ giá chạy mỗi ngày trước lượt crawl 02:00:
   1. fetch_rates(): Vietcombank (giá chuyển khoản) → open.er-api.com.
   2. Lỗi cả hai → dùng tỷ giá đã lưu nếu chưa quá max_age_days, không thì cảnh báo.
-  3. changed_currencies() khác rỗng → gọi ref.refresh_job_salaries_vnd() (db/sql/fx_rates.sql)
-     để mọi tin ngoại tệ đổi theo cùng một tỷ giá trong một transaction.
+  3. changed_currencies() khác rỗng → gọi ref.refresh_job_salaries_vnd()
+     (db/migrations/0002_fx_rates.sql) để mọi tin ngoại tệ đổi theo cùng một tỷ giá
+     trong một transaction.
 """
 
 import json

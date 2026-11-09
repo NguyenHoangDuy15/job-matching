@@ -168,6 +168,22 @@ def to_vnd(parsed: ParsedSalary, rates: Mapping[str, FxRate]) -> SalaryVnd:
     return SalaryVnd(converted[0], converted[1], fx_rate, fx_date, "ok")
 
 
+def salary_columns(parsed: ParsedSalary, vnd: SalaryVnd) -> dict[str, object]:
+    """Giá trị các cột lương của core.jobs (migration 0001 + 0002) cho một tin."""
+    return {
+        "salary_raw": parsed.raw or None,
+        "salary_amount_min": parsed.amount_min,
+        "salary_amount_max": parsed.amount_max,
+        "salary_currency": parsed.currency,
+        "salary_pay_type": parsed.pay_type,
+        "salary_status": parsed.status,
+        "salary_is_negotiable": parsed.status == "negotiable",
+        "salary_min_vnd": vnd.min_vnd,
+        "salary_max_vnd": vnd.max_vnd,
+        "salary_fx_date": vnd.fx_date,
+    }
+
+
 @dataclass(frozen=True)
 class StoredSalary:
     """Phần lương của một dòng core.jobs."""

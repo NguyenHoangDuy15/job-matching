@@ -10,6 +10,7 @@ from ingestion.salary import (
     StoredSalary,
     parse_salary,
     refresh_salaries,
+    salary_columns,
     to_vnd,
 )
 
@@ -72,6 +73,9 @@ def test_parse_foreign_currency(raw, low, high, currency, low_vnd, high_vnd):
     assert amounts(parsed) == (low, high, currency, "parsed")
     vnd = to_vnd(parsed, rates())
     assert (vnd.min_vnd, vnd.max_vnd, vnd.fx_date, vnd.note) == (low_vnd, high_vnd, NEW_DAY, "ok")
+    columns = salary_columns(parsed, vnd)
+    assert (columns["salary_currency"], columns["salary_raw"]) == (currency, raw)
+    assert columns["salary_is_negotiable"] is False
 
 
 # --- Thỏa thuận / trống (5): để trống, không đoán ---
@@ -88,8 +92,10 @@ def test_parse_foreign_currency(raw, low, high, currency, low_vnd, high_vnd):
 def test_negotiable_or_missing_stays_empty(raw, status):
     parsed = parse_salary(raw)
     assert (parsed.status, parsed.amount_min, parsed.amount_max) == (status, None, None)
-    assert parsed.raw == raw
-    assert to_vnd(parsed, rates()).min_vnd is None
+    columns = salary_columns(parsed, to_vnd(parsed, rates()))
+    assert columns["salary_is_negotiable"] is (status == "negotiable")
+    assert columns["salary_raw"] == (raw or None)
+    assert columns["salary_min_vnd"] is None and columns["salary_max_vnd"] is None
 
 
 # --- Gross / Net (3) ---
