@@ -128,9 +128,13 @@ def test_remote_counts_as_parsed_for_ac3(index):
     assert parsed_ratio([]) == 0.0
 
 
-def test_job_location_rows():
-    result = LocationResult(province_codes=(HA_NOI, TP_HCM), work_mode="onsite", unmatched=())
-    assert job_location_rows(42, result) == [(42, HA_NOI), (42, TP_HCM)]
+def test_job_location_rows(index):
+    result = normalize_location("Hà Nội & Hồ Chí Minh", index=index)
+    assert job_location_rows(42, result) == [
+        (42, HA_NOI, "Hà Nội & Hồ Chí Minh"),
+        (42, TP_HCM, "Hà Nội & Hồ Chí Minh"),
+    ]
+    assert job_location_rows(7, LocationResult((), "remote", ())) == []
 
 
 def test_build_index_rejects_unknown_code():

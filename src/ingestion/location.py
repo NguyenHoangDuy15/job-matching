@@ -93,6 +93,7 @@ class LocationResult:
     province_codes: tuple[int, ...]  # giữ thứ tự xuất hiện, không trùng
     work_mode: WorkMode
     unmatched: tuple[str, ...]  # phần không nhận ra, để báo cáo và bổ sung alias
+    raw: str = ""  # chuỗi địa điểm gốc, ghi vào core.job_locations.address_raw
 
     @property
     def is_parsed(self) -> bool:
@@ -173,12 +174,14 @@ def normalize_location(
 
     unique = tuple(dict.fromkeys(codes))
     mode = detect_work_mode(f"{location} {title or ''}", has_province=bool(unique))
-    return LocationResult(province_codes=unique, work_mode=mode, unmatched=tuple(unmatched))
+    return LocationResult(
+        province_codes=unique, work_mode=mode, unmatched=tuple(unmatched), raw=location.strip()
+    )
 
 
-def job_location_rows(job_id: int, result: LocationResult) -> list[tuple[int, int]]:
-    """Các dòng (job_id, province_code) để ghi vào core.job_locations."""
-    return [(job_id, code) for code in result.province_codes]
+def job_location_rows(job_id: int, result: LocationResult) -> list[tuple[int, int, str | None]]:
+    """Các dòng (job_id, province_code, address_raw) để ghi vào core.job_locations."""
+    return [(job_id, code, result.raw or None) for code in result.province_codes]
 
 
 def parsed_ratio(results: Iterable[LocationResult]) -> float:
