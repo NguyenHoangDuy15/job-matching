@@ -7,6 +7,8 @@
 /deploy/ @nguyenxuanthinh281204 @v1ettung511
 /.github/ @nguyenxuanthinh281204 @v1ettung511
 /ui/ @nguyenxuanthinh281204 @NguyenHoangDuy15
+# Web Next.js (kế hoạch v2): Tùng phụ vì sở hữu Auth/RLS, khu vực HR và Admin.
+/apps/web/ @nguyenxuanthinh281204 @v1ettung511
 /src/eval/ @nguyenxuanthinh281204 @NguyenHoangDuy15
 /docs/labeling/ @nguyenxuanthinh281204 @NguyenHoangDuy15
 /labels/ @nguyenxuanthinh281204 @v1ettung511
