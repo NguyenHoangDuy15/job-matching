@@ -22,7 +22,7 @@ Cloud Run Job (02:00)                          Supabase (Postgres 16 + pgvector 
 │ ① tỷ giá  ingestion.fx             │──────▶ │ ref     từ điển: 34 tỉnh, kỹ năng,    │
 │ ② crawl   ingestion.crawl (JSON-LD)│        │         tỷ giá                         │
 │   chuẩn hóa: 34 tỉnh, lương VND,   │──────▶ │ raw     bản gốc từng lượt crawl        │
-│   tách section, kỹ năng + mức      │        │ core    jobs, job_locations, job_skills│
+│ ③ kỹ năng + mức  skillkit.levels   │        │ core    jobs, job_locations, job_skills│
 └────────────────────────────────────┘        │ app     người dùng, CV, HR (RLS)       │
                                                │ api     view + RPC cho web             │
 Next.js trên Cloudflare (apps/web) ──────────▶ │ ops / mart / eval                      │
@@ -70,6 +70,7 @@ psql "$DATABASE_URL" -f db/migrations/0003_skill_tree_sections.sql
 psql "$DATABASE_URL" -f db/seed/seed_skills.sql              # từ điển kỹ năng (sinh từ YAML)
 psql "$DATABASE_URL" -f db/migrations/0004_close_stale_jobs.sql
 psql "$DATABASE_URL" -f db/migrations/0005_job_skill_levels.sql
+psql "$DATABASE_URL" -f db/migrations/0006_job_skills_api.sql   # view thẻ kỹ năng cho web
 ```
 
 Migration và seed đều chạy lại được nhiều lần. Nếu `DATABASE_URL` có dạng `postgresql+psycopg://…` thì bỏ `+psycopg` khi dùng với `psql`.
@@ -83,7 +84,8 @@ TEST_DATABASE_URL=postgresql://app:change_me@localhost:5432/jobs uv run pytest
 ## Luồng dữ liệu tin tuyển dụng
 
 ```bash
-# Crawl: tự cập nhật tỷ giá trước, rồi crawl, chuẩn hóa và ghi DB
+# Crawl: ① cập nhật tỷ giá, ② crawl + chuẩn hóa tỉnh/lương/section và ghi DB,
+# ③ gắn kỹ năng + mức cho tin mới/đổi và tin gắn bằng từ điển cũ (--skip-skills để bỏ)
 uv run python scripts/crawl.py run --source itviec --max-jobs 50
 uv run python scripts/crawl.py run --source itviec --dry-run       # không ghi DB, ghi data/raw/crawl
 uv run python scripts/crawl.py probe --source vietnamworks         # kiểm cấu hình nguồn
@@ -94,7 +96,9 @@ uv run python scripts/load_jsonl.py <file.jsonl> --source topcv
 # Bảo trì
 uv run python scripts/update_fx.py [--dry-run]       # cập nhật tỷ giá + tính lại lương tin ngoại tệ
 uv run python scripts/split_sections.py [--apply]    # tách lại 4 section từ core.jobs.jd_text
-uv run python scripts/label_skills.py [--apply]      # gắn kỹ năng + mức, ghi core.job_skills
+uv run python scripts/label_skills.py [--apply] [--stale]   # gắn kỹ năng + mức, ghi core.job_skills
+uv run python scripts/label_skills.py --report       # % tin mở có thẻ kỹ năng (mục tiêu ≥ 90%)
+uv run python scripts/check_job_skills.py [--score]  # lấy 20 tin để kiểm tay / chấm
 ```
 
 Chỉ crawl các nguồn đã được phép trong `config/sources.yaml`, tuân thủ `docs/data_sources.md`. Gặp 403, 429 hoặc trang chống bot thì dừng, không tìm cách vượt.
@@ -133,6 +137,8 @@ uv run python scripts/evaluate_levels.py score      # chấm trên data/eval/gol
 - **Model** không lên git. Train lại cho ra cùng model, vì seed cố định và `uv.lock` ghim scikit-learn. Chưa có file model thì pipeline chỉ dùng luật.
 - **Thêm cue:** sửa `config/skill_levels.yaml` rồi thêm ca vào `tests/unit/test_levels_rules.py`.
 - **`extractor`:** `dict` là luật quyết, `jev` là Tầng 2 quyết, `human` là sửa tay. Chạy lại pipeline không ghi đè và không xóa dòng `human`.
+- **`--stale`** chỉ gắn tin chưa có kỹ năng hoặc gắn bằng phiên bản cũ. `model_version` chứa mã băm của `skills.yaml` và `skill_levels.yaml`, nên sửa từ điển hay cue thì lần chạy sau tự gắn lại.
+- **Web** đọc thẻ kỹ năng từ `api.v_job_skills` (chỉ `required` / `preferred`). Bộ lọc kỹ năng của `api.search_jobs` cũng bỏ qua `mentioned`.
 - **`source_detail`:** cho biết luật nào đã quyết, gồm `rule_neg`, `rule_section`, `rule_cue`, `rule_mixed`, `rule_desc`, `model`, `fallback`.
 
 ## Script đo chất lượng
