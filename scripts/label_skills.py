@@ -7,7 +7,7 @@
     uv run python scripts/label_skills.py --report            # số liệu nghiệm thu S2-D05
     uv run python scripts/label_skills.py --no-model          # chỉ luật, không dùng Tầng 2
 
-Cần migration 0003, 0004 và seed_skills.sql. Tầng 2 cần models/jev_local_v1.joblib
+Cần migration 0003, 0005 và seed_skills.sql. Tầng 2 cần models/jev_local_v1.joblib
 (scripts/train_tier2.py); không có file thì chỉ dùng luật.
 """
 
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
 
     with psycopg.connect(dsn.replace("+psycopg", ""), prepare_threshold=None) as conn:
         if not has_levels_schema(conn):
-            print("DB chưa chạy db/migrations/0004_job_skill_levels.sql.")
+            print("DB chưa chạy db/migrations/0005_job_skill_levels.sql.")
             return 2
         if args.report:
             print_report(coverage_report(conn))

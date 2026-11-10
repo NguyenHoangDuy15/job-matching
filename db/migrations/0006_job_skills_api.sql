@@ -1,8 +1,8 @@
 -- =====================================================================================
---  Migration 0005 — Thẻ kỹ năng cho web (S2-D05, US-10; dùng ở S2-H04 Trang chi tiết)
+--  Migration 0006 — Thẻ kỹ năng cho web (S2-D05, US-10; dùng ở S2-H04 Trang chi tiết)
 --  1. api.v_job_skills: kỹ năng bắt buộc / ưu tiên của từng tin (không có `mentioned`).
 --  2. api.search_jobs: lọc theo kỹ năng chỉ tính bắt buộc / ưu tiên.
---  Cần 0004. Chạy lại nhiều lần được.
+--  Cần 0005. Chạy lại nhiều lần được.
 -- =====================================================================================
 
 -- 1. Thẻ kỹ năng ------------------------------------------------------------------------

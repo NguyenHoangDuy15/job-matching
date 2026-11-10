@@ -1,5 +1,5 @@
 -- =====================================================================================
---  Migration 0004 — Mức kỹ năng required / preferred / mentioned (S2-D04, US-10)
+--  Migration 0005 — Mức kỹ năng required / preferred / mentioned (S2-D04, US-10)
 --  Bổ sung cột cho core.job_skills (bảng đã có từ 0001), không tạo bảng mới.
 --  Chạy lại nhiều lần được.
 --

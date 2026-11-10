@@ -216,3 +216,120 @@ def test_crawl_source_blocked_midway_is_partial(tmp_path):
     )
     assert status == "partial"
     assert stats.items_new == 1
+
+
+# ---- S2-T06: đóng tin bị gỡ / vắng mặt ---------------------------------------------
+class RecordingStore(LocalStore):
+    """LocalStore ghi lại các lệnh đóng tin để kiểm luồng (không có DB)."""
+
+    def __init__(self, tmp_path, unseen=()):
+        super().__init__(default_index(), out_dir=tmp_path / "out")
+        self.unseen = list(unseen)
+        self.calls: list[tuple] = []
+
+    def unseen_postings(self, run_id, limit):
+        self.calls.append(("unseen", limit))
+        return self.unseen[:limit]
+
+    def mark_gone(self, source_job_id):
+        self.calls.append(("gone", source_job_id))
+        return 1
+
+    def mark_missing(self, run_id):
+        self.calls.append(("missing",))
+        return 2
+
+    def close_stale(self):
+        self.calls.append(("stale",))
+        return 3
+
+
+def _site(listing_pages: dict[str, str], gone=(), blocked=()):
+    job = (FIXTURES / "itviec_job.html").read_text(encoding="utf-8")
+
+    def handler(request):
+        path = request.url.path
+        if path == "/robots.txt":
+            return httpx.Response(404)
+        if path == "/it-jobs":
+            page = request.url.params.get("page")
+            return httpx.Response(200, text=listing_pages.get(page, "<html></html>"))
+        if any(path.endswith(f"-{g}") for g in blocked):
+            return httpx.Response(429)
+        if any(path.endswith(f"-{g}") for g in gone):
+            return httpx.Response(410)
+        return httpx.Response(200, text=job)
+
+    return handler
+
+
+LISTING = (FIXTURES / "itviec_listing.html").read_text(encoding="utf-8")
+OLD_JOBS = [
+    ("7001", "https://itviec.com/it-jobs/tin-cu-da-go-7001"),
+    ("7002", "https://itviec.com/it-jobs/tin-cu-con-song-7002"),
+]
+
+
+def test_full_sweep_closes_gone_rechecks_unseen_and_counts_missing(tmp_path):
+    fetcher, _ = _fetcher(_site({"1": LISTING}, gone=("9012", "7001")))
+    store = RecordingStore(tmp_path, unseen=OLD_JOBS)
+    stats, status = crawl_source(
+        _cfg(), store, max_jobs=10, max_pages=5, fetcher=fetcher, html_root=tmp_path / "raw"
+    )
+    assert status == "success"
+    assert store.calls == [
+        ("gone", "9012"),  # link trong danh sách nhưng trang chi tiết trả 410
+        ("unseen", 20),
+        ("gone", "7001"),  # tin cũ không còn trong danh sách, kiểm lại thấy 410
+        ("missing",),  # đã quét đủ danh sách → đếm vắng mặt
+        ("stale",),
+    ]
+    assert stats.items_new == 3  # 2 tin trong danh sách + tin cũ 7002 còn sống được ghi lại
+    assert stats.items_closed == 1 + 1 + 2 + 3
+
+
+def test_partial_sweep_does_not_count_missing(tmp_path):
+    # max_jobs=2 < 3 link: mới quét một phần danh sách → không được coi tin không gặp là vắng mặt
+    fetcher, _ = _fetcher(_site({"1": LISTING}))
+    store = RecordingStore(tmp_path)
+    _, status = crawl_source(
+        _cfg(), store, max_jobs=2, max_pages=5, fetcher=fetcher, html_root=tmp_path / "raw"
+    )
+    assert status == "success"
+    assert ("missing",) not in store.calls
+    assert ("stale",) in store.calls  # hết hạn nộp vẫn được xử lý
+
+
+def test_blocked_during_recheck_skips_missing_count(tmp_path):
+    fetcher, _ = _fetcher(_site({"1": LISTING}, gone=("9012",), blocked=("7001",)))
+    store = RecordingStore(tmp_path, unseen=OLD_JOBS)
+    crawl_source(
+        _cfg(), store, max_jobs=10, max_pages=5, fetcher=fetcher, html_root=tmp_path / "raw"
+    )
+    assert ("missing",) not in store.calls
+    assert ("gone", "7001") not in store.calls
+
+
+def test_failed_run_closes_nothing(tmp_path):
+    fetcher, _ = _fetcher(_site({}))  # danh sách rỗng: không đọc được tin nào
+    store = RecordingStore(tmp_path, unseen=OLD_JOBS)
+    _, status = crawl_source(
+        _cfg(), store, max_jobs=10, max_pages=5, fetcher=fetcher, html_root=tmp_path / "raw"
+    )
+    assert status == "failed"
+    assert store.calls == []
+
+
+def test_recheck_limit_zero_disables_recheck(tmp_path):
+    fetcher, _ = _fetcher(_site({"1": LISTING}))
+    store = RecordingStore(tmp_path, unseen=OLD_JOBS)
+    crawl_source(
+        _cfg(),
+        store,
+        max_jobs=10,
+        max_pages=5,
+        fetcher=fetcher,
+        html_root=tmp_path / "raw",
+        recheck_limit=0,
+    )
+    assert ("gone", "7001") not in store.calls

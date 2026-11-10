@@ -68,8 +68,9 @@ psql "$DATABASE_URL" -f db/seed/seed_reference_data.sql      # 34 tỉnh, nhóm 
 psql "$DATABASE_URL" -f db/migrations/0002_fx_rates.sql
 psql "$DATABASE_URL" -f db/migrations/0003_skill_tree_sections.sql
 psql "$DATABASE_URL" -f db/seed/seed_skills.sql              # từ điển kỹ năng (sinh từ YAML)
-psql "$DATABASE_URL" -f db/migrations/0004_job_skill_levels.sql
-psql "$DATABASE_URL" -f db/migrations/0005_job_skills_api.sql   # view thẻ kỹ năng cho web
+psql "$DATABASE_URL" -f db/migrations/0004_close_stale_jobs.sql
+psql "$DATABASE_URL" -f db/migrations/0005_job_skill_levels.sql
+psql "$DATABASE_URL" -f db/migrations/0006_job_skills_api.sql   # view thẻ kỹ năng cho web
 ```
 
 Migration và seed đều chạy lại được nhiều lần. Nếu `DATABASE_URL` có dạng `postgresql+psycopg://…` thì bỏ `+psycopg` khi dùng với `psql`.

@@ -1,4 +1,4 @@
-"""S2-D04: ghi core.job_skills (migration 0004). Bỏ qua nếu không đặt TEST_DATABASE_URL.
+"""S2-D04: ghi core.job_skills (migration 0005). Bỏ qua nếu không đặt TEST_DATABASE_URL.
 
 Chạy trong transaction rồi rollback, không để lại dữ liệu (KHÔNG dùng Supabase production).
 """
@@ -27,7 +27,7 @@ def conn():
 
     with psycopg.connect(DSN) as c, c.transaction(force_rollback=True):
         if not has_levels_schema(c):
-            pytest.skip("DB thử chưa chạy 0004_job_skill_levels.sql")
+            pytest.skip("DB thử chưa chạy 0005_job_skill_levels.sql")
         if not c.execute("select 1 from ref.skills where slug = 'java'").fetchone():
             pytest.skip("DB thử chưa chạy db/seed/seed_skills.sql")
         yield c
@@ -104,7 +104,7 @@ def test_web_view_and_search_skip_mentioned(conn):
     from skillkit.levels.db import label_and_write, select_jobs
 
     if not conn.execute("select to_regclass('api.v_job_skills')").fetchone()[0]:
-        pytest.skip("DB thử chưa chạy 0005_job_skills_api.sql")
+        pytest.skip("DB thử chưa chạy 0006_job_skills_api.sql")
     labeler = SkillLabeler.default(with_model=False)
     job_id = _open_job(conn, JD)
     label_and_write(
