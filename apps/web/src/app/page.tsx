@@ -7,19 +7,26 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-/** Số tin IT đang mở (view api.v_open_jobs). null khi DB chưa sẵn sàng. */
-async function countOpenJobs(): Promise<number | null> {
+/**
+ * Số tin IT đang mở (view api.v_open_jobs); `lastHours` = chỉ đếm tin thấy lần đầu trong N giờ qua.
+ * null khi DB chưa sẵn sàng.
+ */
+async function countOpenJobs(lastHours?: number): Promise<number | null> {
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
-  const { count, error } = await supabase
-    .schema("api")
-    .from("v_open_jobs")
-    .select("id", { count: "exact", head: true });
+  let query = supabase.schema("api").from("v_open_jobs").select("id", { count: "exact", head: true });
+  if (lastHours) {
+    const since = new Date(Date.now() - lastHours * 3_600_000);
+    query = query.gte("first_seen_at", since.toISOString());
+  }
+  const { count, error } = await query;
   return error ? null : count;
 }
 
+const fmt = (n: number | null) => (n === null ? undefined : n.toLocaleString("vi-VN"));
+
 function SearchBox() {
-  // Trang /viec-lam (S2-H03) đọc ?q= để tìm kiếm.
+  // Trang /viec-lam đọc ?q= để tìm kiếm.
   return (
     <form action="/viec-lam" className="flex gap-2">
       <Input
@@ -37,7 +44,7 @@ function SearchBox() {
 
 export default async function HomePage() {
   const [session, openJobs] = await Promise.all([getSession(), countOpenJobs()]);
-  const jobsValue = openJobs === null ? undefined : openJobs.toLocaleString("vi-VN");
+  const jobsValue = fmt(openJobs);
 
   if (!session) {
     return (
@@ -56,19 +63,20 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard label="Việc IT đang mở" value={jobsValue} hint="Dữ liệu nối ở S2-H02" />
+          <StatCard label="Việc IT đang mở" value={jobsValue} hint="Cập nhật mỗi ngày từ các trang tuyển dụng" />
         </div>
       </PageShell>
     );
   }
 
   const name = session.email?.split("@")[0] ?? "bạn";
+  const newJobs = await countOpenJobs(24);
   return (
     <PageShell title={`Chào ${name}`}>
       <SearchBox />
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="Việc IT đang mở" value={jobsValue} hint="Từ các nguồn đang bật" />
-        <StatCard label="Việc mới 24 giờ" hint="Nối dữ liệu ở S2-H02" soon />
+        <StatCard label="Việc mới 24 giờ" value={fmt(newJobs)} hint="Tin thấy lần đầu trong 24 giờ qua" />
         <StatCard label="Tải CV để nhận Top N việc phù hợp" hint="Sprint 3–4" soon />
       </div>
     </PageShell>

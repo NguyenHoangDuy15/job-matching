@@ -29,8 +29,11 @@ src/
     dang-ky, dang-nhap, quen-mat-khau, dat-lai-mat-khau    trang xác thực (US-01)
     auth/callback/route.ts   đổi ?code= lấy phiên (link email, Google)
     page.tsx · hr/ · admin/ · 403/     trang chủ theo vai trò (US-02)
+    viec-lam/            danh sách việc từ rpc api.search_jobs (US-03)
     actions/auth.ts      Server Action: đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu, đăng xuất
+  components/jobs/       thẻ việc
   lib/
+    jobs/                gọi rpc api.search_jobs, định dạng lương/ngày/nguồn
     auth-rules.ts        bảng route × vai trò, đọc claim JWT (user_role, account_status, org_id)
     auth.ts              getSession(), requireAccess() — kiểm quyền lần 2 trong trang
     supabase/            client trình duyệt / server, biến môi trường
