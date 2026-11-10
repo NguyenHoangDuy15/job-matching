@@ -5,9 +5,11 @@ rows = labeler.label_text("123", jd_text)               # toàn văn JD
 rows = labeler.label_columns("123", {"requirements": ...})  # 4 cột section trong core.jobs
 """
 
+import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from skillkit.levels.cascade import (
@@ -18,7 +20,7 @@ from skillkit.levels.cascade import (
     label_mention,
     load_cascade_config,
 )
-from skillkit.levels.rules import Cues, Decision, Sec, load_cues
+from skillkit.levels.rules import DEFAULT_CONFIG, Cues, Decision, Sec, load_cues
 from skillkit.levels.tier2 import Tier2Classifier, load_tier2
 from skillkit.matcher import SkillMatcher, prepare
 from skillkit.sections import _is_preferred, assign_lines, default_headings
@@ -35,6 +37,12 @@ _SECTION = {
 }
 SECTION_COLUMNS = ("description", "requirements", "preferred", "benefits")
 _PARENS = re.compile(r"\([^()]*\)")
+SKILLS_YAML = ROOT / "config" / "skills.yaml"
+
+
+@lru_cache(maxsize=8)
+def _digest(path: Path) -> str:
+    return hashlib.sha1(path.read_bytes()).hexdigest()[:8]
 
 
 def rule_section(label: str, line: str, has_sections: bool) -> Sec:
@@ -64,12 +72,18 @@ class SkillLabeler:
     def default(cls, with_model: bool = True) -> "SkillLabeler":
         config = load_cascade_config()
         clf = load_tier2(ROOT / config.model_path) if with_model else None
-        matcher = SkillMatcher(load_taxonomy(ROOT / "config" / "skills.yaml"))
+        matcher = SkillMatcher(load_taxonomy(SKILLS_YAML))
         return cls(matcher, clf, config, load_cues())
 
     @property
     def model_version(self) -> str:
-        return f"dict+{RULES_VERSION}+{self.clf.version if self.clf else 'no-model'}"
+        """dict-<băm skills.yaml>+rules-v1-<băm skill_levels.yaml>+<model>.
+
+        Đổi từ điển, cue hay model là đổi chuỗi này, nên `label_skills.py --stale` và bước
+        kỹ năng sau crawl tự gắn lại các tin cũ.
+        """
+        model = self.clf.version if self.clf else "no-model"
+        return f"dict-{_digest(SKILLS_YAML)}+{RULES_VERSION}-{_digest(DEFAULT_CONFIG)}+{model}"
 
     def mentions(
         self, jd_id: str, lines: Iterable[tuple[str, str]], has_sections: bool
