@@ -7,7 +7,9 @@ CI (tests/unit/test_skill_seed.py) báo đỏ nếu file SQL lệch với YAML.
 - ref.skill_aliases: tên chuẩn + alias, chuẩn hóa NFC + chữ thường, GIỮ DẤU (khớp
   skillkit.matcher). Cách viết nhập nhằng có needs_context = true và context_rule (jsonb).
 - Kỹ năng/alias bị xóa khỏi YAML: skill chuyển is_active = false, alias bị xóa.
-- Cây cha–con chưa ghi được vì ref.skills chưa có parent_id (đề xuất migration 0003).
+- Cây cha–con: ref.skills.parent_id (migration 0003). Kỹ năng level 3 trỏ về kỹ năng
+  level 2; level 2 có parent_id = NULL (nhóm level 1 nằm ở ref.skill_categories).
+  DB chưa chạy 0003 thì bước này tự bỏ qua.
 """
 
 import json
@@ -68,8 +70,19 @@ def rows(taxonomy: Taxonomy) -> tuple[list[tuple], list[tuple]]:
     return skills, aliases
 
 
+def parent_pairs(taxonomy: Taxonomy) -> list[tuple[str, str | None]]:
+    """(slug, slug cha) cho mọi kỹ năng; cha là None với kỹ năng level 2."""
+    return [
+        (s.id, s.parent if s.level == 3 else None)
+        for s in sorted((s for s in taxonomy if s.level > 1), key=lambda s: s.id)
+    ]
+
+
 def render(taxonomy: Taxonomy) -> str:
     skills, aliases = rows(taxonomy)
+    tree_values = ",\n".join(
+        f"      ({_q(slug)}, {_q(parent)})" for slug, parent in parent_pairs(taxonomy)
+    )
     skill_values = ",\n".join(
         f"  ({_q(slug)}, {_q(name)}, {cat}, {_q(kind)}, 'manual')"
         for slug, name, cat, kind in skills
@@ -109,6 +122,33 @@ join ref.skills s on s.slug = v.slug
 on conflict (alias_norm) do update
   set skill_id = excluded.skill_id, needs_context = excluded.needs_context,
       context_rule = excluded.context_rule;
+
+-- Cây kỹ năng (cần migration 0003). Hai bước để không vướng trigger ref.check_skill_parent
+-- (cây 2 tầng): (a) bỏ cha của mọi kỹ năng có cha sai, (b) gán cha cho kỹ năng còn thiếu.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'ref' and table_name = 'skills'
+                    and column_name = 'parent_id') then
+    raise notice 'ref.skills chưa có parent_id (migration 0003): bỏ qua cây kỹ năng';
+    return;
+  end if;
+
+  drop table if exists pg_temp.skill_tree;
+  create temp table skill_tree (slug text primary key, parent_slug text) on commit drop;
+  insert into skill_tree values
+{tree_values};
+
+  update ref.skills s set parent_id = null
+    from skill_tree t
+    left join ref.skills p on p.slug = t.parent_slug
+   where s.slug = t.slug and s.parent_id is distinct from p.id and s.parent_id is not null;
+
+  update ref.skills s set parent_id = p.id
+    from skill_tree t
+    join ref.skills p on p.slug = t.parent_slug
+   where s.slug = t.slug and s.parent_id is null;
+end $$;
 """
 
 
