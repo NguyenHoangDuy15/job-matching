@@ -1,0 +1,58 @@
+# Nhãn gán tay theo NGHĨA cho bộ 50 JD (scripts/build_jd_gold.py). Mặc định mỗi câu mang nhãn
+# của cột gốc VietJobs (description / requirements); ở đây chỉ ghi các câu khác mặc định.
+# Khóa: số dòng trong data/interim/vietjobs_it.csv → cột → {chỉ số câu: nhãn}.
+# Nhãn: description | requirements | preferred | benefits | other | heading (heading không chấm).
+# Quy ước: câu trộn bắt buộc + ưu tiên ("Thành thạo Photoshop, biết AI là lợi thế") gán theo
+# vế đầu (requirements); "(ưu tiên X)" trong một yêu cầu bắt buộc vẫn là requirements.
+# Người gán: Claude, cần Duy duyệt lại trước khi dùng cho S2-D07.
+1226: {requirements: {1: preferred}}
+716: {requirements: {6: preferred}}
+166: {requirements: {0: heading, 7: heading, 8: preferred, 9: preferred, 10: preferred, 11: preferred}}
+1779: {requirements: {7: preferred, 9: preferred}}
+37: {requirements: {4: preferred, 5: preferred}}
+724: {requirements: {2: preferred}}
+59: {requirements: {4: preferred}}
+948: {requirements: {1: preferred}}
+1294: {requirements: {5: preferred}}
+364: {requirements: {5: preferred}}
+130:
+  description: {0: heading}
+  requirements: {6: preferred, 12: preferred, 16: heading, 17: preferred, 18: preferred, 19: preferred}
+191:
+  description: {0: other, 1: heading}
+  requirements: {0: heading}
+688: {description: {0: other}}
+1066: {requirements: {6: preferred}}
+784: {description: {1: requirements}}
+1085: {requirements: {1: preferred, 6: preferred, 7: preferred, 8: preferred}}
+1422:
+  description: {0: other, 1: other, 2: other, 3: other, 4: heading}
+  requirements: {0: heading, 5: preferred, 6: heading, 7: preferred, 8: preferred, 9: preferred}
+1036:
+  description: {1: preferred}
+  requirements: {7: preferred}
+1713: {requirements: {7: preferred}}
+428: {requirements: {4: preferred}}
+249:
+  description: {3: heading}
+  requirements: {16: heading, 20: heading, 21: preferred, 22: preferred}
+1087: {requirements: {8: preferred}}
+1762: {requirements: {8: preferred}}
+1368:
+  description: {0: heading}
+  requirements: {0: heading}
+758: {requirements: {2: preferred}}
+1392: {requirements: {5: preferred}}
+55: {requirements: {5: preferred}}
+1611: {requirements: {9: preferred}}
+1326: {requirements: {4: preferred}}
+1793: {requirements: {2: preferred}}
+816:
+  description: {0: other, 1: other, 2: heading}
+  requirements: {0: heading, 2: preferred}
+761: {requirements: {3: preferred, 7: preferred}}
+387: {requirements: {1: preferred, 3: preferred, 6: preferred, 8: preferred, 9: preferred}}
+902: {requirements: {2: preferred}}
+1311: {requirements: {10: preferred}}
+745: {description: {4: other}}
+295: {requirements: {2: preferred}}

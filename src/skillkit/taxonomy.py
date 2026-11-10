@@ -2,7 +2,7 @@
 
 import unicodedata
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator, model_validator
@@ -10,20 +10,44 @@ from pydantic import BaseModel, ConfigDict, ValidationError, field_validator, mo
 # 1 = nhóm lớn, 2 = kỹ năng cụ thể, 3 = framework/công cụ con
 ALLOWED_LEVELS = {1, 2, 3}
 
+# Khớp CHECK của ref.skills.kind (migration 0001).
+Kind = Literal["hard", "tool", "language", "framework", "cloud", "soft", "domain"]
+
 
 class TaxonomyError(ValueError):
     """Dữ liệu skills.yaml sai; thông điệp nêu rõ id/alias lỗi."""
+
+
+class ContextRule(BaseModel):
+    """Quy tắc cho từ nhập nhằng ("Go", "R", "C"...). Lưu vào ref.skill_aliases.context_rule.
+
+    Một lần khớp `terms` chỉ được nhận khi: đúng dạng chữ trong `forms` (nếu có), không nằm
+    trong cụm `reject`, không có từ `veto` trong cửa sổ, và (đứng trong danh sách kỹ năng
+    hoặc có từ ngữ cảnh của skill trong cửa sổ `window` token).
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, frozen=True)
+
+    terms: list[str]
+    forms: list[str] = []
+    reject: list[str] = []
+    veto: list[str] = []
+    window: int = 6
 
 
 class Skill(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, frozen=True)
 
     id: str
+    name: str | None = None  # tên chuẩn hiển thị (US-10/AC2); bắt buộc khi sinh seed DB
     aliases: list[str] = []
     parent: str | None = None
     level: int
+    kind: Kind = "hard"
+    category: int | None = None  # id ref.skill_categories; level 1 bắt buộc, level 2–3 ghi đè
     ambiguous: bool = False
     context: list[str] = []
+    rule: ContextRule | None = None
 
     @field_validator("id")
     @classmethod
@@ -44,7 +68,25 @@ class Skill(BaseModel):
     def ambiguous_needs_context(self) -> Self:
         if self.ambiguous and not self.context:
             raise ValueError(f"{self.id}: ambiguous=True thì context không được rỗng")
+        if self.rule is not None and not self.ambiguous:
+            raise ValueError(f"{self.id}: có rule thì phải ambiguous=True")
+        if self.rule is not None:
+            known = {_norm(t) for t in self.terms()}
+            unknown = [t for t in self.rule.terms if _norm(t) not in known]
+            if unknown:
+                raise ValueError(f"{self.id}: rule.terms {unknown} không có trong name/aliases")
         return self
+
+    def terms(self) -> list[str]:
+        """Các cách viết dùng để khớp trong JD: tên chuẩn + alias (không gồm id)."""
+        return [t for t in [self.name, *self.aliases] if t]
+
+    def ambiguous_terms(self) -> set[str]:
+        """Cách viết cần kiểm tra ngữ cảnh; ambiguous mà không có rule thì mọi cách viết."""
+        if not self.ambiguous:
+            return set()
+        source = self.rule.terms if self.rule else self.terms()
+        return {_norm(t) for t in source}
 
 
 class Taxonomy:
@@ -77,6 +119,21 @@ class Taxonomy:
         """Con trực tiếp, sắp theo id."""
         return list(self._children[skill_id])
 
+    def __iter__(self):
+        return iter(self._by_id.values())
+
+    def root(self, skill_id: str) -> Skill:
+        """Mục level 1 chứa skill này."""
+        chain = [skill_id, *self.ancestors(skill_id)]
+        return self._by_id[chain[-1]]
+
+    def category_of(self, skill_id: str) -> int | None:
+        """Nhóm của skill: tự ghi thì dùng, không thì lấy của tổ tiên gần nhất."""
+        for sid in [skill_id, *self.ancestors(skill_id)]:
+            if self._by_id[sid].category is not None:
+                return self._by_id[sid].category
+        return None
+
     def family_members(self, skill_id: str) -> list[str]:
         """Chính nó + tổ tiên + mọi hậu duệ, sắp theo id; không gồm anh em cùng cha."""
         members = {skill_id, *self.ancestors(skill_id)}
@@ -89,7 +146,7 @@ class Taxonomy:
 
 
 def _norm(text: str) -> str:
-    return unicodedata.normalize("NFC", text).lower()
+    return " ".join(unicodedata.normalize("NFC", text).lower().split())
 
 
 def _parse_skill(entry: Any, index: int) -> Skill:
@@ -114,7 +171,7 @@ def _check_unique_terms(skills: list[Skill]) -> None:
     # Gom cả id lẫn alias: khi trích kỹ năng, một từ khóa chỉ được trỏ tới một skill.
     owners: dict[str, str] = {}
     for s in skills:
-        for term in [s.id, *s.aliases]:
+        for term in dict.fromkeys(_norm(t) for t in [s.id, *s.terms()]):
             owner = owners.setdefault(_norm(term), s.id)
             if owner != s.id:
                 raise TaxonomyError(f"alias '{term}' trùng giữa {owner} và {s.id}")

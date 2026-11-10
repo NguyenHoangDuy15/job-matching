@@ -1,0 +1,159 @@
+# Heading Việt–Anh của 4 section JD (S2-D03, US-10). So khớp sau khi bỏ dấu, chữ thường,
+# bỏ ký tự đầu dòng/số thứ tự và dấu ":" cuối. Một dòng là heading khi bắt đầu bằng một cụm
+# dưới đây và phần còn lại không quá `max_extra_words` từ ("Yêu cầu ứng viên", "Quyền lợi được hưởng").
+# Cụm dài hơn được thử trước. max_heading_words phải ≥ số từ của cụm dài nhất + max_extra_words. "other" = phần không thuộc 4 section (không trộn vào mô tả).
+max_heading_words: 14
+max_extra_words: 4
+
+sections:
+  description:
+    - mo ta cong viec
+    - mo ta chi tiet cong viec
+    - mo ta
+    - chi tiet cong viec
+    - noi dung cong viec
+    - nhiem vu
+    - trach nhiem
+    - cong viec chinh
+    - cong viec cu the
+    - vai tro
+    - job description
+    - job descriptions
+    - job summary
+    - description
+    - responsibilities
+    - key responsibilities
+    - core responsibilities
+    - main responsibilities
+    - your responsibilities
+    - duties
+    - what you will do
+    - what you'll do
+    - what you will be doing
+    - your role
+    - the role
+    - role overview
+    - about the role
+    - about the job
+  requirements:
+    - yeu cau cong viec
+    - yeu cau ung vien
+    - yeu cau
+    - tieu chuan
+    - tieu chi
+    - ky nang va kinh nghiem
+    - ky nang & kinh nghiem
+    - kinh nghiem va ky nang
+    - ky nang yeu cau
+    - ky nang can co
+    - trinh do
+    - requirements
+    - requirement
+    - job requirements
+    - qualifications
+    - required qualifications
+    - minimum qualifications
+    - your skills and experience
+    - skills and experience
+    - required skills
+    - required skills/experience
+    - competencies required
+    - must have
+    - must-have
+    - what we are looking for
+    - what we're looking for
+    - who you are
+    - about you
+  preferred:
+    - uu tien
+    - diem cong
+    - loi the
+    - la loi the
+    - diem cong/uu tien
+    - nice to have
+    - nice-to-have
+    - good to have
+    - preferred
+    - preferred qualifications
+    - preferred skills
+    - plus points
+    - plus point
+    - bonus points
+    - it's a plus
+    - is a plus
+  benefits:
+    - quyen loi
+    - phuc loi
+    - che do dai ngo
+    - che do phuc loi
+    - che do
+    - dai ngo
+    - thu nhap
+    - luong thuong
+    - cac phuc loi danh cho ban
+    - tai sao ban se yeu thich lam viec tai day
+    - vi sao nen gia nhap
+    - benefits
+    - benefit
+    - perks
+    - perks and benefits
+    - what we offer
+    - what we can offer
+    - what you will get
+    - what you'll get
+    - why you'll love working here
+    - why you will love working here
+    - why join us
+    - compensation
+  other:
+    - thong tin chung
+    - dia diem lam viec
+    - dia diem
+    - thoi gian lam viec
+    - gio lam viec
+    - cach thuc ung tuyen
+    - quy trinh tuyen dung
+    - quy trinh phong van
+    - cach ung tuyen
+    - ho so bao gom
+    - ho so ung tuyen
+    - han nop ho so
+    - thong tin lien he
+    - lien he
+    - gioi thieu cong ty
+    - ve chung toi
+    - ve cong ty
+    - about us
+    - about the company
+    - about company
+    - who we are
+    - how to apply
+    - location
+    - working location
+    - working time
+    - working hours
+    - contact
+
+# Câu trong mục Yêu cầu có dấu hiệu dưới đây được chuyển sang Ưu tiên (US-10/AC1).
+# Nội dung trong ngoặc được bỏ qua ("Có thẩm mỹ tốt (ưu tiên mạnh về in ấn)" vẫn là bắt buộc),
+# trừ khi cả cụm trong ngoặc chỉ là dấu hiệu ("(điểm cộng, không bắt buộc)", "(Plus)").
+preferred_markers:
+  starts: [uu tien, diem cong, nice to have, preferred, preferably, plus, khuyen khich, bonus]
+  contains: [loi the, diem cong, duoc uu tien, uu tien ung vien, khong bat buoc, is a plus,
+             a plus, advantage, nice to have, nice-to-have, good to have, is preferred, cang tot]
+  parenthetical: [diem cong, khong bat buoc, plus, nice to have, optional, uu tien, preferred]
+
+# Heading lạ (không có ở trên): dòng ngắn, không gạch đầu dòng, không kết thúc bằng dấu chấm.
+# Section được đoán theo nội dung khối bên dưới: đếm từ gợi ý, cần ít nhất `min_hits` lần.
+unknown_heading:
+  max_words: 7
+  min_hits: 2
+  cues:
+    description: [thuc hien, phat trien, tham gia, xay dung, phoi hop, thiet ke, trien khai,
+                  bao cao, ho tro, nghien cuu, van hanh, develop, build, design, maintain,
+                  implement, collaborate, work with]
+    requirements: [kinh nghiem, tot nghiep, ky nang, thanh thao, hieu biet, kien thuc, co kha nang,
+                   trinh do, dai hoc, cao dang, experience, degree, knowledge, proficient, skills]
+    benefits: [thuong, bao hiem, luong, nghi phep, du lich, team building, teambuilding, phu cap,
+               tro cap, thu nhap, kham suc khoe, an trua, bhxh, salary, bonus, insurance,
+               annual leave, holiday, moi truong lam viec, co hoi thang tien]
