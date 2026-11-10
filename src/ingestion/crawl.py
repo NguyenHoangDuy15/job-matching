@@ -12,7 +12,7 @@ Luồng: trang danh sách → link tin → trang chi tiết → JSON-LD JobPosti
 import argparse
 import os
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from ingestion.fetch import Blocked, CrawlError, NotAllowed, PoliteFetcher
@@ -221,6 +221,9 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--max-pages", type=int, help="ghi đè listing.max_pages")
     p_run.add_argument("--dry-run", action="store_true", help="không ghi DB, ghi data/raw/crawl")
     p_run.add_argument("--run-type", default="manual", choices=["manual", "daily", "backfill"])
+    p_run.add_argument(
+        "--skip-fx", action="store_true", help="không cập nhật tỷ giá trước khi crawl"
+    )
 
     p_parse = sub.add_parser("parse", help="đọc 1 file HTML đã lưu, không cần mạng")
     p_parse.add_argument("path", type=Path)
@@ -246,7 +249,18 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("thiếu DATABASE_URL (biến môi trường hoặc file .env); hoặc dùng --dry-run")
         store = PgStore(dsn)
         if not store.salary_v2:
-            _log("! DB chưa chạy db/sql/fx_rates.sql: chỉ ghi các cột lương của schema v2.0.")
+            _log("! DB chưa chạy 0002_fx_rates.sql: chỉ ghi các cột lương của schema v2.0.")
+        elif not args.skip_fx:
+            fx = store.sync_fx(date.today())  # ① tỷ giá trước, ② crawl sau (S2-D02)
+            usd = store.fx_rates.get("USD")
+            _log(
+                f"tỷ giá USD {usd.rate_vnd:,.0f} ({usd.source}, {usd.rate_date}); "
+                f"tính lại lương {fx.jobs_refreshed} tin ngoại tệ"
+                if usd
+                else "! chưa có tỷ giá USD: tin ngoại tệ chưa có lương VND"
+            )
+            for warning in fx.update.warnings:
+                _log(f"! {warning}")
     exit_code = 0
     try:
         for name in names:

@@ -3,7 +3,8 @@
 Một tin = một transaction:
   raw.job_snapshots (bản gốc, không ghi đè) → core.companies → core.jobs
   → core.job_sources (nguồn gốc) → core.job_locations (tỉnh chuẩn, dùng location.py của S2-D01).
-Lương dùng salary.py của S2-D02; các cột salary_* mới chỉ ghi khi DB đã chạy db/sql/fx_rates.sql.
+Lương dùng salary.py của S2-D02; các cột salary_* mới chỉ ghi khi DB đã chạy
+db/migrations/0002_fx_rates.sql.
 """
 
 import gzip
@@ -15,7 +16,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
-from ingestion.fx import FxRate
+from ingestion.fx import FxRate, FxSyncResult, load_latest_pg, sync_rates_pg
 from ingestion.location import ProvinceIndex, build_index, normalize_key, normalize_location
 from ingestion.models import JobPostingRaw
 from ingestion.salary import parse_salary, to_vnd
@@ -46,7 +47,7 @@ _LEGAL_WORDS = (
     "inc",
     "llc",
 )
-# Cột salary_* thêm bởi db/sql/fx_rates.sql (S2-D02).
+# Cột salary_* thêm bởi db/migrations/0002_fx_rates.sql (S2-D02).
 SALARY_V2_COLUMNS = (
     "salary_amount_min",
     "salary_amount_max",
@@ -239,15 +240,16 @@ class PgStore:
 
     def _fx_rates(self) -> dict[str, FxRate]:
         exists = self.conn.execute("select to_regclass('ref.fx_latest') is not null").fetchone()[0]
-        rates = {}
-        if exists:
-            for currency, rate, rate_date in self.conn.execute(
-                "select currency, rate_vnd, rate_date from ref.fx_latest"
-            ):
-                code = currency.strip()
-                rates[code] = FxRate(currency=code, rate_vnd=float(rate), rate_date=rate_date)
+        rates = load_latest_pg(self.conn) if exists else {}
         self.conn.commit()
         return rates
+
+    def sync_fx(self, today: date) -> FxSyncResult:
+        """Bước ① trước crawl: cập nhật tỷ giá, tính lại lương tin ngoại tệ, nạp lại bảng tỷ giá
+        để tin mới trong lượt này dùng cùng tỷ giá với tin cũ."""
+        result = sync_rates_pg(self.conn, today)
+        self.fx_rates = self._fx_rates()
+        return result
 
     def source_id(self, code: str) -> int:
         row = self.conn.execute("select id from ops.sources where code = %s", (code,)).fetchone()
