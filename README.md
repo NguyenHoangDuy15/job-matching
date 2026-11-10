@@ -22,7 +22,7 @@ Cloud Run Job (02:00)                          Supabase (Postgres 16 + pgvector 
 │ ① tỷ giá  ingestion.fx             │──────▶ │ ref     từ điển: 34 tỉnh, kỹ năng,    │
 │ ② crawl   ingestion.crawl (JSON-LD)│        │         tỷ giá                         │
 │   chuẩn hóa: 34 tỉnh, lương VND,   │──────▶ │ raw     bản gốc từng lượt crawl        │
-│   tách section, kỹ năng + mức      │        │ core    jobs, job_locations, job_skills│
+│ ③ kỹ năng + mức  skillkit.levels   │        │ core    jobs, job_locations, job_skills│
 └────────────────────────────────────┘        │ app     người dùng, CV, HR (RLS)       │
                                                │ api     view + RPC cho web             │
 Next.js trên Cloudflare (apps/web) ──────────▶ │ ops / mart / eval                      │
@@ -84,7 +84,8 @@ TEST_DATABASE_URL=postgresql://app:change_me@localhost:5432/jobs uv run pytest
 ## Luồng dữ liệu tin tuyển dụng
 
 ```bash
-# Crawl: tự cập nhật tỷ giá trước, rồi crawl, chuẩn hóa và ghi DB
+# Crawl: ① cập nhật tỷ giá, ② crawl + chuẩn hóa tỉnh/lương/section và ghi DB,
+# ③ gắn kỹ năng + mức cho tin mới/đổi và tin gắn bằng từ điển cũ (--skip-skills để bỏ)
 uv run python scripts/crawl.py run --source itviec --max-jobs 50
 uv run python scripts/crawl.py run --source itviec --dry-run       # không ghi DB, ghi data/raw/crawl
 uv run python scripts/crawl.py probe --source vietnamworks         # kiểm cấu hình nguồn

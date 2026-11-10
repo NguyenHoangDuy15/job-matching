@@ -7,6 +7,8 @@ Luồng: trang danh sách → link tin → trang chi tiết → JSON-LD JobPosti
     uv run python scripts/crawl.py run --source itviec --max-jobs 150 --dry-run
     uv run python scripts/crawl.py run --source itviec --source vietnamworks --max-jobs 150
     uv run python scripts/crawl.py parse duong/dan/trang.html --source itviec
+
+Sau crawl (S2-D06): ③ gắn kỹ năng + mức cho tin mới/đổi (bỏ bằng --skip-skills).
 """
 
 import argparse
@@ -179,6 +181,45 @@ def crawl_source(
     return stats, status
 
 
+def label_skills_after_crawl(store: PgStore) -> bool:
+    """Bước ③ (S2-D06): gắn kỹ năng + mức cho tin mới / đổi nội dung trong lượt này, cùng các tin
+    đang mở gắn bằng từ điển / luật cũ. Lỗi ở bước này không làm mất dữ liệu đã crawl.
+
+    Trả False nếu lỗi (Cloud Run Job báo thất bại để có cảnh báo).
+    """
+    from skillkit.levels.db import has_levels_schema, label_and_write, select_jobs
+    from skillkit.levels.pipeline import SkillLabeler
+
+    conn = store.conn
+    try:
+        if not has_levels_schema(conn):
+            conn.rollback()
+            _log("! DB chưa chạy 0005_job_skill_levels.sql: bỏ qua bước gắn kỹ năng.")
+            return True
+        labeler = SkillLabeler.default()
+        version = labeler.model_version
+        rows = {
+            r[0]: r for r in select_jobs(conn, model_version=version, only_open=True, stale=True)
+        }
+        if store.changed_job_ids:
+            changed = select_jobs(conn, model_version=version, ids=store.changed_job_ids)
+            rows.update({r[0]: r for r in changed})
+        stats = label_and_write(conn, labeler, list(rows.values()))
+        conn.commit()
+    except Exception as exc:  # không để bước phụ làm hỏng lượt crawl
+        conn.rollback()
+        _log(f"  ✗ gắn kỹ năng lỗi: {exc!r}")
+        return False
+    tier2 = "có Tầng 2" if labeler.clf else "chỉ luật (không có file model)"
+    _log(
+        f"== kỹ năng ({version}, {tier2}) ==\n"
+        f"  tin đổi trong lượt: {len(store.changed_job_ids)} · đã gắn: {stats.get('tin', 0)} tin · "
+        f"bắt buộc {stats.get('required', 0)} · ưu tiên {stats.get('preferred', 0)} · "
+        f"chỉ nhắc {stats.get('mentioned', 0)}"
+    )
+    return True
+
+
 # ---- CLI -------------------------------------------------------------------------
 def _database_url() -> str | None:
     if os.environ.get("DATABASE_URL"):
@@ -274,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument(
         "--skip-fx", action="store_true", help="không cập nhật tỷ giá trước khi crawl"
     )
+    p_run.add_argument("--skip-skills", action="store_true", help="không gắn kỹ năng sau khi crawl")
 
     p_parse = sub.add_parser("parse", help="đọc 1 file HTML đã lưu, không cần mạng")
     p_parse.add_argument("path", type=Path)
@@ -330,6 +372,11 @@ def main(argv: list[str] | None = None) -> int:
                 status = "failed"
             if status == "failed":
                 exit_code = 1
+        skills_ok = (
+            not isinstance(store, PgStore) or args.skip_skills or label_skills_after_crawl(store)
+        )
+        if not skills_ok:
+            exit_code = 1
     finally:
         store.close()
     return exit_code
