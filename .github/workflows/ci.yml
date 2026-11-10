@@ -1,5 +1,6 @@
-# CI chặn PR lỗi (TASK-H004, US-01.06/AC1).
-# Tên 3 job (lint, test, gitleaks) là tên required status check trong ruleset main: đổi tên job phải sửa ruleset.
+# CI chặn PR lỗi (TASK-H004, US-01.06/AC1; EN-01: lint + test + build).
+# Tên job (lint, test, gitleaks, web) là tên required status check trong ruleset main: đổi tên job phải sửa ruleset.
+# Job `web` thêm ở S2-H01: sau lần chạy đầu, nhờ admin thêm "web" vào required checks.
 name: ci
 
 on:
@@ -59,3 +60,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Comment vào PR cần quyền ghi; tắt đi, chi tiết leak vẫn có trong log và Job summary.
           GITLEAKS_ENABLE_COMMENTS: false
+
+  web:
+    # Web Next.js (apps/web): lint, kiểm kiểu và build giống hệt lúc deploy lên Cloudflare.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Cài thư viện
+        run: npm ci
+      - name: eslint
+        run: npm run lint
+      - name: Kiểm kiểu TypeScript
+        run: npm run typecheck
+      # Build không cần khóa Supabase: web tự hiện thông báo "chưa cấu hình" khi thiếu biến.
+      - name: Build OpenNext (Cloudflare)
+        run: npx opennextjs-cloudflare build

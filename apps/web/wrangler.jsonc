@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Tên Worker: URL production sẽ là https://jobmatch-web.<tài-khoản>.workers.dev
+  "name": "jobmatch-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Worker tự gọi lại chính nó (OpenNext cần); tên service phải trùng "name" ở trên.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "jobmatch-web"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
