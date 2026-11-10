@@ -36,10 +36,15 @@ def _log(msg: str) -> None:
 
 
 def discover(cfg: SourceConfig, fetcher: PoliteFetcher, max_jobs: int, max_pages: int, stats):
-    """Đi qua trang danh sách cho tới khi đủ max_jobs hoặc trang không còn tin mới."""
+    """Đi qua trang danh sách cho tới khi đủ max_jobs hoặc trang không còn tin mới.
+
+    Trả (link, đã_quét_đủ). đã_quét_đủ = True khi dừng vì trang không còn tin mới, tức đã thấy
+    hết danh sách của nguồn; chỉ khi đó mới được coi tin không gặp là "vắng mặt" (S2-T06).
+    """
     if not cfg.listing_url:
         raise CrawlError(f"{cfg.name}: chưa cấu hình listing.url trong config/sources.yaml")
     links: dict[str, str] = {}
+    exhausted = False
     for page_no in range(1, max_pages + 1):
         page = fetcher.get(cfg.listing_url.format(page=page_no))
         stats.pages_fetched += 1
@@ -47,11 +52,13 @@ def discover(cfg: SourceConfig, fetcher: PoliteFetcher, max_jobs: int, max_pages
         fresh = {k: v for k, v in found.items() if k not in links}
         _log(f"  danh sách trang {page_no}: {len(found)} link, {len(fresh)} mới")
         if not fresh:
+            exhausted = True
             break
         links.update(fresh)
         if len(links) >= max_jobs:
             break
-    return dict(list(links.items())[:max_jobs])
+    exhausted = exhausted and len(links) <= max_jobs
+    return dict(list(links.items())[:max_jobs]), exhausted
 
 
 def fetch_posting(cfg: SourceConfig, fetcher: PoliteFetcher, job_id: str, url: str):
@@ -77,6 +84,35 @@ def fetch_posting(cfg: SourceConfig, fetcher: PoliteFetcher, job_id: str, url: s
     return posting, page.text
 
 
+def close_missing(cfg, fetcher, store, run_id, stats, full_sweep, recheck_limit, html_root):
+    """Xử lý tin đang theo dõi nhưng không gặp trong lượt này (S2-T06).
+
+    1. Mở lại trang chi tiết của tối đa `recheck_limit` tin: 404/410 → đóng ngay; còn trang thì
+       coi như đã gặp (danh sách có thể chỉ quét một phần vì --max-jobs).
+    2. Nếu lượt này đã quét ĐỦ danh sách: các tin vẫn không gặp được +1 lượt vắng, đủ 3 thì đóng.
+    Bị chặn (403/429) giữa chừng thì dừng, không đếm vắng mặt.
+    """
+    try:
+        for job_id, url in store.unseen_postings(run_id, recheck_limit):
+            try:
+                posting, extra = fetch_posting(cfg, fetcher, job_id, url)
+            except NotAllowed:
+                continue
+            if posting is None:
+                if extra == "gone":
+                    stats.items_closed += store.mark_gone(job_id)
+                    _log(f"  kiểm lại: đã gỡ (404/410) {url}")
+                continue
+            key = html_key(posting)
+            save_html(key, extra, html_root) if html_root else save_html(key, extra)
+            stats.count(store.save(posting, key, run_id))
+    except Blocked as exc:
+        _log(f"  kiểm lại tin vắng mặt bị chặn, bỏ qua bước đếm vắng: {exc}")
+        return
+    if full_sweep:
+        stats.items_closed += store.mark_missing(run_id)
+
+
 def crawl_source(
     cfg: SourceConfig,
     store,
@@ -86,6 +122,7 @@ def crawl_source(
     run_type: str = "manual",
     fetcher: PoliteFetcher | None = None,
     html_root: Path | None = None,
+    recheck_limit: int = 20,
 ):
     fetcher = fetcher or PoliteFetcher(
         cfg.base_url, allowed=cfg.allowed, rate_limit_s=cfg.rate_limit_s
@@ -94,7 +131,7 @@ def crawl_source(
     run_id = store.start_run(cfg.name, cfg.source_id, run_type)
     status, error = "success", None
     try:
-        links = discover(cfg, fetcher, max_jobs, max_pages, stats)
+        links, full_sweep = discover(cfg, fetcher, max_jobs, max_pages, stats)
         _log(f"  → {len(links)} tin sẽ tải (≈ {len(links) * fetcher.limiter.interval:.0f} giây)")
         for i, (job_id, url) in enumerate(links.items(), start=1):
             try:
@@ -104,7 +141,9 @@ def crawl_source(
                 continue
             if posting is None:
                 stats.skip(extra)
-                if error is None:
+                if extra == "gone":  # 404/410: tin đã bị gỡ khỏi nguồn
+                    stats.items_closed += store.mark_gone(job_id)
+                elif error is None:
                     error = f"{extra}: {url}"
                 _log(f"  [{i}/{len(links)}] bỏ qua ({extra}) {url}")
                 continue
@@ -118,6 +157,8 @@ def crawl_source(
             status = "failed"
         elif skipped > max(2, 0.2 * len(links)):  # vài tin 404 là bình thường
             status = "partial"
+        if status == "success":
+            close_missing(cfg, fetcher, store, run_id, stats, full_sweep, recheck_limit, html_root)
     except Blocked as exc:
         status, error = ("partial" if stats.items_seen else "failed"), str(exc)
         _log(f"  DỪNG: {exc}")
@@ -126,11 +167,14 @@ def crawl_source(
         raise
     finally:
         stats.http_errors = fetcher.http_errors
+        if status != "failed":  # hết hạn nộp không phụ thuộc lượt quét có đủ hay không
+            stats.items_closed += store.close_stale()
         store.finish_run(run_id, stats, status, error)
         fetcher.close()
     _log(
         f"  KẾT QUẢ {cfg.name}: {status} · mới {stats.items_new} · cập nhật {stats.items_updated}"
-        f" · đã đọc {stats.items_seen} · bỏ qua {stats.skipped or 0} · request {fetcher.requests}"
+        f" · đã đọc {stats.items_seen} · đóng {stats.items_closed}"
+        f" · bỏ qua {stats.skipped or 0} · request {fetcher.requests}"
     )
     return stats, status
 
@@ -219,6 +263,12 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--source", action="append", required=True)
     p_run.add_argument("--max-jobs", type=int, default=150)
     p_run.add_argument("--max-pages", type=int, help="ghi đè listing.max_pages")
+    p_run.add_argument(
+        "--recheck-limit",
+        type=int,
+        default=20,
+        help="số tin vắng mặt tối đa được mở lại trang chi tiết để kiểm 404/410 (0 = tắt)",
+    )
     p_run.add_argument("--dry-run", action="store_true", help="không ghi DB, ghi data/raw/crawl")
     p_run.add_argument("--run-type", default="manual", choices=["manual", "daily", "backfill"])
     p_run.add_argument(
@@ -273,6 +323,7 @@ def main(argv: list[str] | None = None) -> int:
                     max_jobs=args.max_jobs,
                     max_pages=args.max_pages or cfg.max_pages,
                     run_type=args.run_type,
+                    recheck_limit=args.recheck_limit,
                 )
             except NotAllowed as exc:
                 _log(f"  ✗ {exc}")
