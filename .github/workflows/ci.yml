@@ -83,3 +83,55 @@ jobs:
       # Build không cần khóa Supabase: web tự hiện thông báo "chưa cấu hình" khi thiếu biến.
       - name: Build OpenNext (Cloudflare)
         run: npx opennextjs-cloudflare build
+
+  rls:
+    # Kiểm thử phân quyền RLS + Auth (S2-T02, US-02): dựng Postgres 16 trống, giả lập Supabase
+    # (auth, storage, role), chạy migration + seed rồi db/tests/rls_test.sql.
+    # Sau lần chạy xanh đầu tiên, nhờ admin thêm "rls" vào required checks của ruleset main.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Có sẵn pgvector; pg_trgm, unaccent, citext là contrib đi kèm image.
+        # Không có pg_cron: migration 0001 tự bỏ qua phần đặt lịch khi thiếu schema cron.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v7
+      - name: Giả lập Supabase (auth, storage, role)
+        run: psql -v ON_ERROR_STOP=1 -q -f db/tests/supabase_ci_bootstrap.sql
+      - name: Chạy migration theo thứ tự tên file
+        run: |
+          for f in db/migrations/*.sql; do
+            echo "::group::$f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+            echo "::endgroup::"
+          done
+      - name: Seed dữ liệu tham chiếu
+        run: |
+          for f in db/seed/*.sql; do
+            echo "::group::$f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+            echo "::endgroup::"
+          done
+      - name: rls_test.sql
+        # File tự dừng với lỗi khi có test FAIL. Đếm thêm số PASS để phát hiện test bị xóa nhầm
+        # (DoD S2-T02: tối thiểu 26 test).
+        run: |
+          set -o pipefail
+          psql -v ON_ERROR_STOP=1 -f db/tests/rls_test.sql | tee rls.log
+          passed=$(grep -c '| PASS$' rls.log || true)
+          echo "PASS: $passed"
+          test "$passed" -ge 26
