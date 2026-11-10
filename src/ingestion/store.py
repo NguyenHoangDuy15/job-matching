@@ -145,6 +145,7 @@ def build_job_row(
         "valid_through": posting.valid_through,
         "apply_url": posting.url,
         "status": "expired" if expired else "open",
+        "close_reason": "expired" if expired else None,  # migration 0004
         "content_hash": content_hash(posting),
     }
     return JobRow(
@@ -175,6 +176,7 @@ class RunStats:
     items_new: int = 0
     items_updated: int = 0
     http_errors: int = 0
+    items_closed: int = 0  # tin chuyển sang closed/expired trong lượt (S2-T06)
     skipped: dict[str, int] = field(default_factory=dict)
 
     def skip(self, reason: str) -> None:
@@ -221,6 +223,19 @@ class LocalStore:
     def finish_run(self, run_id, stats: RunStats, status: str, error: str | None) -> None:
         return None
 
+    # Đóng tin (S2-T06): chạy thử không có DB nên không làm gì.
+    def unseen_postings(self, run_id, limit: int) -> list[tuple[str, str]]:
+        return []
+
+    def mark_gone(self, source_job_id: str) -> int:
+        return 0
+
+    def mark_missing(self, run_id) -> int:
+        return 0
+
+    def close_stale(self) -> int:
+        return 0
+
     def close(self) -> None:
         return None
 
@@ -237,6 +252,8 @@ class PgStore:
         self.columns = self._job_columns()
         missing = [c for c in SALARY_V2_COLUMNS if c not in self.columns]
         self.salary_v2 = not missing
+        # Migration 0004 (S2-T06): thiếu thì crawler vẫn chạy, chỉ không tự đóng tin.
+        self.can_close = "close_reason" in self.columns and self._has_close_functions()
         self.index = self._province_index()
         self.fx_rates = self._fx_rates() if self.salary_v2 else {}
 
@@ -248,6 +265,13 @@ class PgStore:
         ).fetchall()
         self.conn.commit()
         return {r[0] for r in rows}
+
+    def _has_close_functions(self) -> bool:
+        found = self.conn.execute(
+            "select to_regprocedure('core.close_stale_jobs()') is not null"
+        ).fetchone()[0]
+        self.conn.commit()
+        return found
 
     def _province_index(self) -> ProvinceIndex:
         provinces = dict(self.conn.execute("select code, name from ref.provinces").fetchall())
@@ -297,7 +321,7 @@ class PgStore:
                 """update ops.crawl_runs
                       set finished_at = now(), status = %s, pages_fetched = %s,
                           items_seen = %s, items_new = %s, items_updated = %s,
-                          http_errors = %s, error_sample = %s
+                          items_closed = %s, http_errors = %s, error_sample = %s
                     where id = %s""",
                 (
                     status,
@@ -305,6 +329,7 @@ class PgStore:
                     stats.items_seen,
                     stats.items_new,
                     stats.items_updated,
+                    stats.items_closed,
                     stats.http_errors,
                     (error or "")[:2000] or None,
                     run_id,
@@ -367,6 +392,16 @@ class PgStore:
                         where id = %s""",
                     (job_id,),
                 )
+                if self.can_close:
+                    # Tin từng bị đóng vì 404 / vắng mặt nay gặp lại: mở lại.
+                    # Còn hạn hay không do core.close_stale_jobs() quyết định cuối lượt.
+                    self.conn.execute(
+                        """update core.jobs
+                              set status = 'open', closed_at = null, close_reason = null
+                            where id = %s and status = 'closed'
+                              and close_reason in ('gone', 'missing')""",
+                        (job_id,),
+                    )
             else:
                 values = self._job_values(row, self._company_id(row.company_name, posting))
                 if existing:
@@ -378,6 +413,10 @@ class PgStore:
                              where id = %(job_id)s""",
                         {**values, "job_id": job_id},
                     )
+                    if values["status"] == "open":  # nội dung mới còn hạn: bỏ dấu đã đóng
+                        self.conn.execute(
+                            "update core.jobs set closed_at = null where id = %s", (job_id,)
+                        )
                 else:
                     result = "new"
                     cols = ", ".join(values)
@@ -403,7 +442,62 @@ class PgStore:
                          last_content_hash = excluded.last_content_hash""",
                 (self._source_id, posting.source_job_id, job_id, posting.url, snapshot_id, digest),
             )
+            if self.can_close:
+                self.conn.execute(
+                    """update core.job_sources set missed_runs = 0
+                        where source_id = %s and source_job_id = %s and missed_runs <> 0""",
+                    (self._source_id, posting.source_job_id),
+                )
         return result
+
+    # ---- đóng tin hết hạn / bị gỡ (S2-T06, migration 0004) ------------------------
+    def unseen_postings(self, run_id: int, limit: int) -> list[tuple[str, str]]:
+        """Tin của nguồn đang theo dõi nhưng chưa gặp trong lượt này: (mã tin, URL)."""
+        if not self.can_close or limit <= 0:
+            return []
+        rows = self.conn.execute(
+            """select s.source_job_id, s.url
+                 from core.job_sources s
+                where s.source_id = %s and s.is_active
+                  and s.last_seen_at < (select started_at from ops.crawl_runs where id = %s)
+                order by s.last_seen_at
+                limit %s""",
+            (self._source_id, run_id, limit),
+        ).fetchall()
+        self.conn.commit()
+        return [(r[0], r[1]) for r in rows]
+
+    def mark_gone(self, source_job_id: str) -> int:
+        """Trang chi tiết trả 404/410. Trả số tin bị đóng (0 nếu tin còn nguồn khác)."""
+        if not self.can_close:
+            return 0
+        with self.conn.transaction():
+            return self.conn.execute(
+                "select core.mark_posting_gone(%s::smallint, %s)",
+                (self._source_id, source_job_id),
+            ).fetchone()[0]
+
+    def mark_missing(self, run_id: int) -> int:
+        """Gọi sau một lượt quét ĐỦ danh sách: +1 lượt vắng cho tin không gặp, đủ 3 thì đóng."""
+        if not self.can_close:
+            return 0
+        with self.conn.transaction():
+            return self.conn.execute(
+                """select core.mark_source_missing(
+                            %s::smallint,
+                            (select started_at from ops.crawl_runs where id = %s))""",
+                (self._source_id, run_id),
+            ).fetchone()[0]
+
+    def close_stale(self) -> int:
+        """Đóng tin quá hạn nộp + tin không còn nguồn. Trả tổng số tin vừa đổi trạng thái."""
+        if not self.can_close:
+            return 0
+        with self.conn.transaction():
+            expired, closed = self.conn.execute(
+                "select expired, closed from core.close_stale_jobs()"
+            ).fetchone()
+        return expired + closed
 
     def close(self) -> None:
         self.conn.close()
