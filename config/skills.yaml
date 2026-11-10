@@ -1,0 +1,562 @@
+# Từ điển kỹ năng IT (S2-D03, US-10/AC2). Nguồn sự thật duy nhất:
+#   sửa file này → `uv run python scripts/build_skill_seed.py` → db/seed/seed_skills.sql.
+# Level 1 = nhóm (ứng với ref.skill_categories), không ghi vào ref.skills.
+# Level 2 = kỹ năng; level 3 = framework/công cụ con của một kỹ năng level 2.
+# Từ nhập nhằng: ambiguous + context (từ ngữ cảnh) + rule (xem skillkit.taxonomy.ContextRule).
+# Alias so khớp sau khi NFC + chữ thường, GIỮ DẤU: không bỏ dấu để "gõ" không thành "go".
+# Nguồn chọn: tần suất technical_skills VietJobs (data/interim/vietjobs_it.csv),
+# n-gram JD (data/interim/skill_candidates.csv), danh mục Stack Overflow Developer Survey.
+
+skills:
+  # ===================================================================== 1. Programming Language
+  - {id: group_programming, name: Programming Language, level: 1, category: 1}
+  - {id: python, name: Python, level: 2, parent: group_programming, kind: language, aliases: [python3]}
+  - id: java
+    name: Java
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [java core, core java, java 8, java 11, java 17, java 21]
+  - id: javascript
+    name: JavaScript
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [js, java script, ecmascript, es6, es6+, javascript (es6+), vanilla js]
+  - {id: typescript, name: TypeScript, level: 2, parent: group_programming, kind: language, aliases: []}
+  - id: c_lang
+    name: C
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [ngôn ngữ c, lập trình c, ansi c]
+    ambiguous: true
+    context: [c++, embedded, nhúng, firmware, linux, kernel, vi điều khiển, microcontroller, stm32,
+              driver, rtos, ngôn ngữ, lập trình, programming, language, pointer, con trỏ, posix]
+    rule:
+      terms: [C]
+      forms: [C]
+      reject: [c-level, c level, hạng c, vitamin c, plan c, type c, type-c, c-suite, nhóm c,
+               mức c, loại c, khu c, tòa c, block c]
+  - id: cpp
+    name: C++
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [cpp, c plus plus, c++11, c++14, c++17, c++20, c++23, modern c++]
+  - {id: csharp, name: C#, level: 2, parent: group_programming, kind: language, aliases: [c sharp, csharp]}
+  - id: golang
+    name: Go
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [golang, go lang]
+    ambiguous: true
+    context: [backend, back-end, microservice, microservices, goroutine, goroutines, gin, grpc,
+              developer, lập trình, programming, language, ngôn ngữ, api, server, docker,
+              kubernetes, rust, java, python, engineer, kỹ sư]
+    rule:
+      terms: [Go]
+      forms: [Go, GO]
+      reject: [go live, go-live, go to, go-to, to go, go-to-market, go market, on the go,
+               let's go, go ahead, ready to go, go with, go into, go through, go beyond,
+               go global, go out]
+  - {id: rust, name: Rust, level: 2, parent: group_programming, kind: language,
+     ambiguous: true, context: [cargo, tokio, systems, backend, webassembly, wasm, go, c++, lập trình, programming],
+     rule: {terms: [Rust], forms: [Rust]}}
+  - {id: php, name: PHP, level: 2, parent: group_programming, kind: language, aliases: [php7, php 7, php8, php 8]}
+  - {id: ruby, name: Ruby, level: 2, parent: group_programming, kind: language}
+  - {id: kotlin, name: Kotlin, level: 2, parent: group_programming, kind: language}
+  - id: swift
+    name: Swift
+    level: 2
+    parent: group_programming
+    kind: language
+    ambiguous: true
+    context: [ios, xcode, apple, swiftui, uikit, mobile, objective-c, iphone, ipad, macos, cocoa]
+    rule: {terms: [Swift], forms: [Swift], veto: [swift code, mã swift, chuyển tiền, ngân hàng, bank, banking, thanh toán quốc tế]}
+  - {id: objective_c, name: Objective-C, level: 2, parent: group_programming, kind: language, aliases: [objective c, objc]}
+  - id: dart
+    name: Dart
+    level: 2
+    parent: group_programming
+    kind: language
+    ambiguous: true
+    context: [flutter, mobile, android, ios, lập trình, programming]
+    rule: {terms: [Dart], forms: [Dart]}
+  - {id: scala, name: Scala, level: 2, parent: group_programming, kind: language}
+  - id: r_lang
+    name: R
+    level: 2
+    parent: group_programming
+    kind: language
+    aliases: [ngôn ngữ r, r language, rlang]
+    ambiguous: true
+    context: [statistics, statistical, thống kê, rstudio, ggplot, ggplot2, tidyverse, shiny,
+              data, dữ liệu, phân tích, analysis, analytics, python, sas, spss, stata, matlab]
+    rule:
+      terms: [R]
+      forms: [R]
+      reject: [r&d, r & d, r and d, r/d, nghiên cứu r, phòng r]
+  - {id: matlab, name: MATLAB, level: 2, parent: group_programming, kind: language}
+  - {id: perl, name: Perl, level: 2, parent: group_programming, kind: language}
+  - {id: lua, name: Lua, level: 2, parent: group_programming, kind: language}
+  - {id: elixir, name: Elixir, level: 2, parent: group_programming, kind: language}
+  - {id: erlang, name: Erlang, level: 2, parent: group_programming, kind: language}
+  - {id: haskell, name: Haskell, level: 2, parent: group_programming, kind: language}
+  - {id: groovy, name: Groovy, level: 2, parent: group_programming, kind: language}
+  - {id: vb_net, name: VB.NET, level: 2, parent: group_programming, kind: language, aliases: [visual basic .net]}
+  - {id: vba, name: VBA, level: 2, parent: group_programming, kind: language, aliases: [excel vba, visual basic for applications, macro vba]}
+  - {id: bash, name: Bash, level: 2, parent: group_programming, kind: language, aliases: [shell script, shell scripting, bash script, bash scripting, unix shell, linux shell]}
+  - {id: powershell, name: PowerShell, level: 2, parent: group_programming, kind: language}
+  - {id: sql, name: SQL, level: 2, parent: group_programming, kind: language, aliases: [ngôn ngữ sql, truy vấn sql, sql query, sql queries]}
+  - {id: plsql, name: PL/SQL, level: 3, parent: sql, category: 4, kind: language, aliases: [plsql, pl sql]}
+  - {id: tsql, name: T-SQL, level: 3, parent: sql, category: 4, kind: language, aliases: [tsql, transact-sql]}
+  - {id: solidity, name: Solidity, level: 2, parent: group_programming, kind: language}
+  - {id: assembly, name: Assembly, level: 2, parent: group_programming, kind: language, aliases: [assembler, hợp ngữ]}
+  - {id: cobol, name: COBOL, level: 2, parent: group_programming, kind: language}
+  - {id: abap, name: ABAP, level: 2, parent: group_programming, kind: language}
+  - {id: julia, name: Julia, level: 2, parent: group_programming, kind: language,
+     ambiguous: true, context: [scientific, numerical, data, python, r, matlab, lập trình], rule: {terms: [Julia], forms: [Julia]}}
+  - {id: verilog, name: Verilog, level: 2, parent: group_programming, kind: language, aliases: [systemverilog, vhdl]}
+
+  # ===================================================================== 2. Backend & Framework
+  - {id: group_backend, name: Backend & Framework, level: 1, category: 2}
+  # Python
+  - {id: django, name: Django, level: 3, parent: python, category: 2, kind: framework, aliases: [django rest framework, drf]}
+  - {id: flask, name: Flask, level: 3, parent: python, category: 2, kind: framework}
+  - {id: fastapi, name: FastAPI, level: 3, parent: python, category: 2, kind: framework, aliases: [fast api]}
+  - {id: celery, name: Celery, level: 3, parent: python, category: 2, kind: tool}
+  - {id: sqlalchemy, name: SQLAlchemy, level: 3, parent: python, category: 2, kind: framework}
+  # Java
+  - id: spring
+    name: Spring
+    level: 3
+    parent: java
+    category: 2
+    kind: framework
+    aliases: [spring framework, spring mvc, spring core]
+    ambiguous: true
+    context: [java, boot, mvc, hibernate, jpa, backend, microservice, microservices, maven, gradle, kotlin]
+    rule: {terms: [Spring], forms: [Spring]}
+  - {id: spring_boot, name: Spring Boot, level: 3, parent: java, category: 2, kind: framework, aliases: [springboot, java spring boot]}
+  - {id: spring_cloud, name: Spring Cloud, level: 3, parent: java, category: 2, kind: framework}
+  - {id: spring_security, name: Spring Security, level: 3, parent: java, category: 2, kind: framework}
+  - {id: hibernate, name: Hibernate, level: 3, parent: java, category: 2, kind: framework}
+  - {id: jpa, name: JPA, level: 3, parent: java, category: 2, kind: framework, aliases: [spring data jpa]}
+  - {id: java_ee, name: Java EE, level: 3, parent: java, category: 2, kind: framework, aliases: [j2ee, jakarta ee, jee]}
+  - {id: struts, name: Struts, level: 3, parent: java, category: 2, kind: framework, aliases: [apache struts]}
+  - {id: jsp, name: JSP, level: 3, parent: java, category: 2, kind: framework, aliases: [servlet, jsp/servlet]}
+  - {id: maven, name: Maven, level: 3, parent: java, category: 2, kind: tool}
+  - {id: gradle, name: Gradle, level: 3, parent: java, category: 2, kind: tool}
+  - {id: quarkus, name: Quarkus, level: 3, parent: java, category: 2, kind: framework}
+  # JavaScript / TypeScript backend
+  - {id: nodejs, name: Node.js, level: 3, parent: javascript, category: 2, kind: framework, aliases: [nodejs, node js]}
+  - id: expressjs
+    name: Express.js
+    level: 3
+    parent: javascript
+    category: 2
+    kind: framework
+    aliases: [expressjs, express js, express]
+    ambiguous: true
+    context: [node, nodejs, node.js, javascript, typescript, api, backend, mongodb, nestjs]
+    rule: {terms: [express], forms: [Express, ExpressJS]}
+  - {id: nestjs, name: NestJS, level: 3, parent: typescript, category: 2, kind: framework, aliases: [nest.js, nest js]}
+  # C# / .NET
+  - {id: dotnet, name: .NET, level: 3, parent: csharp, category: 2, kind: framework, aliases: [dotnet, .net core, .netcore, .net framework, .net 6, .net 7, .net 8, net core]}
+  - {id: aspnet, name: ASP.NET, level: 3, parent: csharp, category: 2, kind: framework, aliases: [asp.net core, asp.net mvc, asp.net web api, aspnet]}
+  - {id: entity_framework, name: Entity Framework, level: 3, parent: csharp, category: 2, kind: framework, aliases: [ef core, entity framework core]}
+  - {id: linq, name: LINQ, level: 3, parent: csharp, category: 2, kind: framework}
+  - {id: blazor, name: Blazor, level: 3, parent: csharp, category: 3, kind: framework}
+  - {id: wpf, name: WPF, level: 3, parent: csharp, category: 3, kind: framework}
+  - {id: winforms, name: WinForms, level: 3, parent: csharp, category: 3, kind: framework, aliases: [windows forms]}
+  # PHP / Ruby / Go
+  - {id: laravel, name: Laravel, level: 3, parent: php, category: 2, kind: framework}
+  - {id: symfony, name: Symfony, level: 3, parent: php, category: 2, kind: framework}
+  - {id: codeigniter, name: CodeIgniter, level: 3, parent: php, category: 2, kind: framework}
+  - {id: yii, name: Yii, level: 3, parent: php, category: 2, kind: framework, aliases: [yii2]}
+  - {id: wordpress, name: WordPress, level: 3, parent: php, category: 2, kind: framework}
+  - {id: magento, name: Magento, level: 3, parent: php, category: 2, kind: framework}
+  - {id: rails, name: Ruby on Rails, level: 3, parent: ruby, category: 2, kind: framework, aliases: [rails, ror]}
+  - {id: gin, name: Gin, level: 3, parent: golang, category: 2, kind: framework,
+     ambiguous: true, context: [go, golang, api, backend, framework], rule: {terms: [Gin], forms: [Gin]}}
+  # Kiến trúc & giao tiếp
+  - {id: rest_api, name: REST API, level: 2, parent: group_backend, kind: hard, aliases: [restful api, restful apis, rest apis, restful, api restful, restful web services, web api]}
+  - {id: api, name: API, level: 2, parent: group_backend, kind: hard, aliases: [apis, api integration, api development, tích hợp api, web service, web services]}
+  - {id: graphql, name: GraphQL, level: 2, parent: group_backend, kind: hard}
+  - {id: grpc, name: gRPC, level: 2, parent: group_backend, kind: hard}
+  - {id: soap, name: SOAP, level: 2, parent: group_backend, kind: hard, aliases: [soap api, wsdl]}
+  - {id: websocket, name: WebSocket, level: 2, parent: group_backend, kind: hard, aliases: [websockets, web socket, socket.io]}
+  - {id: microservices, name: Microservices, level: 2, parent: group_backend, kind: hard, aliases: [microservice, micro-service, micro-services, microservices architecture, microservice architecture, kiến trúc microservices]}
+  - {id: oop, name: OOP, level: 2, parent: group_backend, kind: hard, aliases: [lập trình hướng đối tượng, object-oriented programming, object oriented programming, hướng đối tượng]}
+  - {id: design_patterns, name: Design Patterns, level: 2, parent: group_backend, kind: hard, aliases: [design pattern, mẫu thiết kế]}
+  - {id: solid, name: SOLID, level: 2, parent: group_backend, kind: hard, aliases: [solid principles, nguyên lý solid]}
+  - {id: dsa, name: Cấu trúc dữ liệu và giải thuật, level: 2, parent: group_backend, kind: hard, aliases: [cấu trúc dữ liệu, giải thuật, thuật toán, data structures, algorithms, data structures and algorithms, cấu trúc dữ liệu & giải thuật]}
+  - {id: system_design, name: System Design, level: 2, parent: group_backend, kind: hard, aliases: [thiết kế hệ thống, kiến trúc hệ thống, system architecture, software architecture, kiến trúc phần mềm]}
+  - {id: clean_architecture, name: Clean Architecture, level: 2, parent: group_backend, kind: hard}
+  - {id: ddd, name: Domain-Driven Design, level: 2, parent: group_backend, kind: hard, aliases: [ddd, domain driven design]}
+  - {id: mvc, name: MVC, level: 2, parent: group_backend, kind: hard, aliases: [mô hình mvc]}
+  - {id: mvvm, name: MVVM, level: 2, parent: group_backend, kind: hard, aliases: [mvp, viper]}
+  - {id: event_driven, name: Event-Driven Architecture, level: 2, parent: group_backend, kind: hard, aliases: [event-driven, event driven, event sourcing, cqrs]}
+  - {id: kafka, name: Kafka, level: 2, parent: group_backend, kind: tool, aliases: [apache kafka]}
+  - {id: rabbitmq, name: RabbitMQ, level: 2, parent: group_backend, kind: tool, aliases: [rabbit mq]}
+  - {id: activemq, name: ActiveMQ, level: 2, parent: group_backend, kind: tool}
+  - {id: message_queue, name: Message Queue, level: 2, parent: group_backend, kind: hard, aliases: [message queues, message broker, hàng đợi thông điệp]}
+  - {id: oauth, name: OAuth, level: 2, parent: group_backend, kind: hard, aliases: [oauth2, oauth 2.0, openid connect, oidc]}
+  - {id: jwt, name: JWT, level: 2, parent: group_backend, kind: hard, aliases: [json web token]}
+  - {id: keycloak, name: Keycloak, level: 2, parent: group_backend, kind: tool}
+  - {id: swagger, name: Swagger, level: 2, parent: group_backend, kind: tool, aliases: [openapi]}
+  - {id: json, name: JSON, level: 2, parent: group_backend, kind: hard}
+  - {id: xml, name: XML, level: 2, parent: group_backend, kind: hard}
+  - {id: orm, name: ORM, level: 2, parent: group_backend, kind: hard}
+  - {id: caching, name: Caching, level: 2, parent: group_backend, kind: hard, aliases: [cache, bộ nhớ đệm]}
+  - {id: odoo, name: Odoo, level: 2, parent: group_backend, kind: tool}
+  - {id: blockchain, name: Blockchain, level: 2, parent: group_backend, kind: domain, aliases: [web3, smart contract, smart contracts]}
+  - {id: embedded, name: Embedded Systems, level: 2, parent: group_backend, kind: domain, aliases: [lập trình nhúng, hệ thống nhúng, embedded, firmware]}
+  - {id: rtos, name: RTOS, level: 3, parent: embedded, kind: tool, aliases: [freertos]}
+  - {id: autosar, name: AUTOSAR, level: 3, parent: embedded, kind: tool}
+  - {id: microcontroller, name: Vi điều khiển, level: 3, parent: embedded, kind: hard, aliases: [microcontroller, mcu, stm32, arm cortex, arduino]}
+  - {id: linux_kernel, name: Linux Kernel, level: 3, parent: embedded, kind: hard, aliases: [kernel linux, linux driver, device driver]}
+  - {id: fpga, name: FPGA, level: 3, parent: embedded, kind: hard}
+  - {id: iot, name: IoT, level: 2, parent: group_backend, kind: domain, aliases: [internet of things, mqtt]}
+  - {id: game_dev, name: Game Development, level: 2, parent: group_backend, kind: domain, aliases: [phát triển game, lập trình game, game developer]}
+  - id: unity
+    name: Unity
+    level: 3
+    parent: game_dev
+    kind: tool
+    aliases: [unity3d, unity 3d]
+    ambiguous: true
+    context: [game, c#, 3d, 2d, engine, mobile game, ar, vr]
+    rule: {terms: [Unity], forms: [Unity]}
+  - {id: unreal, name: Unreal Engine, level: 3, parent: game_dev, kind: tool, aliases: [unreal engine 5, ue4, ue5]}
+
+  # ===================================================================== 3. Frontend & Mobile
+  - {id: group_frontend_mobile, name: Frontend & Mobile, level: 1, category: 3}
+  - {id: html, name: HTML, level: 2, parent: group_frontend_mobile, kind: language, aliases: [html5, html/css]}
+  - {id: css, name: CSS, level: 2, parent: group_frontend_mobile, kind: language, aliases: [css3]}
+  - {id: sass, name: SASS, level: 3, parent: css, kind: tool, aliases: [scss, sass/scss, less]}
+  - {id: tailwind, name: Tailwind CSS, level: 3, parent: css, kind: framework, aliases: [tailwind, tailwindcss]}
+  - {id: bootstrap, name: Bootstrap, level: 3, parent: css, kind: framework}
+  - {id: material_ui, name: Material UI, level: 3, parent: css, kind: framework, aliases: [mui, material-ui]}
+  - {id: ant_design, name: Ant Design, level: 3, parent: css, kind: framework, aliases: [antd]}
+  - id: react
+    name: React
+    level: 3
+    parent: javascript
+    category: 3
+    kind: framework
+    aliases: [reactjs, react.js, react js]
+    ambiguous: true
+    context: [frontend, front-end, javascript, js, typescript, component, components, hooks, redux,
+              ui, web, spa, next.js, nextjs, html, css, vue, angular]
+    rule: {terms: [React], forms: [React, REACT]}
+  - {id: nextjs, name: Next.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [nextjs, next js]}
+  - {id: vuejs, name: Vue.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [vue, vuejs, vue js, vue3, vue 3, vue2]}
+  - {id: nuxtjs, name: Nuxt.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [nuxt, nuxtjs]}
+  - {id: angular, name: Angular, level: 3, parent: typescript, category: 3, kind: framework, aliases: [angularjs, angular js, angular 2+]}
+  - {id: svelte, name: Svelte, level: 3, parent: javascript, category: 3, kind: framework, aliases: [sveltekit]}
+  - {id: jquery, name: jQuery, level: 3, parent: javascript, category: 3, kind: framework}
+  - {id: redux, name: Redux, level: 3, parent: javascript, category: 3, kind: framework, aliases: [redux toolkit, redux-saga, redux saga]}
+  - {id: mobx, name: MobX, level: 3, parent: javascript, category: 3, kind: framework}
+  - {id: rxjs, name: RxJS, level: 3, parent: javascript, category: 3, kind: framework}
+  - {id: ajax, name: AJAX, level: 3, parent: javascript, category: 3, kind: hard}
+  - {id: webpack, name: Webpack, level: 3, parent: javascript, category: 3, kind: tool}
+  - {id: vite, name: Vite, level: 3, parent: javascript, category: 3, kind: tool, aliases: [vitejs]}
+  - {id: npm, name: npm, level: 3, parent: javascript, category: 3, kind: tool, aliases: [yarn, pnpm]}
+  - {id: threejs, name: Three.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [threejs, webgl]}
+  - {id: d3js, name: D3.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [d3, d3js]}
+  - {id: electron, name: Electron, level: 3, parent: javascript, category: 3, kind: framework, aliases: [electronjs]}
+  - {id: react_native, name: React Native, level: 3, parent: javascript, category: 3, kind: framework, aliases: [reactnative]}
+  - {id: flutter, name: Flutter, level: 3, parent: dart, category: 3, kind: framework}
+  - {id: android, name: Android, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [lập trình android, android sdk, android native]}
+  - {id: android_studio, name: Android Studio, level: 3, parent: android, kind: tool}
+  - {id: jetpack_compose, name: Jetpack Compose, level: 3, parent: android, kind: framework}
+  - {id: ios, name: iOS, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [lập trình ios, ios native]}
+  - {id: swiftui, name: SwiftUI, level: 3, parent: ios, kind: framework}
+  - {id: uikit, name: UIKit, level: 3, parent: ios, kind: framework}
+  - {id: xcode, name: Xcode, level: 3, parent: ios, kind: tool}
+  - {id: xamarin, name: Xamarin, level: 3, parent: csharp, category: 3, kind: framework, aliases: [.net maui, maui]}
+  - {id: ionic, name: Ionic, level: 3, parent: javascript, category: 3, kind: framework}
+  - {id: responsive, name: Responsive Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [responsive web design, responsive]}
+  - {id: pwa, name: PWA, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [progressive web app]}
+  - {id: seo, name: SEO, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [search engine optimization]}
+  - {id: ui_ux, name: UI/UX Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [ui/ux, ui ux, ux/ui, ux design, ui design, thiết kế ui/ux, user experience, user interface, wireframe, wireframes, prototype, prototyping]}
+  - {id: figma, name: Figma, level: 3, parent: ui_ux, kind: tool}
+  - {id: adobe_xd, name: Adobe XD, level: 3, parent: ui_ux, kind: tool, aliases: []}
+  - {id: sketch, name: Sketch, level: 3, parent: ui_ux, kind: tool,
+     ambiguous: true, context: [figma, adobe xd, ui, ux, design, thiết kế, prototype, wireframe, photoshop], rule: {terms: [Sketch], forms: [Sketch]}}
+  - {id: photoshop, name: Photoshop, level: 3, parent: ui_ux, kind: tool, aliases: [adobe photoshop]}
+  - {id: illustrator, name: Illustrator, level: 3, parent: ui_ux, kind: tool, aliases: [adobe illustrator]}
+
+  # ===================================================================== 4. Database & Storage
+  - {id: group_database, name: Database & Storage, level: 1, category: 4}
+  - {id: mysql, name: MySQL, level: 2, parent: group_database, kind: tool}
+  - {id: postgresql, name: PostgreSQL, level: 2, parent: group_database, kind: tool, aliases: [postgres, postgre, postgre sql, psql]}
+  - {id: sql_server, name: SQL Server, level: 2, parent: group_database, kind: tool, aliases: [mssql, ms sql, ms sql server, microsoft sql server, sqlserver]}
+  - id: oracle_db
+    name: Oracle Database
+    level: 2
+    parent: group_database
+    kind: tool
+    aliases: [oracle, oracle db, oracle database]
+  - {id: mariadb, name: MariaDB, level: 2, parent: group_database, kind: tool}
+  - {id: sqlite, name: SQLite, level: 2, parent: group_database, kind: tool}
+  - {id: mongodb, name: MongoDB, level: 2, parent: group_database, kind: tool, aliases: [mongo, mongo db]}
+  - {id: redis, name: Redis, level: 2, parent: group_database, kind: tool}
+  - {id: memcached, name: Memcached, level: 2, parent: group_database, kind: tool}
+  - {id: cassandra, name: Cassandra, level: 2, parent: group_database, kind: tool, aliases: [apache cassandra]}
+  - {id: dynamodb, name: DynamoDB, level: 2, parent: group_database, kind: cloud, aliases: [dynamo db, aws dynamodb]}
+  - {id: neo4j, name: Neo4j, level: 2, parent: group_database, kind: tool}
+  - {id: couchbase, name: Couchbase, level: 2, parent: group_database, kind: tool, aliases: [couchdb]}
+  - {id: firestore, name: Firestore, level: 2, parent: group_database, kind: cloud, aliases: [cloud firestore]}
+  - {id: elasticsearch, name: Elasticsearch, level: 2, parent: group_database, kind: tool, aliases: [elastic search, opensearch]}
+  - {id: clickhouse, name: ClickHouse, level: 2, parent: group_database, kind: tool}
+  - {id: influxdb, name: InfluxDB, level: 2, parent: group_database, kind: tool, aliases: [timescaledb, time series database]}
+  - {id: snowflake, name: Snowflake, level: 2, parent: group_database, kind: cloud}
+  - {id: redshift, name: Redshift, level: 2, parent: group_database, kind: cloud, aliases: [amazon redshift, aws redshift]}
+  - {id: bigquery, name: BigQuery, level: 2, parent: group_database, kind: cloud, aliases: [big query, google bigquery]}
+  - {id: nosql, name: NoSQL, level: 2, parent: group_database, kind: hard, aliases: [no sql, no-sql]}
+  - {id: rdbms, name: Relational Database, level: 2, parent: group_database, kind: hard, aliases: [rdbms, cơ sở dữ liệu quan hệ, relational databases, cơ sở dữ liệu, database]}
+  - {id: database_design, name: Database Design, level: 2, parent: group_database, kind: hard, aliases: [thiết kế cơ sở dữ liệu, thiết kế database, data modeling, mô hình hóa dữ liệu, database modeling]}
+  - {id: query_optimization, name: Query Optimization, level: 2, parent: group_database, kind: hard, aliases: [tối ưu truy vấn, sql tuning, database tuning, tối ưu cơ sở dữ liệu]}
+  - {id: vector_db, name: Vector Database, level: 2, parent: group_database, kind: tool, aliases: [vector db, pgvector, milvus, pinecone, qdrant, weaviate, chromadb]}
+  - {id: supabase, name: Supabase, level: 2, parent: group_database, kind: cloud}
+  - {id: storage_systems, name: Storage (SAN/NAS), level: 2, parent: group_database, kind: hard, aliases: [nas, san/nas, ceph, storage system]}
+
+  # ===================================================================== 5. Data Engineering & AI/ML
+  - {id: group_data_ai, name: Data Engineering & AI/ML, level: 1, category: 5}
+  - {id: machine_learning, name: Machine Learning, level: 2, parent: group_data_ai, kind: hard, aliases: [học máy, ml, máy học]}
+  - {id: deep_learning, name: Deep Learning, level: 2, parent: group_data_ai, kind: hard, aliases: [học sâu, neural network, neural networks, mạng nơ-ron]}
+  - id: artificial_intelligence
+    name: Trí tuệ nhân tạo
+    level: 2
+    parent: group_data_ai
+    kind: hard
+    aliases: [ai, artificial intelligence, a.i.]
+    ambiguous: true
+    context: [machine learning, ml, deep learning, llm, model, models, mô hình, data, dữ liệu, nlp,
+              computer vision, genai, generative, python, pytorch, tensorflow, engineer, kỹ sư,
+              chatbot, agent, ứng dụng, application, solution, giải pháp]
+    rule:
+      terms: [ai]
+      forms: [AI, A.I.]
+      veto: [photoshop, illustrator, indesign, corel, coreldraw, premiere, after effects, canva,
+             adobe, thiết kế đồ họa, graphic design, đồ họa, in ấn]
+  - {id: nlp, name: NLP, level: 2, parent: group_data_ai, kind: hard, aliases: [natural language processing, xử lý ngôn ngữ tự nhiên]}
+  - {id: computer_vision, name: Computer Vision, level: 2, parent: group_data_ai, kind: hard, aliases: [thị giác máy tính, xử lý ảnh, image processing]}
+  - {id: llm, name: LLM, level: 2, parent: group_data_ai, kind: hard, aliases: [large language model, large language models, llms, mô hình ngôn ngữ lớn]}
+  - {id: genai, name: Generative AI, level: 2, parent: group_data_ai, kind: hard, aliases: [genai, gen ai, generative ai, ai tạo sinh]}
+  - {id: rag, name: RAG, level: 2, parent: group_data_ai, kind: hard, aliases: [retrieval-augmented generation, retrieval augmented generation]}
+  - {id: prompt_engineering, name: Prompt Engineering, level: 2, parent: group_data_ai, kind: hard, aliases: [prompt engineer, prompting]}
+  - {id: mlops, name: MLOps, level: 2, parent: group_data_ai, kind: hard, aliases: [ml ops]}
+  - {id: recommender, name: Recommender Systems, level: 2, parent: group_data_ai, kind: hard, aliases: [recommendation system, recommender system, hệ thống gợi ý]}
+  - {id: time_series, name: Time Series Analysis, level: 2, parent: group_data_ai, kind: hard, aliases: [time series, chuỗi thời gian, forecasting]}
+  - {id: reinforcement_learning, name: Reinforcement Learning, level: 2, parent: group_data_ai, kind: hard, aliases: [học tăng cường]}
+  - {id: ocr, name: OCR, level: 2, parent: group_data_ai, kind: hard, aliases: [nhận dạng ký tự quang học]}
+  - {id: speech, name: Speech Recognition, level: 2, parent: group_data_ai, kind: hard, aliases: [asr, speech-to-text, nhận dạng giọng nói, text-to-speech, tts]}
+  - {id: statistics, name: Thống kê, level: 2, parent: group_data_ai, kind: hard, aliases: [statistics, statistical analysis, xác suất thống kê, probability]}
+  - {id: data_analysis, name: Phân tích dữ liệu, level: 2, parent: group_data_ai, kind: hard, aliases: [data analysis, data analytics, phân tích số liệu, analytics]}
+  - {id: data_visualization, name: Data Visualization, level: 2, parent: group_data_ai, kind: hard, aliases: [trực quan hóa dữ liệu, data visualisation, dashboard, dashboards]}
+  - {id: ab_testing, name: A/B Testing, level: 2, parent: group_data_ai, kind: hard, aliases: [a/b test, ab testing, ab test]}
+  - {id: big_data, name: Big Data, level: 2, parent: group_data_ai, kind: hard, aliases: [dữ liệu lớn, bigdata]}
+  - {id: etl, name: ETL, level: 2, parent: group_data_ai, kind: hard, aliases: [elt, etl/elt, data pipeline, data pipelines, pipeline dữ liệu]}
+  - {id: data_warehouse, name: Data Warehouse, level: 2, parent: group_data_ai, kind: hard, aliases: [kho dữ liệu, data warehousing, dwh, data lake, lakehouse, data mart]}
+  - {id: data_engineering, name: Data Engineering, level: 2, parent: group_data_ai, kind: hard, aliases: [kỹ thuật dữ liệu, data engineer]}
+  - {id: pandas, name: Pandas, level: 3, parent: python, category: 5, kind: framework}
+  - {id: numpy, name: NumPy, level: 3, parent: python, category: 5, kind: framework}
+  - {id: scipy, name: SciPy, level: 3, parent: python, category: 5, kind: framework}
+  - {id: matplotlib, name: Matplotlib, level: 3, parent: python, category: 5, kind: framework, aliases: [seaborn, plotly]}
+  - {id: scikit_learn, name: scikit-learn, level: 3, parent: machine_learning, kind: framework, aliases: [sklearn, scikit learn]}
+  - {id: tensorflow, name: TensorFlow, level: 3, parent: deep_learning, kind: framework, aliases: [tensor flow, tf2]}
+  - {id: keras, name: Keras, level: 3, parent: deep_learning, kind: framework}
+  - {id: pytorch, name: PyTorch, level: 3, parent: deep_learning, kind: framework, aliases: [torch]}
+  - {id: huggingface, name: Hugging Face, level: 3, parent: nlp, kind: framework, aliases: [huggingface, transformers, hugging face transformers]}
+  - {id: langchain, name: LangChain, level: 3, parent: llm, kind: framework, aliases: [langgraph]}
+  - {id: llamaindex, name: LlamaIndex, level: 3, parent: llm, kind: framework, aliases: [llama index, llama_index]}
+  - {id: openai_api, name: OpenAI API, level: 3, parent: llm, kind: tool, aliases: [openai, chatgpt api, gpt-4, gpt api]}
+  - {id: spacy, name: spaCy, level: 3, parent: nlp, kind: framework, aliases: [nltk]}
+  - {id: opencv, name: OpenCV, level: 3, parent: computer_vision, kind: framework, aliases: [open cv]}
+  - {id: yolo, name: YOLO, level: 3, parent: computer_vision, kind: framework, aliases: [yolov5, yolov8]}
+  - {id: xgboost, name: XGBoost, level: 3, parent: machine_learning, kind: framework, aliases: [lightgbm, catboost]}
+  - {id: jupyter, name: Jupyter, level: 3, parent: python, category: 5, kind: tool, aliases: [jupyter notebook, jupyterlab]}
+  - {id: mlflow, name: MLflow, level: 3, parent: mlops, kind: tool, aliases: [kubeflow, weights & biases, wandb]}
+  - id: spark
+    name: Apache Spark
+    level: 2
+    parent: group_data_ai
+    kind: framework
+    aliases: [spark, spark sql, spark streaming]
+    ambiguous: true
+    context: [data, dữ liệu, big data, hadoop, scala, etl, databricks, python, pyspark, kafka, hive]
+    rule: {terms: [spark], forms: [Spark]}
+  - {id: pyspark, name: PySpark, level: 3, parent: spark, kind: framework}
+  - {id: hadoop, name: Hadoop, level: 2, parent: group_data_ai, kind: framework, aliases: [apache hadoop, hdfs, mapreduce, hive, apache hive]}
+  - {id: flink, name: Apache Flink, level: 2, parent: group_data_ai, kind: framework, aliases: [flink]}
+  - {id: airflow, name: Apache Airflow, level: 2, parent: group_data_ai, kind: tool, aliases: [airflow]}
+  - {id: dbt, name: dbt, level: 2, parent: group_data_ai, kind: tool, aliases: [data build tool]}
+  - {id: databricks, name: Databricks, level: 2, parent: group_data_ai, kind: cloud}
+  - {id: power_bi, name: Power BI, level: 2, parent: group_data_ai, kind: tool, aliases: [powerbi, microsoft power bi, dax]}
+  - {id: tableau, name: Tableau, level: 2, parent: group_data_ai, kind: tool}
+  - {id: looker, name: Looker, level: 2, parent: group_data_ai, kind: tool, aliases: [looker studio, google data studio, data studio]}
+  - {id: superset, name: Apache Superset, level: 2, parent: group_data_ai, kind: tool, aliases: [superset, metabase, redash]}
+  - id: excel
+    name: Excel
+    level: 2
+    parent: group_data_ai
+    kind: tool
+    aliases: [microsoft excel, ms excel, excel nâng cao, advanced excel]
+    ambiguous: true
+    context: [word, powerpoint, office, báo cáo, report, data, dữ liệu, vba, pivot, tin học,
+              google sheets, sql, power bi, số liệu, thành thạo, sử dụng]
+    rule: {terms: [Excel], forms: [Excel, EXCEL], reject: [excel at, excel in, to excel]}
+  - {id: google_sheets, name: Google Sheets, level: 2, parent: group_data_ai, kind: tool, aliases: [google sheet, google spreadsheet]}
+  - {id: sas, name: SAS, level: 2, parent: group_data_ai, kind: tool, aliases: [spss, stata]}
+  - {id: google_analytics, name: Google Analytics, level: 2, parent: group_data_ai, kind: tool, aliases: [ga4, google tag manager]}
+
+  # ===================================================================== 6. DevOps, Cloud & Infra
+  - {id: group_devops_cloud, name: "DevOps, Cloud & Infra", level: 1, category: 6}
+  - {id: aws, name: AWS, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [amazon web services, amazon aws]}
+  - {id: aws_ec2, name: AWS EC2, level: 3, parent: aws, kind: cloud, aliases: [ec2]}
+  - {id: aws_s3, name: AWS S3, level: 3, parent: aws, kind: cloud, aliases: [amazon s3, s3 bucket]}
+  - {id: aws_lambda, name: AWS Lambda, level: 3, parent: aws, kind: cloud, aliases: [lambda function, lambda functions]}
+  - {id: aws_rds, name: AWS RDS, level: 3, parent: aws, kind: cloud, aliases: [amazon rds, aurora, amazon aurora]}
+  - {id: aws_eks, name: AWS EKS, level: 3, parent: aws, kind: cloud, aliases: [eks, amazon eks]}
+  - {id: aws_ecs, name: AWS ECS, level: 3, parent: aws, kind: cloud, aliases: [ecs, fargate]}
+  - {id: cloudwatch, name: CloudWatch, level: 3, parent: aws, kind: cloud, aliases: [aws cloudwatch]}
+  - {id: aws_iam, name: AWS IAM, level: 3, parent: aws, kind: cloud}
+  - {id: aws_sqs, name: AWS SQS, level: 3, parent: aws, kind: cloud, aliases: [sqs, aws sns]}
+  - {id: cloudformation, name: CloudFormation, level: 3, parent: aws, kind: cloud, aliases: [aws cloudformation, aws cdk, cdk]}
+  - {id: gcp, name: Google Cloud, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [gcp, google cloud platform]}
+  - {id: gke, name: GKE, level: 3, parent: gcp, kind: cloud, aliases: [google kubernetes engine]}
+  - {id: cloud_run, name: Cloud Run, level: 3, parent: gcp, kind: cloud, aliases: [cloud functions, google cloud run]}
+  - {id: pubsub, name: Pub/Sub, level: 3, parent: gcp, kind: cloud, aliases: [google pub/sub, cloud pub/sub]}
+  - {id: firebase, name: Firebase, level: 3, parent: gcp, kind: cloud}
+  - {id: azure, name: Azure, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [microsoft azure]}
+  - {id: aks, name: AKS, level: 3, parent: azure, kind: cloud, aliases: [azure kubernetes service]}
+  - {id: azure_devops, name: Azure DevOps, level: 3, parent: azure, kind: tool, aliases: [azure pipelines, tfs]}
+  - {id: azure_functions, name: Azure Functions, level: 3, parent: azure, kind: cloud}
+  - {id: cloudflare, name: Cloudflare, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [cloudflare workers]}
+  - {id: cloud_computing, name: Cloud Computing, level: 2, parent: group_devops_cloud, kind: hard, aliases: [cloud, điện toán đám mây, cloud native, cloud-native, multi-cloud, hybrid cloud]}
+  - {id: serverless, name: Serverless, level: 2, parent: group_devops_cloud, kind: hard}
+  - {id: docker, name: Docker, level: 2, parent: group_devops_cloud, kind: tool, aliases: [docker compose, docker-compose, dockerfile, container, containers, containerization]}
+  - {id: kubernetes, name: Kubernetes, level: 2, parent: group_devops_cloud, kind: tool, aliases: [k8s, kubernetes (k8s), kubectl, k3s]}
+  - {id: helm, name: Helm, level: 3, parent: kubernetes, kind: tool, aliases: [helm chart, helm charts]}
+  - {id: openshift, name: OpenShift, level: 3, parent: kubernetes, kind: tool}
+  - {id: istio, name: Istio, level: 3, parent: kubernetes, kind: tool, aliases: [service mesh, linkerd]}
+  - {id: terraform, name: Terraform, level: 2, parent: group_devops_cloud, kind: tool, aliases: [infrastructure as code, iac, pulumi]}
+  - {id: ansible, name: Ansible, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: jenkins, name: Jenkins, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: gitlab_ci, name: GitLab CI, level: 2, parent: group_devops_cloud, kind: tool, aliases: [gitlab ci/cd, gitlab-ci, gitlab pipelines]}
+  - {id: github_actions, name: GitHub Actions, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: argocd, name: Argo CD, level: 2, parent: group_devops_cloud, kind: tool, aliases: [argocd, gitops, flux cd]}
+  - {id: ci_cd, name: CI/CD, level: 2, parent: group_devops_cloud, kind: hard, aliases: [cicd, ci cd, ci/cd pipelines, ci/cd pipeline, continuous integration, continuous delivery, continuous deployment, ci/cd tools]}
+  - {id: devops, name: DevOps, level: 2, parent: group_devops_cloud, kind: hard, aliases: [dev ops]}
+  - {id: sre, name: SRE, level: 2, parent: group_devops_cloud, kind: hard, aliases: [site reliability engineering, site reliability]}
+  - {id: linux, name: Linux, level: 2, parent: group_devops_cloud, kind: tool, aliases: [ubuntu, centos, redhat, red hat, rhel, debian, unix, hệ điều hành linux]}
+  - {id: windows_server, name: Windows Server, level: 2, parent: group_devops_cloud, kind: tool, aliases: [windows server 2016, windows server 2019]}
+  - {id: windows, name: Windows, level: 2, parent: group_devops_cloud, kind: tool, aliases: [hệ điều hành windows, windows os, windows 10, windows 11, macos, mac os]}
+  - {id: hardware, name: Phần cứng máy tính, level: 2, parent: group_devops_cloud, kind: hard, aliases: [phần cứng, phần cứng máy tính, hardware, it helpdesk, helpdesk, it support]}
+  - {id: active_directory, name: Active Directory, level: 2, parent: group_devops_cloud, kind: tool, aliases: [ad ds, ldap]}
+  - {id: nginx, name: Nginx, level: 2, parent: group_devops_cloud, kind: tool, aliases: [haproxy, load balancer, load balancing, cân bằng tải]}
+  - {id: apache_http, name: Apache HTTP Server, level: 2, parent: group_devops_cloud, kind: tool, aliases: [apache2, apache httpd, tomcat, apache tomcat]}
+  - {id: iis, name: IIS, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: prometheus, name: Prometheus, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: grafana, name: Grafana, level: 2, parent: group_devops_cloud, kind: tool, aliases: [loki]}
+  - {id: elk, name: ELK Stack, level: 2, parent: group_devops_cloud, kind: tool, aliases: [elk, elk stack, kibana, logstash, efk, filebeat]}
+  - {id: datadog, name: Datadog, level: 2, parent: group_devops_cloud, kind: tool, aliases: [new relic, dynatrace]}
+  - {id: sentry, name: Sentry, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: zabbix, name: Zabbix, level: 2, parent: group_devops_cloud, kind: tool, aliases: [nagios]}
+  - {id: monitoring, name: Monitoring & Observability, level: 2, parent: group_devops_cloud, kind: hard, aliases: [monitoring, observability, giám sát hệ thống, logging, opentelemetry]}
+  - {id: vmware, name: VMware, level: 2, parent: group_devops_cloud, kind: tool, aliases: [vsphere, esxi, vcenter, virtualization, ảo hóa]}
+  - {id: hyper_v, name: Hyper-V, level: 2, parent: group_devops_cloud, kind: tool, aliases: [hyperv, kvm, proxmox]}
+  - {id: openstack, name: OpenStack, level: 2, parent: group_devops_cloud, kind: tool}
+  - {id: veeam, name: Backup & Recovery, level: 2, parent: group_devops_cloud, kind: hard, aliases: [veeam, backup and recovery, disaster recovery, sao lưu dữ liệu]}
+  - {id: networking, name: Networking, level: 2, parent: group_devops_cloud, kind: hard, aliases: [network, mạng máy tính, quản trị mạng, mạng lan/wan, lan/wan, routing, switching, routing & switching]}
+  - {id: tcp_ip, name: TCP/IP, level: 3, parent: networking, kind: hard, aliases: [tcp ip, osi model, mô hình osi]}
+  - {id: dns, name: DNS, level: 3, parent: networking, kind: hard, aliases: [dhcp, dns/dhcp]}
+  - {id: http, name: HTTP, level: 3, parent: networking, kind: hard, aliases: [https, http/https, http/2]}
+  - {id: vpn, name: VPN, level: 3, parent: networking, kind: hard, aliases: [ipsec, site-to-site vpn]}
+  - {id: cisco, name: Cisco, level: 3, parent: networking, kind: tool, aliases: [ccna, ccnp, ccie, juniper, mikrotik]}
+  - {id: git, name: Git, level: 2, parent: group_devops_cloud, kind: tool, aliases: [git flow, gitflow]}
+  - {id: github, name: GitHub, level: 3, parent: git, kind: tool}
+  - {id: gitlab, name: GitLab, level: 3, parent: git, kind: tool}
+  - {id: bitbucket, name: Bitbucket, level: 3, parent: git, kind: tool}
+  - {id: svn, name: SVN, level: 3, parent: git, kind: tool, aliases: [subversion, tortoisesvn]}
+  - {id: vault, name: HashiCorp Vault, level: 2, parent: group_devops_cloud, kind: tool, aliases: [vault, consul]}
+
+  # ===================================================================== 7. Testing, Security & Process
+  - {id: group_qa_security_process, name: "Testing, Security & Process", level: 1, category: 7}
+  - {id: software_testing, name: Kiểm thử phần mềm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [software testing, kiểm thử, testing, qa/qc, quality assurance, kỹ thuật test, test design, test techniques]}
+  - {id: manual_testing, name: Manual Testing, level: 3, parent: software_testing, kind: hard, aliases: [manual test, kiểm thử thủ công, test thủ công, black box testing, kiểm thử hộp đen]}
+  - {id: automation_testing, name: Automation Testing, level: 3, parent: software_testing, kind: hard, aliases: [automation test, test automation, kiểm thử tự động, test tự động]}
+  - {id: unit_testing, name: Unit Testing, level: 3, parent: software_testing, kind: hard, aliases: [unit test, unit tests, kiểm thử đơn vị]}
+  - {id: integration_testing, name: Integration Testing, level: 3, parent: software_testing, kind: hard, aliases: [integration test, kiểm thử tích hợp, e2e testing, end-to-end testing, e2e]}
+  - {id: api_testing, name: API Testing, level: 3, parent: software_testing, kind: hard, aliases: [api test, kiểm thử api, test api]}
+  - {id: performance_testing, name: Performance Testing, level: 3, parent: software_testing, kind: hard, aliases: [performance test, load testing, load test, stress test, stress testing, kiểm thử hiệu năng, kiểm thử tải]}
+  - {id: mobile_testing, name: Mobile Testing, level: 3, parent: software_testing, kind: hard, aliases: [mobile test, kiểm thử mobile, test mobile]}
+  - {id: test_case, name: Test Case Design, level: 3, parent: software_testing, kind: hard, aliases: [test case, test cases, testcase, viết test case, viết testcase, test plan, test scenario, test scenarios, kế hoạch kiểm thử]}
+  - {id: selenium, name: Selenium, level: 3, parent: software_testing, kind: tool, aliases: [selenium webdriver]}
+  - {id: cypress, name: Cypress, level: 3, parent: software_testing, kind: tool}
+  - {id: playwright, name: Playwright, level: 3, parent: software_testing, kind: tool}
+  - {id: appium, name: Appium, level: 3, parent: software_testing, kind: tool}
+  - {id: katalon, name: Katalon, level: 3, parent: software_testing, kind: tool, aliases: [katalon studio]}
+  - {id: robot_framework, name: Robot Framework, level: 3, parent: software_testing, kind: tool}
+  - {id: cucumber, name: Cucumber, level: 3, parent: software_testing, kind: tool, aliases: [gherkin]}
+  - {id: jmeter, name: JMeter, level: 3, parent: software_testing, kind: tool, aliases: [apache jmeter, k6, gatling, locust, loadrunner]}
+  - {id: postman, name: Postman, level: 3, parent: software_testing, kind: tool, aliases: [soapui, insomnia]}
+  - {id: junit, name: JUnit, level: 3, parent: java, category: 7, kind: tool, aliases: [testng, mockito]}
+  - {id: pytest, name: pytest, level: 3, parent: python, category: 7, kind: tool, aliases: [unittest]}
+  - {id: jest, name: Jest, level: 3, parent: javascript, category: 7, kind: tool, aliases: [mocha, jasmine, vitest, react testing library]}
+  - {id: testrail, name: TestRail, level: 3, parent: software_testing, kind: tool, aliases: [zephyr, testlink, qtest]}
+  - {id: sonarqube, name: SonarQube, level: 3, parent: software_testing, kind: tool, aliases: [sonar, sonarcloud, static code analysis]}
+  - {id: istqb, name: ISTQB, level: 3, parent: software_testing, kind: hard, aliases: [istqb foundation, ctfl]}
+  - {id: tdd, name: TDD, level: 2, parent: group_qa_security_process, kind: hard, aliases: [test-driven development, test driven development, bdd, behavior-driven development]}
+  - {id: security, name: Information Security, level: 2, parent: group_qa_security_process, kind: hard, aliases: [security, bảo mật, an toàn thông tin, an ninh mạng, cybersecurity, cyber security, information security, application security, network security, bảo mật hệ thống]}
+  - {id: owasp, name: OWASP, level: 3, parent: security, kind: hard, aliases: [owasp top 10, xss, csrf, sql injection]}
+  - {id: pentest, name: Penetration Testing, level: 3, parent: security, kind: hard, aliases: [pentest, pen test, kiểm thử xâm nhập, ethical hacking, red team]}
+  - {id: siem, name: SIEM, level: 3, parent: security, kind: tool, aliases: [splunk, qradar, soc, security operations center, wazuh]}
+  - {id: firewall, name: Firewall, level: 3, parent: security, kind: hard, aliases: [tường lửa, waf, fortigate, palo alto, checkpoint, ids/ips]}
+  - {id: security_tools, name: Burp Suite, level: 3, parent: security, kind: tool, aliases: [burpsuite, metasploit, nmap, wireshark, kali linux]}
+  - {id: iso27001, name: ISO 27001, level: 3, parent: security, kind: hard, aliases: [iso/iec 27001, pci dss, soc 2, gdpr]}
+  - {id: cryptography, name: Cryptography, level: 3, parent: security, kind: hard, aliases: [mã hóa, encryption, pki, ssl/tls, tls/ssl, ssl, tls]}
+  - {id: iam_sso, name: IAM & SSO, level: 3, parent: security, kind: hard, aliases: [identity and access management, single sign-on, sso, mfa, 2fa]}
+  - {id: agile, name: Agile, level: 2, parent: group_qa_security_process, kind: hard, aliases: [agile methodologies, agile methodology, phương pháp agile, agile/scrum]}
+  - {id: scrum, name: Scrum, level: 3, parent: agile, kind: hard, aliases: [scrum master, sprint planning, psm]}
+  - {id: kanban, name: Kanban, level: 3, parent: agile, kind: hard}
+  - {id: waterfall, name: Waterfall, level: 2, parent: group_qa_security_process, kind: hard, aliases: [mô hình thác nước, v-model]}
+  - {id: cmmi, name: CMMI, level: 2, parent: group_qa_security_process, kind: hard, aliases: [iso 9001, itil]}
+  - {id: jira, name: Jira, level: 2, parent: group_qa_security_process, kind: tool, aliases: [atlassian jira]}
+  - {id: confluence, name: Confluence, level: 2, parent: group_qa_security_process, kind: tool}
+  - {id: trello, name: Trello, level: 2, parent: group_qa_security_process, kind: tool, aliases: [asana, clickup, monday.com, redmine, notion]}
+  - {id: uml, name: UML, level: 2, parent: group_qa_security_process, kind: hard, aliases: [use case diagram, sequence diagram, class diagram, activity diagram, sơ đồ uml, draw.io, visio, bpmn, miro]}
+  - {id: business_analysis, name: Phân tích nghiệp vụ, level: 2, parent: group_qa_security_process, kind: hard, aliases: [business analysis, phân tích yêu cầu, requirement analysis, requirements analysis, requirement gathering, thu thập yêu cầu, brd, srs, phân tích hệ thống]}
+  - {id: user_story, name: User Story, level: 3, parent: business_analysis, kind: hard, aliases: [user stories, viết user story, use case, use cases, acceptance criteria]}
+  - {id: product_management, name: Quản lý sản phẩm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [product management, product owner, product roadmap, xây dựng roadmap sản phẩm, roadmap sản phẩm]}
+  - {id: project_management, name: Quản lý dự án, level: 2, parent: group_qa_security_process, kind: hard, aliases: [project management, quản trị dự án, quản lý dự án phần mềm, lập kế hoạch dự án, theo dõi tiến độ dự án, pmp]}
+  - {id: erp, name: ERP, level: 2, parent: group_qa_security_process, kind: domain, aliases: [hệ thống erp, sap, sap erp, sap s/4hana, oracle erp, microsoft dynamics]}
+  - {id: crm, name: CRM, level: 2, parent: group_qa_security_process, kind: domain, aliases: [salesforce, hubspot, hệ thống crm]}
+  - {id: fintech, name: Fintech, level: 2, parent: group_qa_security_process, kind: domain, aliases: [banking domain, nghiệp vụ ngân hàng, core banking, payment gateway, cổng thanh toán, e-wallet, ví điện tử]}
+  - {id: ecommerce, name: E-commerce, level: 2, parent: group_qa_security_process, kind: domain, aliases: [ecommerce, thương mại điện tử, e commerce]}
+  - {id: code_review, name: Code Review, level: 2, parent: group_qa_security_process, kind: hard, aliases: [review code, clean code]}
+  - {id: technical_writing, name: Technical Documentation, level: 2, parent: group_qa_security_process, kind: hard, aliases: [viết tài liệu kỹ thuật, tài liệu kỹ thuật, technical writing, technical documentation]}
+  - {id: office_skills, name: Tin học văn phòng, level: 2, parent: group_qa_security_process, kind: tool, aliases: [microsoft office, ms office, office 365, microsoft 365, powerpoint, google workspace, phần mềm văn phòng, thành thạo tin học văn phòng]}
+  # Kỹ năng mềm và ngoại ngữ
+  - {id: english, name: Tiếng Anh, level: 2, parent: group_qa_security_process, kind: soft, aliases: [english, tiếng anh giao tiếp, tiếng anh chuyên ngành, toeic, ielts, business english, tiếng anh cơ bản]}
+  - {id: japanese, name: Tiếng Nhật, level: 2, parent: group_qa_security_process, kind: soft, aliases: [japanese, jlpt, n1, n2, n3, bse, brse]}
+  - {id: korean, name: Tiếng Hàn, level: 2, parent: group_qa_security_process, kind: soft, aliases: [korean, topik]}
+  - {id: chinese, name: Tiếng Trung, level: 2, parent: group_qa_security_process, kind: soft, aliases: [chinese, hsk, mandarin]}
+  - {id: communication, name: Giao tiếp, level: 2, parent: group_qa_security_process, kind: soft, aliases: [kỹ năng giao tiếp, communication, communication skills, giao tiếp tốt]}
+  - {id: teamwork, name: Làm việc nhóm, level: 2, parent: group_qa_security_process, kind: soft, aliases: [teamwork, kỹ năng làm việc nhóm, team work, team player]}
+  - {id: problem_solving, name: Giải quyết vấn đề, level: 2, parent: group_qa_security_process, kind: soft, aliases: [problem solving, problem-solving, kỹ năng giải quyết vấn đề]}
+  - {id: logical_thinking, name: Tư duy logic, level: 2, parent: group_qa_security_process, kind: soft, aliases: [logical thinking, tư duy phân tích, analytical thinking, analytical skills, kỹ năng phân tích, critical thinking, tư duy phản biện]}
+  - {id: self_learning, name: Tự học, level: 2, parent: group_qa_security_process, kind: soft, aliases: [self-learning, khả năng tự học, tinh thần tự học, self-motivated]}
+  - {id: time_management, name: Quản lý thời gian, level: 2, parent: group_qa_security_process, kind: soft, aliases: [time management, kỹ năng quản lý thời gian, lập kế hoạch, kỹ năng lập kế hoạch]}
+  - {id: leadership, name: Lãnh đạo, level: 2, parent: group_qa_security_process, kind: soft, aliases: [leadership, kỹ năng lãnh đạo, team lead, quản lý đội nhóm, quản lý nhóm, people management]}
+  - {id: presentation, name: Thuyết trình, level: 2, parent: group_qa_security_process, kind: soft, aliases: [presentation skills, kỹ năng thuyết trình, presentation]}
+  - {id: mentoring, name: Mentoring, level: 2, parent: group_qa_security_process, kind: soft, aliases: [coaching, đào tạo nội bộ, hướng dẫn junior]}
+  - {id: negotiation, name: Đàm phán, level: 2, parent: group_qa_security_process, kind: soft, aliases: [kỹ năng đàm phán, negotiation, thuyết phục, kỹ năng thuyết phục]}
+  - {id: stakeholder_management, name: Stakeholder Management, level: 2, parent: group_qa_security_process, kind: soft, aliases: [quản lý các bên liên quan, làm việc với khách hàng, customer communication]}
+  - {id: attention_to_detail, name: "Cẩn thận, chi tiết", level: 2, parent: group_qa_security_process, kind: soft, aliases: [attention to detail, tỉ mỉ, cẩn thận, detail-oriented]}
+  - {id: adaptability, name: Thích nghi, level: 2, parent: group_qa_security_process, kind: soft, aliases: [adaptability, khả năng thích nghi, chịu áp lực, làm việc dưới áp lực, chịu được áp lực]}
