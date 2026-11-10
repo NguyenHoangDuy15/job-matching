@@ -1,0 +1,29 @@
+{
+  "model_version": "jev_local_v1",
+  "sklearn": "1.9.1",
+  "train_file": "silver_mentions.csv",
+  "n_train": 12414,
+  "n_jd": 1635,
+  "preferred_share": 0.1183,
+  "oof_macro_f1": 0.9481,
+  "oof_preferred_recall": 0.9373,
+  "cv_by_tau": {
+    "0.6": {
+      "coverage": 0.9897,
+      "macro_f1": 0.9592
+    },
+    "0.7": {
+      "coverage": 0.9751,
+      "macro_f1": 0.9689
+    },
+    "0.8": {
+      "coverage": 0.9528,
+      "macro_f1": 0.9765
+    },
+    "0.9": {
+      "coverage": 0.894,
+      "macro_f1": 0.9808
+    }
+  },
+  "note": "Nhãn silver do luật sinh ra: số liệu CV chỉ cho biết model học lại luật tốt đến đâu, KHÔNG phải độ chính xác thật. Độ chính xác thật đo bằng scripts/evaluate_levels.py."
+}
