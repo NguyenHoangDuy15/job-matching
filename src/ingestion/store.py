@@ -256,6 +256,8 @@ class PgStore:
         self.can_close = "close_reason" in self.columns and self._has_close_functions()
         self.index = self._province_index()
         self.fx_rates = self._fx_rates() if self.salary_v2 else {}
+        # Tin mới / đổi nội dung trong lượt này: bước ③ gắn kỹ năng sau crawl (S2-D06).
+        self.changed_job_ids: list[int] = []
 
     # ---- đọc tham chiếu ---------------------------------------------------
     def _job_columns(self) -> set[str]:
@@ -448,6 +450,8 @@ class PgStore:
                         where source_id = %s and source_job_id = %s and missed_runs <> 0""",
                     (self._source_id, posting.source_job_id),
                 )
+        if result != "unchanged":
+            self.changed_job_ids.append(job_id)
         return result
 
     # ---- đóng tin hết hạn / bị gỡ (S2-T06, migration 0004) ------------------------
