@@ -121,3 +121,32 @@ def test_company_name_norm(name, expected):
 
 def test_salary_text_from_numbers(vnw):
     assert vnw.salary_text() == "25,000,000 - 40,000,000 VND"
+
+
+def test_content_hash_only_depends_on_source_fields(itviec, monkeypatch):
+    """Mã băm chỉ tính trên dữ liệu nguồn: giữ nguyên giá trị đã ghi vào DB từ 09/11."""
+    import hashlib
+    import json
+
+    from ingestion import store
+
+    expected = hashlib.sha256(
+        json.dumps(
+            {
+                "title": itviec.title,
+                "company": itviec.company_name,
+                "description": itviec.description_text,
+                "salary": itviec.salary_text(),
+                "location": itviec.location_text(),
+                "remote": itviec.remote,
+                "valid_through": itviec.valid_through.isoformat(),
+                "employment_type": itviec.employment_type,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode()
+    ).digest()
+    assert content_hash(itviec) == expected
+    # Bộ tách section đổi kết quả thì mã băm vẫn không đổi.
+    monkeypatch.setattr(store, "section_columns", lambda text: {"description": "khác"})
+    assert content_hash(itviec) == expected

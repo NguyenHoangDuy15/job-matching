@@ -21,6 +21,11 @@ from ingestion.location import ProvinceIndex, build_index, normalize_key, normal
 from ingestion.models import JobPostingRaw
 from ingestion.salary import parse_salary, to_vnd
 
+try:  # S2-D03 (PR #618): tách JD thành 4 section. Chưa có thì ghi toàn văn vào description.
+    from skillkit.sections import split_text
+except ImportError:  # pragma: no cover - chỉ xảy ra trước khi #618 được merge
+    split_text = None
+
 SaveResult = Literal["new", "updated", "unchanged"]
 
 DATA_RAW = Path(__file__).resolve().parents[2] / "data" / "raw"
@@ -65,8 +70,21 @@ def company_name_norm(name: str) -> str:
     return " ".join(key.split()) or normalize_key(name)
 
 
+def section_columns(text: str) -> dict[str, str | None]:
+    """4 cột section của core.jobs. Không tách được thì giữ toàn văn ở description."""
+    if split_text is not None and text:
+        cols = split_text(text).columns()
+        if any(cols.values()):
+            return cols
+    return {"description": text or None, "requirements": None, "preferred": None, "benefits": None}
+
+
 def content_hash(posting: JobPostingRaw) -> bytes:
-    """SHA-256 phần nội dung có ý nghĩa: đổi thì mới cập nhật core.jobs."""
+    """SHA-256 nội dung LẤY TỪ NGUỒN: đổi thì mới cập nhật core.jobs.
+
+    Không đưa kết quả tách section vào đây: cải tiến bộ tách không được làm tin "đổi nội dung".
+    Đổi tên khóa hay thêm khóa sẽ làm mọi tin đã nạp bị coi là đã đổi ở lần crawl kế tiếp.
+    """
     payload = {
         "title": posting.title,
         "company": posting.company_name,
@@ -121,7 +139,8 @@ def build_job_row(
         "salary_pay_type": parsed.pay_type,
         "salary_status": parsed.status,
         "salary_fx_date": vnd.fx_date,
-        "description": posting.description_text,
+        "jd_text": posting.description_text,  # migration 0003; DB chưa có cột thì bị bỏ qua
+        **section_columns(posting.description_text),
         "posted_at": posting.date_posted,
         "valid_through": posting.valid_through,
         "apply_url": posting.url,
