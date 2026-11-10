@@ -51,3 +51,13 @@ def test_ambiguous_terms_need_context_in_seed(taxonomy):
     flagged = {alias for alias, _, needs, _ in aliases if needs}
     assert {"go", "r", "c", "ai", "react", "swift", "spring", "excel"} <= flagged
     assert "golang" not in flagged and "javascript" not in flagged
+
+
+def test_tree_is_two_tiers_for_db(taxonomy):
+    """ref.skills (migration 0003): cấp 3 trỏ về cấp 2, cấp 2 không có cha trong DB."""
+    from scripts.build_skill_seed import parent_pairs
+
+    pairs = dict(parent_pairs(taxonomy))
+    parents = {p for p in pairs.values() if p}
+    assert pairs["react"] == "javascript" and pairs["javascript"] is None
+    assert parents <= set(pairs) and all(pairs[p] is None for p in parents)
