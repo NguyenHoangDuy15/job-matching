@@ -4,7 +4,7 @@ Phương án: lưu sẵn lương VND trong core.jobs, tính lại khi tỷ giá 
 Job tỷ giá chạy mỗi ngày trước lượt crawl 02:00:
   1. fetch_rates(): Vietcombank (giá chuyển khoản) → open.er-api.com.
   2. Lỗi cả hai → dùng tỷ giá đã lưu nếu chưa quá max_age_days, không thì cảnh báo.
-  3. changed_currencies() khác rỗng → gọi ref.refresh_job_salaries_vnd()
+  3. sync_rates_pg() ghi ref.fx_rates rồi gọi ref.refresh_job_salaries_vnd()
      (db/migrations/0002_fx_rates.sql) để mọi tin ngoại tệ đổi theo cùng một tỷ giá
      trong một transaction.
 """
@@ -16,6 +16,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -173,10 +174,10 @@ def changed_currencies(old: Mapping[str, FxRate], new: Mapping[str, FxRate]) -> 
     )
 
 
-def update_rates(today: date, config: FxConfig | None = None, fetch: Fetch = http_get) -> FxUpdate:
-    """Bước ① của Cloud Run Job: lấy tỷ giá mới, lưu lịch sử, báo ngoại tệ nào đổi."""
-    config = config or load_fx_config()
-    previous = load_latest(config.store_path)
+def _resolve(
+    previous: FxTable, today: date, config: FxConfig, fetch: Fetch
+) -> tuple[FxUpdate, FxTable | None]:
+    """Lấy tỷ giá mới; lỗi thì dùng tỷ giá cũ ≤ max_age_days. Trả (kết quả, bảng mới cần lưu)."""
     try:
         fresh = fetch_rates(config, fetch)
     except FxError as exc:
@@ -186,11 +187,65 @@ def update_rates(today: date, config: FxConfig | None = None, fetch: Fetch = htt
             if (today - rate.rate_date).days <= config.max_age_days
         }
         if usable:
-            return FxUpdate(usable, frozenset(), (f"dùng tỷ giá đã lưu vì {exc}",))
-        return FxUpdate(
-            {},
-            frozenset(),
-            (f"tỷ giá đã lưu quá {config.max_age_days} ngày, không đổi lương ngoại tệ: {exc}",),
+            return FxUpdate(usable, frozenset(), (f"dùng tỷ giá đã lưu vì {exc}",)), None
+        warning = f"tỷ giá đã lưu quá {config.max_age_days} ngày, không đổi lương ngoại tệ: {exc}"
+        return FxUpdate({}, frozenset(), (warning,)), None
+    return FxUpdate(fresh, changed_currencies(previous, fresh), ()), fresh
+
+
+def update_rates(today: date, config: FxConfig | None = None, fetch: Fetch = http_get) -> FxUpdate:
+    """Chạy offline (không DB): lấy tỷ giá mới, lưu lịch sử vào file JSON."""
+    config = config or load_fx_config()
+    update, fresh = _resolve(load_latest(config.store_path), today, config, fetch)
+    if fresh is not None:
+        save_rates(fresh, config.store_path)
+    return update
+
+
+# --- Postgres: ref.fx_rates / ref.fx_latest / ref.refresh_job_salaries_vnd() (migration 0002) ---
+
+
+def load_latest_pg(conn: Any) -> FxTable:
+    """Tỷ giá mới nhất mỗi ngoại tệ trong DB (view ref.fx_latest)."""
+    rows = conn.execute("select currency, rate_vnd, rate_date, source from ref.fx_latest")
+    return {
+        code.strip(): FxRate(code.strip(), float(rate), day, source)
+        for code, rate, day, source in rows
+    }
+
+
+def save_rates_pg(conn: Any, table: Mapping[str, FxRate]) -> None:
+    """Ghi lịch sử tỷ giá; cùng (ngoại tệ, ngày, nguồn) thì giữ bản ghi đầu."""
+    for rate in table.values():
+        conn.execute(
+            """insert into ref.fx_rates (currency, rate_date, rate_vnd, source)
+               values (%s, %s, %s, %s)
+               on conflict (currency, rate_date, source) do nothing""",
+            (rate.currency, rate.rate_date, rate.rate_vnd, rate.source),
         )
-    save_rates(fresh, config.store_path)
-    return FxUpdate(fresh, changed_currencies(previous, fresh), ())
+
+
+@dataclass(frozen=True)
+class FxSyncResult:
+    update: FxUpdate
+    jobs_refreshed: int  # số tin ngoại tệ được tính lại lương VND
+
+
+def sync_rates_pg(
+    conn: Any, today: date, config: FxConfig | None = None, fetch: Fetch = http_get
+) -> FxSyncResult:
+    """Bước ① của Cloud Run Job, chạy trước crawl.
+
+    Lấy tỷ giá mới → ghi ref.fx_rates → nếu có ngoại tệ đổi giá hoặc còn tin ngoại tệ
+    chưa đổi theo ngày tỷ giá mới nhất, gọi ref.refresh_job_salaries_vnd() để mọi tin
+    ngoại tệ đổi theo cùng một tỷ giá trong một transaction.
+    """
+    config = config or load_fx_config()
+    with conn.transaction():
+        update, fresh = _resolve(load_latest_pg(conn), today, config, fetch)
+        if fresh is not None:
+            save_rates_pg(conn, fresh)
+        # Hàm SQL chỉ sửa tin có salary_fx_date khác ngày tỷ giá mới nhất, nên gọi luôn
+        # cũng rẻ; nhờ vậy tin nạp lúc DB chưa có tỷ giá cũng được bổ sung lương VND.
+        refreshed = conn.execute("select ref.refresh_job_salaries_vnd()").fetchone()[0]
+    return FxSyncResult(update, int(refreshed))
