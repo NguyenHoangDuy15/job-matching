@@ -69,6 +69,7 @@ psql "$DATABASE_URL" -f db/migrations/0002_fx_rates.sql
 psql "$DATABASE_URL" -f db/migrations/0003_skill_tree_sections.sql
 psql "$DATABASE_URL" -f db/seed/seed_skills.sql              # từ điển kỹ năng (sinh từ YAML)
 psql "$DATABASE_URL" -f db/migrations/0004_job_skill_levels.sql
+psql "$DATABASE_URL" -f db/migrations/0005_job_skills_api.sql   # view thẻ kỹ năng cho web
 ```
 
 Migration và seed đều chạy lại được nhiều lần. Nếu `DATABASE_URL` có dạng `postgresql+psycopg://…` thì bỏ `+psycopg` khi dùng với `psql`.
@@ -93,7 +94,9 @@ uv run python scripts/load_jsonl.py <file.jsonl> --source topcv
 # Bảo trì
 uv run python scripts/update_fx.py [--dry-run]       # cập nhật tỷ giá + tính lại lương tin ngoại tệ
 uv run python scripts/split_sections.py [--apply]    # tách lại 4 section từ core.jobs.jd_text
-uv run python scripts/label_skills.py [--apply]      # gắn kỹ năng + mức, ghi core.job_skills
+uv run python scripts/label_skills.py [--apply] [--stale]   # gắn kỹ năng + mức, ghi core.job_skills
+uv run python scripts/label_skills.py --report       # % tin mở có thẻ kỹ năng (mục tiêu ≥ 90%)
+uv run python scripts/check_job_skills.py [--score]  # lấy 20 tin để kiểm tay / chấm
 ```
 
 Chỉ crawl các nguồn đã được phép trong `config/sources.yaml`, tuân thủ `docs/data_sources.md`. Gặp 403, 429 hoặc trang chống bot thì dừng, không tìm cách vượt.
@@ -132,6 +135,8 @@ uv run python scripts/evaluate_levels.py score      # chấm trên data/eval/gol
 - **Model** không lên git. Train lại cho ra cùng model, vì seed cố định và `uv.lock` ghim scikit-learn. Chưa có file model thì pipeline chỉ dùng luật.
 - **Thêm cue:** sửa `config/skill_levels.yaml` rồi thêm ca vào `tests/unit/test_levels_rules.py`.
 - **`extractor`:** `dict` là luật quyết, `jev` là Tầng 2 quyết, `human` là sửa tay. Chạy lại pipeline không ghi đè và không xóa dòng `human`.
+- **`--stale`** chỉ gắn tin chưa có kỹ năng hoặc gắn bằng phiên bản cũ. `model_version` chứa mã băm của `skills.yaml` và `skill_levels.yaml`, nên sửa từ điển hay cue thì lần chạy sau tự gắn lại.
+- **Web** đọc thẻ kỹ năng từ `api.v_job_skills` (chỉ `required` / `preferred`). Bộ lọc kỹ năng của `api.search_jobs` cũng bỏ qua `mentioned`.
 - **`source_detail`:** cho biết luật nào đã quyết, gồm `rule_neg`, `rule_section`, `rule_cue`, `rule_mixed`, `rule_desc`, `model`, `fallback`.
 
 ## Script đo chất lượng

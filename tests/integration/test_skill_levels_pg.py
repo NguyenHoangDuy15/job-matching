@@ -67,3 +67,64 @@ def test_write_keeps_human_rows_and_removes_stale(conn):
 
     write_job_skills(conn, labeled, ids, labeler.model_version)  # chạy lại được
     assert _levels(conn, job_id) == got
+
+
+def _open_job(conn, text: str) -> int:
+    return conn.execute(
+        "insert into core.jobs (title, title_norm, apply_url, jd_text, origin, status) "
+        "values ('Backend', 'backend', 'https://example.com/d05', %s, 'crawled', 'open') "
+        "returning id",
+        (text,),
+    ).fetchone()[0]
+
+
+def test_stale_selection_and_report(conn):
+    from skillkit.levels.db import coverage_report, label_and_write, select_jobs
+
+    labeler = SkillLabeler.default(with_model=False)
+    job_id = _open_job(conn, JD)
+    ver = labeler.model_version
+
+    def stale_ids():
+        rows = select_jobs(conn, model_version=ver, only_open=True, stale=True)
+        return {r[0] for r in rows}
+
+    assert job_id in stale_ids()  # chưa gắn
+    label_and_write(conn, labeler, select_jobs(conn, model_version=ver, ids=[job_id]))
+    assert job_id not in stale_ids()  # đã gắn bằng bản hiện tại
+    conn.execute("update core.job_skills set model_version = 'cu' where job_id = %s", (job_id,))
+    assert job_id in stale_ids()  # luật/từ điển đổi → gắn lại
+
+    report = coverage_report(conn)
+    assert report["open_jobs"] >= 1 and report["with_skill_cards"] >= 1
+    assert 0 < report["pct_with_cards"] <= 100
+
+
+def test_web_view_and_search_skip_mentioned(conn):
+    from skillkit.levels.db import label_and_write, select_jobs
+
+    if not conn.execute("select to_regclass('api.v_job_skills')").fetchone()[0]:
+        pytest.skip("DB thử chưa chạy 0005_job_skills_api.sql")
+    labeler = SkillLabeler.default(with_model=False)
+    job_id = _open_job(conn, JD)
+    label_and_write(
+        conn, labeler, select_jobs(conn, model_version=labeler.model_version, ids=[job_id])
+    )
+    public_id = conn.execute("select public_id from core.jobs where id = %s", (job_id,)).fetchone()
+    cards = dict(
+        conn.execute(
+            "select skill_slug, level::text from api.v_job_skills where job_public_id = %s",
+            public_id,
+        ).fetchall()
+    )
+    assert cards == {"java": "required", "kotlin": "preferred"}  # kafka (mentioned) không hiện
+
+    ids = skill_ids(conn)
+
+    def found(slug):
+        rows = conn.execute(
+            "select public_id from api.search_jobs(skills => %s)", ([ids[slug]],)
+        ).fetchall()
+        return public_id in rows
+
+    assert found("java") and not found("kafka")
