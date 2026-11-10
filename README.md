@@ -22,7 +22,7 @@ Cloud Run Job (02:00)                          Supabase (Postgres 16 + pgvector 
 │ ① tỷ giá  ingestion.fx             │──────▶ │ ref     từ điển: 34 tỉnh, kỹ năng,    │
 │ ② crawl   ingestion.crawl (JSON-LD)│        │         tỷ giá                         │
 │   chuẩn hóa: 34 tỉnh, lương VND,   │──────▶ │ raw     bản gốc từng lượt crawl        │
-│   tách section, (kỹ năng — S2-D05) │        │ core    jobs, job_locations, job_skills│
+│   tách section, kỹ năng + mức      │        │ core    jobs, job_locations, job_skills│
 └────────────────────────────────────┘        │ app     người dùng, CV, HR (RLS)       │
                                                │ api     view + RPC cho web             │
 Next.js trên Cloudflare (apps/web) ──────────▶ │ ops / mart / eval                      │
@@ -42,6 +42,7 @@ Chi tiết stack và lý do chọn: `docs/adr/003-stack.md` và `docs/architectu
 | Chuẩn hóa lương về VND/tháng | `src/ingestion/salary.py`, `fx.py` | Tỷ giá lấy mới mỗi lượt crawl; tin ngoại tệ tự tính lại khi tỷ giá đổi |
 | Tách 4 section JD | `src/skillkit/sections.py` | Mô tả / Yêu cầu / Ưu tiên / Quyền lợi, heading Việt–Anh |
 | Từ điển 379 kỹ năng + từ nhập nhằng | `config/skills.yaml`, `src/skillkit/matcher.py` | Go, R, C, .NET, Java/JS, AI... |
+| Mức kỹ năng bắt buộc / ưu tiên / chỉ nhắc | `src/skillkit/levels/` | Từ điển + luật + Tầng 2 JEV-local; chạy lô bằng `label_skills.py` (gắn vào crawl ở S2-D05) |
 
 ## Bắt đầu
 
@@ -67,6 +68,8 @@ psql "$DATABASE_URL" -f db/seed/seed_reference_data.sql      # 34 tỉnh, nhóm 
 psql "$DATABASE_URL" -f db/migrations/0002_fx_rates.sql
 psql "$DATABASE_URL" -f db/migrations/0003_skill_tree_sections.sql
 psql "$DATABASE_URL" -f db/seed/seed_skills.sql              # từ điển kỹ năng (sinh từ YAML)
+psql "$DATABASE_URL" -f db/migrations/0004_close_stale_jobs.sql
+psql "$DATABASE_URL" -f db/migrations/0005_job_skill_levels.sql
 ```
 
 Migration và seed đều chạy lại được nhiều lần. Nếu `DATABASE_URL` có dạng `postgresql+psycopg://…` thì bỏ `+psycopg` khi dùng với `psql`.
@@ -91,6 +94,7 @@ uv run python scripts/load_jsonl.py <file.jsonl> --source topcv
 # Bảo trì
 uv run python scripts/update_fx.py [--dry-run]       # cập nhật tỷ giá + tính lại lương tin ngoại tệ
 uv run python scripts/split_sections.py [--apply]    # tách lại 4 section từ core.jobs.jd_text
+uv run python scripts/label_skills.py [--apply]      # gắn kỹ năng + mức, ghi core.job_skills
 ```
 
 Chỉ crawl các nguồn đã được phép trong `config/sources.yaml`, tuân thủ `docs/data_sources.md`. Gặp 403, 429 hoặc trang chống bot thì dừng, không tìm cách vượt.
@@ -107,6 +111,29 @@ uv run pytest tests/unit/test_skill_seed.py                # CI báo đỏ nếu
 - **Cấu trúc:** level 1 là nhóm, khớp `ref.skill_categories`. Level 2 là kỹ năng. Level 3 là framework/công cụ con, ghi vào `ref.skills.parent_id`.
 - **So khớp giữ dấu tiếng Việt**, để "gõ" không thành "go".
 - **Từ nhập nhằng** ("Go", "R", "C", "AI", "React"...) khai báo `ambiguous`, `context` và `rule` ngay trong YAML. Ví dụ: chỉ nhận "Go" viết hoa khi có ngữ cảnh lập trình; loại "go live", "R&D", "hạng C"; "lương Net" không ra .NET.
+
+## Mức kỹ năng: bắt buộc / ưu tiên (S2-D04)
+
+Mỗi lần kỹ năng xuất hiện trong JD đi qua các bước sau:
+
+1. **Từ điển** (`SkillMatcher`) tìm kỹ năng.
+2. **Luật** (`config/skill_levels.yaml`) xét section theo heading gốc và cue trong câu: "ưu tiên", "là lợi thế", "a plus", "không bắt buộc", "tối thiểu", "must"... Câu trộn hai mức được xét theo từng vế: "Thành thạo Java, ưu tiên biết Kotlin".
+3. **Tầng 2 "JEV-local"** (TF-IDF n-gram ký tự + Logistic Regression) chỉ quyết các ca luật không chắc.
+4. **Gộp:** mỗi (tin, kỹ năng) giữ một dòng trong `core.job_skills`.
+
+Kỹ năng chỉ được nhắc trong Mô tả công việc, không có cue, ghi là `mentioned`. Kỹ năng trong Quyền lợi bị bỏ.
+
+```bash
+uv run python scripts/make_silver.py                # nhãn yếu từ VietJobs, trừ 50 JD gold
+uv run python scripts/train_tier2.py                # train → models/jev_local_v1.joblib
+uv run python scripts/evaluate_levels.py template   # file gán tay data/eval/gold_mentions_TEMPLATE.csv
+uv run python scripts/evaluate_levels.py score      # chấm trên data/eval/gold_mentions.csv
+```
+
+- **Model** không lên git. Train lại cho ra cùng model, vì seed cố định và `uv.lock` ghim scikit-learn. Chưa có file model thì pipeline chỉ dùng luật.
+- **Thêm cue:** sửa `config/skill_levels.yaml` rồi thêm ca vào `tests/unit/test_levels_rules.py`.
+- **`extractor`:** `dict` là luật quyết, `jev` là Tầng 2 quyết, `human` là sửa tay. Chạy lại pipeline không ghi đè và không xóa dòng `human`.
+- **`source_detail`:** cho biết luật nào đã quyết, gồm `rule_neg`, `rule_section`, `rule_cue`, `rule_mixed`, `rule_desc`, `model`, `fallback`.
 
 ## Script đo chất lượng
 

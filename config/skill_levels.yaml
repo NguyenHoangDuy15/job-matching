@@ -1,0 +1,73 @@
+# Gắn mức required / preferred / mentioned cho kỹ năng trong JD (S2-D04, US-10).
+# Cue là regex so trên câu đã bỏ dấu, chữ thường (skillkit.levels.norm), nên khớp cả JD
+# gõ không dấu. Mỗi danh sách được nối bằng "|" thành một regex.
+
+cues:
+  # Phủ định của yêu cầu → preferred, mạnh nhất.
+  negation:
+    - 'khong (yeu cau )?bat buoc'
+    - 'not (required|mandatory)'
+    - '\boptional\b'
+    - 'tuy chon'
+  # Ưu tiên. "ưu tiên" còn nghĩa "độ ưu tiên" ("Xử lý ưu tiên các ticket") nên chỉ tính
+  # khi đứng đầu câu hoặc đứng trước các từ dưới đây.
+  preferred:
+    - '^[^a-z]*uu tien'
+    - 'uu tien (cho )?(ung vien|nguoi|ban|biet|co|kinh nghiem|hieu|su dung|da|thanh thao|lam)'
+    - 'duoc uu tien'
+    - 'loi the'
+    - 'diem cong'
+    - 'cang tot'
+    - 'neu co'
+    - 'nice[- ]to[- ]have'
+    - 'good[- ]to[- ]have'
+    - '\b(is )?a plus\b'
+    - 'plus point'
+    - '\bbonus\b'
+    - 'advantage'
+    - 'preferred'
+    - 'preferably'
+    - 'desirable'
+    - 'ideally'
+    - 'would be (great|nice)'
+  # Bắt buộc. Tín hiệu yếu: không bao giờ ghi đè section Ưu tiên.
+  required:
+    - 'bat buoc'
+    - 'toi thieu'
+    - 'it nhat'
+    - 'can co'
+    - 'phai co'
+    - '\bphai\b'
+    - '\bmust\b'
+    - 'required'
+    - 'essential'
+    - 'mandatory'
+    - 'minimum'
+    - 'at least'
+    - '\d+\+? ?(nam|years?)'
+    - 'thanh thao'
+    - 'nam vung'
+    - '\bstrong\b'
+    - 'proficien'
+    - '\bsolid\b'
+  # Cue ưu tiên đứng TRƯỚC kỹ năng nó áp vào ("ưu tiên biết Docker", "preferably Go").
+  # Gặp cue này ở mục sau kỹ năng ("Kubernetes, ưu tiên đã dùng RKE2") thì không áp ngược.
+  preferred_prefix:
+    - '^[^a-z]*uu tien'
+    - 'uu tien (cho )?(ung vien|nguoi|ban|biet|co|kinh nghiem|hieu|su dung|da|thanh thao|lam)'
+    - 'preferably'
+    - 'ideally'
+  # Phạm vi của cue: cắt câu ở các dấu/từ nối này. Dấu chấm chỉ tính khi đứng một mình
+  # trước khoảng trắng / cuối câu ("Node.js", "v.v.", "Docker, .. là" không bị cắt).
+  # "…" không cắt: JD hay dùng như "v.v." ("DevOps, ITSM,… là một lợi thế").
+  segment:
+    - '[;!?\n]'
+    - '(?<!\.)\.(?!\.)(?=\s|$)'
+    - '\s(but|while|whereas|nhung)\s'
+
+cascade:
+  # Tầng 2 (JEV-local) chỉ được quyết khi max(p, 1 - p) >= tau.
+  tau: 0.7
+  # Câu trong mục Yêu cầu không có cue: model chỉ được lật sang preferred khi p >= flip.
+  flip_required: 0.9
+  model_path: models/jev_local_v1.joblib
