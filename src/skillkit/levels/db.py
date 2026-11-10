@@ -1,4 +1,4 @@
-"""Ghi kết quả gắn mức vào core.job_skills (migration 0004).
+"""Ghi kết quả gắn mức vào core.job_skills (migration 0005).
 
 Mỗi tin: upsert các kỹ năng tìm được, xóa kỹ năng không còn trong JD. Dòng extractor = 'human'
 (sửa tay) không bao giờ bị ghi đè hay xóa.
