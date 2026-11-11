@@ -1,0 +1,117 @@
+{
+  "model_version": "dict-83913672+rules-v1-58671077+jev_local_v1",
+  "n_gold": 749,
+  "n_matched": 749,
+  "full": {
+    "n": 749,
+    "accuracy": 0.8798,
+    "macro_f1": 0.7038,
+    "required": {
+      "precision": 0.9585,
+      "recall": 0.8618,
+      "f1": 0.9076,
+      "support": 456
+    },
+    "preferred": {
+      "precision": 0.3494,
+      "recall": 0.8788,
+      "f1": 0.5,
+      "support": 33
+    }
+  },
+  "rules_only": {
+    "n": 749,
+    "accuracy": 0.8812,
+    "macro_f1": 0.7066,
+    "required": {
+      "precision": 0.9586,
+      "recall": 0.864,
+      "f1": 0.9089,
+      "support": 456
+    },
+    "preferred": {
+      "precision": 0.3537,
+      "recall": 0.8788,
+      "f1": 0.5043,
+      "support": 33
+    }
+  },
+  "hard_slice": {
+    "n": 221,
+    "full": {
+      "n": 221,
+      "accuracy": 0.9819,
+      "macro_f1": 0.6667,
+      "required": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6667,
+        "support": 4
+      },
+      "preferred": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667,
+        "support": 2
+      }
+    },
+    "rules_only": {
+      "n": 221,
+      "accuracy": 0.9864,
+      "macro_f1": 0.8286,
+      "required": {
+        "precision": 1.0,
+        "recall": 0.75,
+        "f1": 0.8571,
+        "support": 4
+      },
+      "preferred": {
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8,
+        "support": 2
+      }
+    }
+  },
+  "confusion": {
+    "required->required": 393,
+    "mentioned->mentioned": 213,
+    "required->drop": 10,
+    "mentioned->drop": 7,
+    "preferred->preferred": 29,
+    "required->preferred": 53,
+    "mentioned->required": 10,
+    "drop->drop": 24,
+    "drop->required": 3,
+    "drop->mentioned": 2,
+    "drop->preferred": 1,
+    "preferred->required": 4
+  },
+  "by_source": {
+    "rule_section": {
+      "correct": 431,
+      "n": 459
+    },
+    "rule_desc": {
+      "correct": 213,
+      "n": 215
+    },
+    "rule_cue": {
+      "correct": 11,
+      "n": 69
+    },
+    "rule_mixed": {
+      "correct": 3,
+      "n": 3
+    },
+    "model": {
+      "correct": 1,
+      "n": 3
+    }
+  },
+  "targets": {
+    "macro_f1": 0.85,
+    "preferred_recall": 0.8,
+    "note": "ngưỡng nhóm tự đặt, chưa có benchmark công bố"
+  }
+}

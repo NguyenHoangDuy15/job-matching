@@ -22,6 +22,7 @@ import yaml
 from skillkit.levels.norm import norm
 
 DEFAULT_CONFIG = Path(__file__).resolve().parents[3] / "config" / "skill_levels.yaml"
+_PAREN = re.compile(r"\([^()]*\)")
 
 # Section dùng trong luật. NONE = JD không có heading (không biết câu thuộc mục nào).
 Sec = Literal["DESC", "REQ", "PREF", "BEN", "IGNORE", "NONE"]
@@ -95,6 +96,15 @@ def decide(
         return Decision("PREFERRED", 0.95, "rule_neg")
     if section == "PREF":
         return Decision("PREFERRED", 0.95, "rule_section")
+    # Cụm trong ngoặc có cue ưu tiên chỉ áp cho kỹ năng trong ngoặc:
+    # "ít nhất một ngôn ngữ (ưu tiên Python, JavaScript) hoặc scripting (Bash)".
+    for m in _PAREN.finditer(seg):
+        x, y = m.span()
+        if not cues.preferred.search(seg[x:y]):
+            continue
+        if x < ls and le <= y:
+            return Decision("PREFERRED", 0.9, "rule_cue")
+        seg = seg[:x] + " " * (y - x) + seg[y:]  # che đi, giữ nguyên vị trí
     pref = [m.span() for m in cues.preferred.finditer(seg)]
     # "ưu tiên thành thạo X": "thành thạo" nằm trong cue ưu tiên, không tính là cue bắt buộc.
     req = [
