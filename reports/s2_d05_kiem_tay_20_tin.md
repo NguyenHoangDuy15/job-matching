@@ -33,11 +33,11 @@ Tin đang mở: 284 · có thẻ kỹ năng: 264 (93.0%, mục tiêu ≥ 90%) ·
 | Nhóm | Số mục | Ví dụ (job) | Nằm ở đâu |
 |---|---|---|---|
 | Chưa có trong từ điển | 80 (63%) | MES, SCADA, PLC (208); After Effects (249); ABAP Dictionary, CDS View (420); Sales, Telesales (295) | Từ điển. 5/14 tin không phải việc IT (4 tin bán hàng, 1 tin thiết kế đồ họa) |
-| Nội dung VietnamWorks bị cắt | 22 (17%) | AWS, Docker, Kubernetes (427); RDBMS (409) | **Crawler.** 93/97 tin VietnamWorks đang mở lưu `jd_text` kết thúc bằng "...", trung bình 691 ký tự (TopCV: 3.049) |
+| Nội dung VietnamWorks bị cắt | 22 (17%) | AWS, Docker, Kubernetes (427); RDBMS (409) | **Dữ liệu nạp vào.** 93/97 tin VietnamWorks đang mở lưu `jd_text` kết thúc bằng "...", trung bình 691 ký tự (TopCV: 3.049). Cả 100 tin được nạp ngày 09/11 từ file JSONL có sẵn, và `description` trong `raw.job_snapshots` đã bị cắt từ file đó |
 | Đã gắn, nhưng dưới tên kỹ năng chuẩn khác | 14 (11%) | Routing → Networking, CCNA → Cisco, IPsec → VPN, MQTT → IoT, Microsoft 365 → Tin học văn phòng | Từ điển gộp alias; người xem không biết thẻ đó bao gồm kỹ năng nào |
 | Nhận ra nhưng gắn mức `mentioned` (không hiện thẻ) | 5 (4%) | ERP, Data Warehouse (208); Node.js, TypeScript (427) | Luật mức: kỹ năng chỉ có ở phần Mô tả |
 | Có trong nội dung nhưng bộ trích bỏ sót | 4 (3%) | Scrum trong "Agile/Scrum" (212); Windows Server (273) | Bộ trích |
-| DB còn gắn bằng bản cũ | 1 | Leadership (427) | Chạy lại `label_skills.py --apply --stale` |
+| Chỉ model Tầng 2 bắt được | 1 | Leadership (427) | Production chỉ chạy luật: thẻ trên DB có phiên bản `…rules-v1-eb5abe00+no-model`, vì file model không lên git nên lượt crawl hằng đêm không có |
 
 ## Thẻ sai: 6/105, đều do alias quá rộng
 
@@ -56,11 +56,11 @@ Sai mức: 1 thẻ (Tiếng Trung, job 212). JD ghi rõ là ưu tiên, máy gắ
 
 | Việc | Người | Lý do |
 |---|---|---|
-| Lấy đủ mô tả tin VietnamWorks (trang chi tiết thay vì đoạn tóm tắt) | Tùng (crawler, S2-T03) | 17% mục thiếu; ảnh hưởng gần như mọi tin VietnamWorks |
+| Nạp lại tin VietnamWorks với mô tả đầy đủ (trang chi tiết thay vì đoạn tóm tắt trong file JSONL) | Tùng (S2-T03) | 17% mục thiếu; ảnh hưởng gần như mọi tin VietnamWorks |
 | Thu hẹp alias gây sai: `Solid` phải viết hoa `SOLID`; bỏ "thiết kế hệ thống", "kỹ năng thuyết phục", "kỹ năng phân tích", "SSL", "Microsoft 365" khỏi các kỹ năng trên | Duy (S2-D08) | Toàn bộ 6 thẻ sai |
 | Tách các kỹ năng đang bị gộp khác bản chất: Proxmox ≠ Hyper-V, Notion ≠ Trello, DHCP ≠ DNS | Duy (S2-D08) | Thẻ hiện tên khác với kỹ năng tin ghi |
 | Quyết định phạm vi từ điển với tin không phải IT (bán hàng, thiết kế) | Cả nhóm | Lọc tin không phải IT ở crawler, hoặc chấp nhận độ phủ thấp ở nhóm tin này |
-| Chạy `label_skills.py --apply --stale` trên Supabase | Duy | Gắn lại tin bằng bản luật mới nhất (PR #633) |
+| Quyết định có dùng model Tầng 2 trên production không. Nếu có, lượt crawl hằng đêm phải có file model; nếu chỉ gắn lại từ máy có model, lượt crawl đêm sau (không có model) sẽ coi mọi tin là bản cũ và gắn đè lại | Duy, Tùng | DB đã ở bản luật mới nhất (PR #633); chạy thử `label_skills.py --stale --only-open --no-model` ra 0 kỹ năng cần đổi |
 
 ## Cách chạy lại
 
