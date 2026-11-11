@@ -61,7 +61,7 @@ class FakeClient:
         return response
 
 
-def test_t01_completed_rows_and_synced_flag_survive_upsert(tmp_path):
+def test_t01_completed_rows_survive_upsert_and_changed_row_needs_sync(tmp_path):
     conn = open_db(tmp_path)
     jobs = add_jobs(conn, 10, 100)
     parsed = topcv.parse_jd_html(VALID_HTML)
@@ -71,7 +71,7 @@ def test_t01_completed_rows_and_synced_flag_survive_upsert(tmp_path):
     conn.commit()
     topcv.save_job_detail(conn, jobs[0]["job_id"], parsed)
     assert conn.execute("SELECT COUNT(*) FROM job_details").fetchone()[0] == 10
-    assert conn.execute("SELECT SUM(synced_to_pg) FROM job_details").fetchone()[0] == 10
+    assert conn.execute("SELECT SUM(synced_to_pg) FROM job_details").fetchone()[0] == 9
     assert (
         conn.execute("SELECT COUNT(*) FROM job_queue WHERE status='COMPLETED'").fetchone()[0] == 10
     )
@@ -112,7 +112,7 @@ def test_interrupted_run_reports_successes_saved_before_http_429(tmp_path, monke
     )
 
     class Browser:
-        def __init__(self, *_args):
+        def __init__(self, *_args, **_kwargs):
             self.calls = 0
 
         async def start(self):
@@ -484,7 +484,7 @@ def test_nodriver_close_awaits_process_and_closes_windows_transport(tmp_path):
 
 def test_t16_close_error_still_closes_db_and_returns_error(tmp_path, monkeypatch):
     class Browser:
-        def __init__(self, *_args):
+        def __init__(self, *_args, **_kwargs):
             pass
 
         async def start(self):
@@ -622,7 +622,7 @@ def test_target_total_caps_detail_requests_without_overshooting(tmp_path, monkey
     class Browser:
         calls = 0
 
-        def __init__(self, *_args):
+        def __init__(self, *_args, **_kwargs):
             pass
 
         async def start(self):

@@ -697,8 +697,8 @@ def save_job_detail(
     }
     missing = [field for field in ("requirements", "benefits") if not cleaned(parsed.get(field))]
     quality_note = f"Thiếu phần: {', '.join(missing)}" if missing else None
-    # Both writes form one transaction. The conflict update intentionally omits
-    # synced_to_pg so a downstream-sync marker survives a re-crawl/import.
+    # Both writes form one transaction. Any refreshed detail must be synced again;
+    # the downstream upsert is idempotent when its content did not actually change.
     with conn:
         conn.execute(
             """INSERT INTO job_details (
@@ -715,7 +715,7 @@ def save_job_detail(
             date_posted=excluded.date_posted,valid_through=excluded.valid_through,
             description_text=excluded.description_text,requirements_text=excluded.requirements_text,
             benefits_text=excluded.benefits_text,skills_json=excluded.skills_json,
-            raw_json_ld=excluded.raw_json_ld,scraped_at=CURRENT_TIMESTAMP""",
+            raw_json_ld=excluded.raw_json_ld,scraped_at=CURRENT_TIMESTAMP,synced_to_pg=0""",
             row,
         )
         conn.execute(
@@ -904,12 +904,13 @@ def source_policy(config_path: Path) -> float:
 
 
 class NodriverBrowser:
-    """A single visible browser tab; CDP records document response status."""
+    """A single browser tab; CDP records document response status."""
 
-    def __init__(self, profile: Path, chrome: str | None, delay: float):
+    def __init__(self, profile: Path, chrome: str | None, delay: float, *, headless: bool = False):
         self.profile = profile
         self.chrome = chrome
         self.delay = delay
+        self.headless = headless
         self.driver = None
         self.tab = None
         self._document_statuses: list[dict[str, Any]] = []
@@ -922,7 +923,10 @@ class NodriverBrowser:
             raise RuntimeError("Thiếu nodriver: python -m pip install nodriver") from exc
         self.uc = uc
         self.profile.mkdir(parents=True, exist_ok=True)
-        options: dict[str, Any] = {"headless": False, "user_data_dir": str(self.profile.resolve())}
+        options: dict[str, Any] = {
+            "headless": self.headless,
+            "user_data_dir": str(self.profile.resolve()),
+        }
         if self.chrome:
             options["browser_executable_path"] = self.chrome
         self.driver = await uc.start(**options)
@@ -1375,6 +1379,12 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--profile", type=Path, default=Path("data/state/chrome_topcv_profile"))
     parser.add_argument("--chrome-path", default=os.environ.get("CHROME_PATH"))
     parser.add_argument(
+        "--headless",
+        action=argparse.BooleanOptionalAction,
+        default=os.environ.get("TOPCV_HEADLESS", "").strip().lower() in {"1", "true", "yes", "on"},
+        help="Chạy Chrome không giao diện; có thể đặt TOPCV_HEADLESS=1",
+    )
+    parser.add_argument(
         "--delay",
         type=float,
         default=None,
@@ -1500,7 +1510,9 @@ async def run(args: argparse.Namespace) -> int:
                         "đây là phê duyệt nội bộ, "
                         f"không phải quyền từ TopCV; nghỉ ít nhất {delay:.1f}s giữa lần tải"
                     )
-                    browser = NodriverBrowser(args.profile, args.chrome_path, delay)
+                    browser = NodriverBrowser(
+                        args.profile, args.chrome_path, delay, headless=args.headless
+                    )
                     await browser.start()
                     if not args.details_only:
                         _, duplicates = await crawl_listing(
