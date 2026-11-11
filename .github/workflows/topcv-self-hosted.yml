@@ -55,7 +55,7 @@ jobs:
           enable-cache: false
 
       - name: Validate configuration
-        shell: pwsh
+        shell: powershell
         run: |
           if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) {
             throw "Thiếu GitHub Actions secret DATABASE_URL."
@@ -75,7 +75,7 @@ jobs:
         run: uv sync --locked --no-dev
 
       - name: Crawl and incrementally sync
-        shell: pwsh
+        shell: powershell
         run: |
           $arguments = @(
             "scripts/run_topcv_automation.py",
@@ -92,7 +92,7 @@ jobs:
 
       - name: Publish run summary
         if: always()
-        shell: pwsh
+        shell: powershell
         run: |
           $summary = Join-Path $env:TOPCV_STATE_ROOT "logs\latest-summary.json"
           if (Test-Path -LiteralPath $summary -PathType Leaf) {
