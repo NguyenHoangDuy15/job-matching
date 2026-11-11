@@ -1,0 +1,104 @@
+name: topcv-self-hosted
+
+on:
+  schedule:
+    # Chạy mỗi 2 giờ vào phút 17, tránh cao điểm đầu giờ.
+    - cron: "17 */2 * * *"
+      timezone: "Asia/Ho_Chi_Minh"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Số JD tối đa trong lượt này"
+        default: "20"
+        type: string
+      target_total:
+        description: "Dừng khi tổng COMPLETED đạt mốc này"
+        default: "1000"
+        type: string
+      sync_only:
+        description: "Chỉ đồng bộ SQLite hiện tại lên Supabase, không truy cập TopCV"
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: topcv-self-hosted
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    # Lịch chỉ hoạt động sau khi chủ repo bật variable; chạy tay luôn được phép để nghiệm thu.
+    if: github.event_name == 'workflow_dispatch' || vars.TOPCV_SCHEDULE_ENABLED == 'true'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TOPCV_STATE_ROOT: C:\topcv-automation
+      PYTHONUTF8: "1"
+      LIMIT: ${{ github.event_name == 'schedule' && '20' || inputs.limit }}
+      TARGET_TOTAL: ${{ github.event_name == 'schedule' && '1000' || inputs.target_total }}
+      SYNC_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.sync_only && 'true' || 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.7"
+          python-version: "3.11"
+          enable-cache: false
+
+      - name: Validate configuration
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) {
+            throw "Thiếu GitHub Actions secret DATABASE_URL."
+          }
+          if ($env:LIMIT -notmatch '^\d+$' -or [int]$env:LIMIT -lt 1) {
+            throw "limit phải là số nguyên >= 1."
+          }
+          if ($env:TARGET_TOTAL -notmatch '^\d+$' -or [int]$env:TARGET_TOTAL -lt 1) {
+            throw "target_total phải là số nguyên >= 1."
+          }
+          $db = Join-Path $env:TOPCV_STATE_ROOT "state\topcv_jobs.db"
+          if (-not (Test-Path -LiteralPath $db -PathType Leaf)) {
+            throw "Chưa có checkpoint $db. Hãy bootstrap state theo docs/deploy/topcv-self-hosted.md."
+          }
+
+      - name: Install locked dependencies
+        run: uv sync --locked --no-dev
+
+      - name: Crawl and incrementally sync
+        shell: pwsh
+        run: |
+          $arguments = @(
+            "scripts/run_topcv_automation.py",
+            "--state-root", $env:TOPCV_STATE_ROOT,
+            "--limit", $env:LIMIT,
+            "--target-total", $env:TARGET_TOTAL,
+            "--headless"
+          )
+          if ($env:SYNC_ONLY -eq "true") {
+            $arguments += "--sync-only"
+          }
+          uv run --no-dev python @arguments
+          exit $LASTEXITCODE
+
+      - name: Publish run summary
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = Join-Path $env:TOPCV_STATE_ROOT "logs\latest-summary.json"
+          if (Test-Path -LiteralPath $summary -PathType Leaf) {
+            "## TopCV automation" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            '```json' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            Get-Content -LiteralPath $summary -Raw |
+              Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          }

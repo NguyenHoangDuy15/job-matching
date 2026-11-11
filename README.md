@@ -105,6 +105,9 @@ uv run python scripts/check_job_skills.py [--score]  # lấy 20 tin để kiểm
 
 Chạy tự động 02:00 mỗi đêm bằng GitHub Actions (S2-T05, `.github/workflows/crawl-daily.yml`); cài secret, chạy tay và nghiệm thu: `docs/deploy/crawl-job.md`.
 
+TopCV dùng self-hosted Windows runner để giữ SQLite/profile cục bộ và tránh chạy từ IP cloud. Workflow,
+bootstrap checkpoint, secret và cách bật/tắt lịch nằm tại `docs/deploy/topcv-self-hosted.md`.
+
 Chỉ crawl các nguồn đã được phép trong `config/sources.yaml`, tuân thủ `docs/data_sources.md`. Gặp 403, 429 hoặc trang chống bot thì dừng, không tìm cách vượt.
 
 ## Từ điển kỹ năng
