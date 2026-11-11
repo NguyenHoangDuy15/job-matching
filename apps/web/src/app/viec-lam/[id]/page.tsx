@@ -6,11 +6,13 @@ import { cache } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { getJobDetail, jdSections, type JobDetail, type JobSkill } from "@/lib/jobs/detail";
 import { LEVEL_LABEL, WORK_MODE_LABEL } from "@/lib/jobs/filters";
-import { formatDay, formatSalary } from "@/lib/jobs/format";
+import { JobProvenance } from "@/components/jobs/job-provenance";
+import { daysLeft, daysLeftLabel, formatDay, formatSalary, salaryFull } from "@/lib/jobs/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
-// S2-H04 · US-06 · docs/ui/wireframe_jobs.png (màn 3). Khách và mọi vai trò đều xem được.
+// S2-H04 (trang) + S2-H05 (hạn nộp, độ mới, nguồn) · US-06 · docs/ui/wireframe_jobs.png (màn 3).
+// Khách và mọi vai trò đều xem được.
 
 // generateMetadata và trang cùng cần dữ liệu: cache() để chỉ gọi DB một lần mỗi request.
 const loadJob = cache(getJobDetail);
@@ -106,22 +108,44 @@ function JobHeader({ job }: { job: JobDetail }) {
     job.employment_type,
   ].filter(Boolean);
 
+  // S2-H05: hạn nộp kèm số ngày còn lại; ≤ 3 ngày thì gắn nhãn "Sắp hết hạn".
+  const days = job.valid_through ? daysLeft(job.valid_through) : null;
+  const expiring = job.is_expiring_soon || (days !== null && days >= 0 && days <= 3);
+  // Rê chuột lên mức lương: số đầy đủ, hoặc chuỗi gốc của tin; bỏ qua nếu trùng chữ đang hiện.
+  const salaryText = formatSalary(job);
+  const salaryHintRaw = salaryFull(job) ?? job.salary_raw?.trim();
+  const salaryHint = salaryHintRaw && salaryHintRaw !== salaryText ? salaryHintRaw : undefined;
+
   return (
     <header className="grid gap-4 rounded-lg border p-5">
       <div className="grid gap-1">
-        <h1 className="text-2xl leading-tight font-semibold break-words">{job.title}</h1>
+        <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl leading-tight font-semibold break-words">
+          <span>{job.title}</span>
+          {expiring && (
+            <span className="rounded border border-destructive px-2 py-0.5 text-sm font-medium text-destructive">
+              Sắp hết hạn
+            </span>
+          )}
+        </h1>
         {meta.length > 0 && <p className="text-muted-foreground">{meta.join(" · ")}</p>}
       </div>
 
       <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
         <div>
           <dt className="text-muted-foreground">Mức lương</dt>
-          <dd className="text-base font-semibold">{formatSalary(job)}</dd>
+          <dd className="text-base font-semibold" title={salaryHint}>
+            {salaryText}
+          </dd>
         </div>
-        {job.valid_through && (
+        {job.valid_through && days !== null && (
           <div>
             <dt className="text-muted-foreground">Hạn nộp</dt>
-            <dd className="text-base font-semibold">{formatDay(job.valid_through)}</dd>
+            <dd className="text-base font-semibold">
+              {formatDay(job.valid_through)}{" "}
+              <span className={cn("text-sm font-normal", expiring ? "text-destructive" : "text-muted-foreground")}>
+                ({daysLeftLabel(days)})
+              </span>
+            </dd>
           </div>
         )}
         {job.job_family_name && (
@@ -131,6 +155,8 @@ function JobHeader({ job }: { job: JobDetail }) {
           </div>
         )}
       </dl>
+
+      <JobProvenance job={job} />
 
       <div className="flex flex-wrap gap-2">
         {job.apply_url && <ApplyLink url={job.apply_url} />}
