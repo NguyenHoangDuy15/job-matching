@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# S2-T05 (US-07): đóng gói pipeline crawl & upsert lên GCP.
+# S2-T05 (US-07), phương án GCP: đóng gói pipeline crawl & upsert lên GCP (cần project có billing).
+# Lịch hằng ngày hiện chạy bằng GitHub Actions: .github/workflows/crawl-daily.yml.
 #   Cloud Build  → image trong Artifact Registry (Dockerfile ở gốc repo)
 #   Cloud Run Job → python scripts/crawl.py run --run-type daily ...
 #   Cloud Scheduler → gọi job lúc 02:00 giờ Việt Nam mỗi ngày

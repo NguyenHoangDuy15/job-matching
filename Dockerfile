@@ -1,4 +1,5 @@
-# Image chung cho api, ui (TASK-H002) và pipeline crawl chạy trên Cloud Run Job (S2-T05).
+# Image chung cho api, ui (TASK-H002) và pipeline crawl khi chạy trên Cloud Run Job
+# (phương án GCP của S2-T05; lịch hằng ngày hiện chạy bằng GitHub Actions).
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
 WORKDIR /app
