@@ -104,6 +104,8 @@ insert into results select 'anon sees crawled jobs only', count(*)::text, '2' fr
 insert into results select 'v_open_jobs hides expired job', count(*)::text, '1' from api.v_open_jobs;
 insert into results select 'search unaccent "lap trinh vien" + Hà Nội', count(*)::text, '1' from api.search_jobs(q=>'lap trinh vien', provinces=>array[1]::smallint[]);
 insert into results select 'search hides expired java', count(*)::text, '0' from api.search_jobs(q=>'java');
+insert into results select 'v_job_detail: open crawled only', count(*)::text, '1' from api.v_job_detail;
+insert into results select 'v_job_detail: province name', coalesce((select provinces[1] from api.v_job_detail limit 1), 'null'), 'Hà Nội';
 -- anon không được cấp SELECT trên app.cvs (schema chỉ grant cho authenticated) → bị từ chối ngay ở tầng quyền.
 do $$
 declare

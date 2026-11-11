@@ -30,6 +30,7 @@ src/
     auth/callback/route.ts   đổi ?code= lấy phiên (link email, Google)
     page.tsx · hr/ · admin/ · 403/     trang chủ theo vai trò (US-02)
     viec-lam/            tìm việc + bộ lọc trên URL, 20 tin/trang, skeleton (US-03, US-05)
+    viec-lam/[id]/       chi tiết tin: kỹ năng, mô tả/yêu cầu/quyền lợi (US-06, api.v_job_detail)
     actions/auth.ts      Server Action: đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu, đăng xuất
   components/jobs/       ô tìm kiếm, cột bộ lọc, thẻ việc, phân trang
   lib/
