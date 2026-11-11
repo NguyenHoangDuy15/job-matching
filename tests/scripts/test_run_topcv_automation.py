@@ -5,6 +5,10 @@ import sqlite3
 import scripts.run_topcv_automation as automation
 
 
+def test_arguments_accept_valid_database_run_type():
+    assert automation.arguments(["--run-type", "hourly"]).run_type == "hourly"
+
+
 def test_prune_backups_keeps_newest_files(tmp_path):
     backup_dir = tmp_path / "backups"
     backup_dir.mkdir()

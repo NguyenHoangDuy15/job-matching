@@ -38,9 +38,11 @@ class FakeStore:
         self.fail = fail
         self.saved = []
         self.finished = []
+        self.run_types = []
 
     def start_run(self, source, source_id, run_type):
-        assert (source, source_id, run_type) == ("topcv", None, "topcv_automation")
+        assert (source, source_id) == ("topcv", None)
+        self.run_types.append(run_type)
         return 42
 
     def save(self, posting, key, run_id):
@@ -76,6 +78,7 @@ def test_sync_only_sends_unsynced_rows_and_marks_after_success(tmp_path):
 
     assert stats.items_seen == 1
     assert store.saved == [jobs[1]["job_id"]]
+    assert store.run_types == ["manual"]
     assert pending_job_ids(conn) == []
     assert store.finished == [(42, 1, "success", None)]
 
@@ -85,9 +88,10 @@ def test_sync_failure_does_not_mark_row_as_synced(tmp_path):
     store = FakeStore(fail=True)
 
     with pytest.raises(RuntimeError, match="database unavailable"):
-        sync_pending(conn, out, store)
+        sync_pending(conn, out, store, run_type="hourly")
 
     assert len(pending_job_ids(conn)) == 1
+    assert store.run_types == ["hourly"]
     assert store.finished[0][2] == "failed"
 
 
