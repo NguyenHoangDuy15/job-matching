@@ -43,6 +43,8 @@ Chi tiết stack và lý do chọn: `docs/adr/003-stack.md` và `docs/architectu
 | Tách 4 section JD | `src/skillkit/sections.py` | Mô tả / Yêu cầu / Ưu tiên / Quyền lợi, heading Việt–Anh |
 | Từ điển 379 kỹ năng + từ nhập nhằng | `config/skills.yaml`, `src/skillkit/matcher.py` | Go, R, C, .NET, Java/JS, AI... |
 | Mức kỹ năng bắt buộc / ưu tiên / chỉ nhắc | `src/skillkit/levels/` | Từ điển + luật + Tầng 2 JEV-local; chạy lô bằng `label_skills.py` (gắn vào crawl ở S2-D05) |
+| Tự đóng tin hết hạn / bị gỡ / vắng 3 lượt | `db/migrations/0004`, `src/ingestion/store.py` | Tin ẩn khỏi `api.v_open_jobs`, vẫn giữ trong `core.jobs` |
+| Pipeline chạy tự động 02:00 trên GCP | `Dockerfile`, `scripts/deploy_crawl_job.sh` | Cloud Run Job + Cloud Scheduler + Secret Manager; xem `docs/deploy/crawl-job.md` |
 
 ## Bắt đầu
 
@@ -100,6 +102,8 @@ uv run python scripts/label_skills.py [--apply] [--stale]   # gắn kỹ năng +
 uv run python scripts/label_skills.py --report       # % tin mở có thẻ kỹ năng (mục tiêu ≥ 90%)
 uv run python scripts/check_job_skills.py [--score]  # lấy 20 tin để kiểm tay / chấm
 ```
+
+Chạy tự động mỗi đêm trên GCP (S2-T05): `bash scripts/deploy_crawl_job.sh`, hướng dẫn và cách nghiệm thu ở `docs/deploy/crawl-job.md`.
 
 Chỉ crawl các nguồn đã được phép trong `config/sources.yaml`, tuân thủ `docs/data_sources.md`. Gặp 403, 429 hoặc trang chống bot thì dừng, không tìm cách vượt.
 
