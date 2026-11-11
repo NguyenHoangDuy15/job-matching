@@ -1,0 +1,78 @@
+# Pipeline crawl & upsert chạy tự động 02:00 giờ Việt Nam mỗi ngày (S2-T05, US-07).
+# Cùng lệnh với khi chạy ở máy: ① tỷ giá → ② crawl + chuẩn hóa + upsert Supabase
+# → đóng tin hết hạn / bị gỡ (S2-T06) → ③ gắn kỹ năng + mức.
+# Cần secret DATABASE_URL (Settings → Secrets and variables → Actions), dùng chuỗi
+# "Session pooler" của Supabase. Hướng dẫn và cách nghiệm thu: docs/deploy/crawl-job.md
+name: crawl-daily
+
+on:
+  schedule:
+    # Cron của GitHub tính theo UTC: 19:00 UTC = 02:00 Asia/Ho_Chi_Minh (UTC+7).
+    # Lịch chỉ chạy trên nhánh mặc định (main) và có thể trễ vài chục phút khi GitHub quá tải.
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Các nguồn, cách nhau bằng dấu cách (vd: itviec vietnamworks)"
+        default: "itviec"
+        type: string
+      max_jobs:
+        description: "Số tin tối đa mỗi nguồn"
+        default: "150"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Không cho hai lượt crawl chạy chồng nhau; lượt mới xếp hàng chờ lượt cũ xong.
+  group: crawl-daily
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    # Bản fork không chạy (không có secret của nhóm).
+    if: github.repository == 'NguyenHoangDuy15/job-matching'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # Ước tính ITviec: 150 tin × 5 giây ≈ 15 phút, cộng kiểm lại tin vắng mặt và gắn kỹ năng.
+      SOURCES: ${{ github.event_name == 'schedule' && 'itviec' || inputs.sources }}
+      MAX_JOBS: ${{ github.event_name == 'schedule' && '150' || inputs.max_jobs }}
+      RUN_TYPE: ${{ github.event_name == 'schedule' && 'daily' || 'manual' }}
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Cài thư viện (không cài nhóm dev)
+        run: uv sync --locked --no-dev
+
+      - name: Kiểm tham số và DATABASE_URL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Thiếu secret DATABASE_URL (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          case "$DATABASE_URL" in
+            *@db.*.supabase.co*)
+              echo "::error::DATABASE_URL đang là Direct connection (chỉ có IPv6, runner GitHub không kết nối được). Dùng chuỗi Session pooler."
+              exit 1 ;;
+          esac
+          for s in $SOURCES; do
+            [[ "$s" =~ ^[a-z0-9_]+$ ]] || { echo "::error::Tên nguồn không hợp lệ: $s"; exit 1; }
+          done
+          [[ "$MAX_JOBS" =~ ^[0-9]+$ ]] || { echo "::error::max_jobs phải là số: $MAX_JOBS"; exit 1; }
+          echo "nguồn: $SOURCES · tối đa $MAX_JOBS tin/nguồn · run_type $RUN_TYPE"
+
+      - name: Crawl, upsert, đóng tin cũ, gắn kỹ năng
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          args=()
+          for s in $SOURCES; do args+=("--source=$s"); done
+          uv run --no-dev python scripts/crawl.py run "${args[@]}" \
+            --run-type="$RUN_TYPE" --max-jobs="$MAX_JOBS"
