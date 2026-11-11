@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { LEVEL_LABEL, WORK_MODE_LABEL } from "@/lib/jobs/filters";
 import {
   formatDay,
@@ -20,10 +21,16 @@ export function JobCard({ job }: { job: JobItem }) {
   ].filter(Boolean);
 
   return (
-    <article className="grid gap-x-6 gap-y-2 rounded-lg border p-4 sm:grid-cols-[1fr_auto]">
+    // Cả thẻ bấm được (S2-H04): link tiêu đề có lớp ::after phủ kín thẻ; "Xem tin gốc" nằm trên lớp đó.
+    <article className="relative grid gap-x-6 gap-y-2 rounded-lg border p-4 transition-colors hover:border-foreground/40 hover:bg-muted/30 sm:grid-cols-[1fr_auto]">
       <div className="grid min-w-0 gap-1">
         <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold leading-snug">
-          <span className="break-words">{job.title}</span>
+          <Link
+            href={`/viec-lam/${job.public_id}`}
+            className="break-words after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none after:focus-visible:ring-2 after:focus-visible:ring-ring"
+          >
+            {job.title}
+          </Link>
           {expiring && (
             <span className="rounded border border-destructive px-1.5 text-xs font-medium text-destructive">
               Sắp hết hạn
@@ -48,7 +55,7 @@ export function JobCard({ job }: { job: JobItem }) {
             href={job.apply_url}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline sm:justify-self-end"
+            className="relative z-10 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline sm:justify-self-end"
           >
             Xem tin gốc <ExternalLink className="size-3" aria-hidden />
           </a>
