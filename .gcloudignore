@@ -1,0 +1,18 @@
+# File KHÔNG gửi lên Cloud Build khi chạy scripts/deploy_crawl_job.sh (S2-T05).
+# Không có file này gcloud sẽ dùng .gitignore và bỏ mất models/ (model Tầng 2 không nằm trên git).
+# Giữ khớp với .dockerignore.
+.git
+.gitignore
+.venv
+.env
+.env.*
+data
+sandbox
+docs
+tests
+apps
+reports
+**/node_modules
+**/__pycache__
+.pytest_cache
+.ruff_cache

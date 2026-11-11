@@ -17,7 +17,9 @@ data/storage/*
 *.docx
 *.doc
 *.zip
-models/
+# Model đã train: giữ thư mục (.gitkeep) để Dockerfile COPY được, bỏ nội dung
+models/*
+!models/.gitkeep
 
 # Python
 __pycache__/

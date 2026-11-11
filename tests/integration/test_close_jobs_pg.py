@@ -16,6 +16,8 @@ DSN = os.environ.get("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DSN, reason="cần TEST_DATABASE_URL trỏ tới DB thử")
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "crawl"
 _seq = iter(range(10**6))
+# Nguồn chỉ dùng cho test quét vắng mặt (xem fixture sweep_source).
+SWEEP_SOURCE, SWEEP_SOURCE_ID = "t06_sweep", 9106
 
 
 def _posting(job_id: str, source: str = "itviec", **changes):
@@ -43,6 +45,28 @@ def store():
         pytest.skip("DB thử chưa chạy db/migrations/0004_close_stale_jobs.sql")
     yield s
     s.close()
+
+
+@pytest.fixture
+def sweep_source(store):
+    """Nguồn riêng cho test quét vắng mặt.
+
+    mark_missing cộng lượt vắng cho MỌI tin còn theo dõi của nguồn, nên nếu dùng chung 'itviec'
+    thì tin các test khác (hoặc lần chạy trước) để lại sẽ bị đếm lẫn vào kết quả.
+    """
+    with store.conn.transaction():
+        store.conn.execute(
+            """insert into ops.sources (id, code, name, base_url, method)
+               values (%s, %s, 'T06 sweep (test)', 'https://example.test', 'html')
+               on conflict (id) do nothing""",
+            (SWEEP_SOURCE_ID, SWEEP_SOURCE),
+        )
+        # Tin lần chạy trước để lại ở nguồn này: ngừng theo dõi để không bị đếm lại.
+        store.conn.execute(
+            "update core.job_sources set is_active = false where source_id = %s and is_active",
+            (SWEEP_SOURCE_ID,),
+        )
+    return SWEEP_SOURCE, SWEEP_SOURCE_ID
 
 
 def _job(store, job_id: str, source_id: int = 2):
@@ -81,37 +105,39 @@ def _run(store, saves=(), source="itviec", source_id=2):
     return run_id
 
 
-def test_missing_three_full_sweeps_closes_then_reappearing_reopens(store):
-    a, b = _posting(_new_id("a")), _posting(_new_id("b"))
-    _run(store, [a, b])
+def test_missing_three_full_sweeps_closes_then_reappearing_reopens(store, sweep_source):
+    source, source_id = sweep_source
+    a, b = _posting(_new_id("a"), source), _posting(_new_id("b"), source)
+    _run(store, [a, b], source, source_id)
     assert _in_open_view(store, b.title)
 
     for expected_missed in (1, 2):
-        run_id = _run(store, [a])  # b không còn trong danh sách
+        run_id = _run(store, [a], source, source_id)  # b không còn trong danh sách
         assert store.mark_missing(run_id) == 0
-        state = _job(store, b.source_job_id)
+        state = _job(store, b.source_job_id, source_id)
         assert (state["status"], state["src_missed"], state["missed"]) == (
             "open",
             expected_missed,
             expected_missed,
         )
 
-    run_id = _run(store, [a])
+    run_id = _run(store, [a], source, source_id)
     assert store.mark_missing(run_id) == 1  # lượt vắng thứ 3 → đóng
-    state = _job(store, b.source_job_id)
+    state = _job(store, b.source_job_id, source_id)
     assert (state["status"], state["reason"], state["has_closed_at"]) == ("closed", "missing", True)
     assert state["src_active"] is False
     assert not _in_open_view(store, b.title)  # ẩn khỏi web...
-    assert _job(store, a.source_job_id)["status"] == "open"  # ...tin vẫn gặp thì không bị đụng
+    # ...tin vẫn gặp thì không bị đụng
+    assert _job(store, a.source_job_id, source_id)["status"] == "open"
     snapshots = store.conn.execute(
-        "select count(*) from raw.job_snapshots where source_id = 2 and source_job_id = %s",
-        (b.source_job_id,),
+        "select count(*) from raw.job_snapshots where source_id = %s and source_job_id = %s",
+        (source_id, b.source_job_id),
     ).fetchone()[0]
     store.conn.commit()
     assert snapshots == 1  # lịch sử còn nguyên
 
-    _run(store, [a, b])  # b xuất hiện lại, nội dung không đổi
-    state = _job(store, b.source_job_id)
+    _run(store, [a, b], source, source_id)  # b xuất hiện lại, nội dung không đổi
+    state = _job(store, b.source_job_id, source_id)
     assert (state["status"], state["reason"], state["has_closed_at"]) == ("open", None, False)
     assert (state["src_active"], state["src_missed"], state["missed"]) == (True, 0, 0)
     assert _in_open_view(store, b.title)

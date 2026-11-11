@@ -10,7 +10,8 @@ trong Quyền lợi/phần ngoài 4 section). Script KHÔNG tự điền cột g
 
 Bước 2 in accuracy, macro-F1 (required/preferred), precision/recall từng lớp, ma trận nhầm,
 kết quả theo nguồn, so "chỉ luật" với "luật + JEV-local" trên lát khó; lưu
-reports/eval_<model_version>.json. File gold chứa câu JD thật → không lên git.
+reports/eval_<model_version>.json, và data/eval/level_errors.csv (các dòng máy khác gold).
+File gold chứa câu JD thật → không lên git.
 """
 
 import csv
@@ -28,6 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 JDS = ROOT / "data" / "eval" / "jd_gold.jsonl"
 TEMPLATE = ROOT / "data" / "eval" / "gold_mentions_TEMPLATE.csv"
 GOLD = ROOT / "data" / "eval" / "gold_mentions.csv"
+ERRORS = ROOT / "data" / "eval" / "level_errors.csv"
 LABELS = ["required", "preferred", "mentioned", "drop"]
 HARD = {"rule_mixed", "model", "fallback", "rule_desc"}
 FIELDS = [
@@ -165,6 +167,16 @@ def cmd_score(labeler: SkillLabeler) -> int:
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"→ {out}")
+
+    errors = sorted(
+        ({**p, "gold": g} for g, p in rows if g != p["pred"]),
+        key=lambda r: (r["source"], r["jd_id"]),
+    )
+    with ERRORS.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDS)
+        writer.writeheader()
+        writer.writerows(errors)
+    print(f"{len(errors)} dòng máy khác gold → {ERRORS} (xem lại: nhãn sai hay luật sai?)")
     return 0
 
 

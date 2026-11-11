@@ -38,6 +38,32 @@ CASES = [  # (section, câu, kỹ năng, mức mong đợi | None)
     ("REQ", "Có kỹ năng phân tích (ưu tiên thành thạo Odoo).", "kỹ năng phân tích", "REQUIRED"),
     ("REQ", "Có kỹ năng phân tích (ưu tiên thành thạo Odoo).", "Odoo", "PREFERRED"),
     ("REQ", "Biết Node.js là lợi thế", "Node.js", "PREFERRED"),
+    # Lỗi tìm ra khi chấm gold lần 2 (S2-D04).
+    ("DESC", "Công ty với hơn 17 năm chuyên môn về AI và IoT", "AI", None),
+    ("DESC", "Có 3 năm kinh nghiệm Java", "Java", "REQUIRED"),
+    ("NONE", "3+ years of experience with Go", "Go", "REQUIRED"),
+    ("NONE", "Kinh nghiệm làm việc với Docker tối thiểu 2 năm", "Docker", "REQUIRED"),
+    ("DESC", "Nghiên cứu cổ phiếu, phái sinh và đưa ra product roadmap", "product roadmap", None),
+    ("NONE", "Phải biết Java", "Java", "REQUIRED"),
+    (
+        "REQ",
+        "Biết ít nhất một ngôn ngữ (ưu tiên Python, JavaScript) hoặc scripting (Bash)",
+        "Python",
+        "PREFERRED",
+    ),
+    (
+        "REQ",
+        "Biết ít nhất một ngôn ngữ (ưu tiên Python, JavaScript) hoặc scripting (Bash)",
+        "JavaScript",
+        "PREFERRED",
+    ),
+    (
+        "REQ",
+        "Biết ít nhất một ngôn ngữ (ưu tiên Python, JavaScript) hoặc scripting (Bash)",
+        "Bash",
+        "REQUIRED",
+    ),
+    ("REQ", "Có kinh nghiệm backend (ưu tiên Python)", "Python", "PREFERRED"),
 ]
 
 
