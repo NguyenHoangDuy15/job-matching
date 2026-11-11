@@ -45,11 +45,32 @@ export function todayVN(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(now);
 }
 
+/** Số ngày từ hôm nay (giờ VN) tới hạn nộp: 0 = hạn chót hôm nay, âm = đã qua. */
+export function daysLeft(validThrough: string, today = todayVN()): number {
+  return Math.round((Date.parse(validThrough) - Date.parse(today)) / 86_400_000);
+}
+
 /** Còn ≤ 3 ngày là hết hạn (giống cột is_expiring_soon của api.v_open_jobs). */
 export function isExpiringSoon(validThrough: string | null, today = todayVN()): boolean {
   if (!validThrough) return false;
-  const days = (Date.parse(validThrough) - Date.parse(today)) / 86_400_000;
+  const days = daysLeft(validThrough, today);
   return days >= 0 && days <= 3;
+}
+
+/** "hạn chót hôm nay", "còn 1 ngày", "còn 12 ngày". */
+export function daysLeftLabel(days: number): string {
+  if (days <= 0) return "hạn chót hôm nay";
+  return `còn ${days} ngày`;
+}
+
+/** "20.000.000 – 35.000.000 VND": số đầy đủ để hiện khi rê chuột lên mức lương. */
+export function salaryFull(job: { salary_min_vnd: number | null; salary_max_vnd: number | null }): string | null {
+  const fmt = (n: number) => n.toLocaleString("vi-VN");
+  const { salary_min_vnd: min, salary_max_vnd: max } = job;
+  if (min && max) return min === max ? `${fmt(min)} VND` : `${fmt(min)} – ${fmt(max)} VND`;
+  if (min) return `Từ ${fmt(min)} VND`;
+  if (max) return `Đến ${fmt(max)} VND`;
+  return null;
 }
 
 const SOURCE_NAMES: Record<string, string> = {
