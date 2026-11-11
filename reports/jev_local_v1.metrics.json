@@ -2,27 +2,27 @@
   "model_version": "jev_local_v1",
   "sklearn": "1.9.1",
   "train_file": "silver_mentions.csv",
-  "n_train": 12414,
-  "n_jd": 1635,
-  "preferred_share": 0.1183,
-  "oof_macro_f1": 0.9481,
-  "oof_preferred_recall": 0.9373,
+  "n_train": 12455,
+  "n_jd": 1640,
+  "preferred_share": 0.1128,
+  "oof_macro_f1": 0.937,
+  "oof_preferred_recall": 0.9317,
   "cv_by_tau": {
     "0.6": {
-      "coverage": 0.9897,
-      "macro_f1": 0.9592
+      "coverage": 0.985,
+      "macro_f1": 0.9514
     },
     "0.7": {
-      "coverage": 0.9751,
-      "macro_f1": 0.9689
+      "coverage": 0.9729,
+      "macro_f1": 0.9614
     },
     "0.8": {
-      "coverage": 0.9528,
-      "macro_f1": 0.9765
+      "coverage": 0.9519,
+      "macro_f1": 0.971
     },
     "0.9": {
-      "coverage": 0.894,
-      "macro_f1": 0.9808
+      "coverage": 0.8966,
+      "macro_f1": 0.9806
     }
   },
   "note": "Nhãn silver do luật sinh ra: số liệu CV chỉ cho biết model học lại luật tốt đến đâu, KHÔNG phải độ chính xác thật. Độ chính xác thật đo bằng scripts/evaluate_levels.py."
