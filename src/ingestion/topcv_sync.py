@@ -11,6 +11,8 @@ from pathlib import Path
 from ingestion.jsonl_import import read_jsonl, record_to_posting
 from ingestion.store import PgStore, RunStats
 
+VALID_RUN_TYPES = ("daily", "hourly", "manual", "backfill")
+
 
 class TopCVSyncError(RuntimeError):
     """The durable local checkpoint cannot be synced safely."""
@@ -59,6 +61,7 @@ def sync_pending(
     store,
     *,
     source: str = "topcv",
+    run_type: str = "manual",
     verbose: bool = False,
 ) -> RunStats:
     job_ids = pending_job_ids(conn)
@@ -68,7 +71,7 @@ def sync_pending(
         return stats
 
     postings = pending_postings(jsonl_path, job_ids, source)
-    run_id = store.start_run(source, None, "topcv_automation")
+    run_id = store.start_run(source, None, run_type)
     status, error = "success", None
     try:
         for index, job_id in enumerate(job_ids, start=1):
@@ -108,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--db", type=Path, required=True)
     parser.add_argument("--jsonl", type=Path, required=True)
     parser.add_argument("--source", default="topcv")
+    parser.add_argument("--run-type", choices=VALID_RUN_TYPES, default="manual")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -127,7 +131,14 @@ def main(argv: list[str] | None = None) -> int:
     store = PgStore(dsn)
     try:
         with sqlite3.connect(args.db) as conn:
-            sync_pending(conn, args.jsonl, store, source=args.source, verbose=args.verbose)
+            sync_pending(
+                conn,
+                args.jsonl,
+                store,
+                source=args.source,
+                run_type=args.run_type,
+                verbose=args.verbose,
+            )
     finally:
         store.close()
     return 0

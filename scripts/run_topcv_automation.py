@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from ingestion import topcv  # noqa: E402
+from ingestion.topcv_sync import VALID_RUN_TYPES  # noqa: E402
 from ingestion.topcv_sync import main as sync_main  # noqa: E402
 
 
@@ -68,6 +69,7 @@ def arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--target-total", type=int, default=1000)
     parser.add_argument("--backup-retention", type=int, default=10)
+    parser.add_argument("--run-type", choices=VALID_RUN_TYPES, default="manual")
     parser.add_argument("--sources-config", type=Path, default=ROOT / "config" / "sources.yaml")
     parser.add_argument("--chrome-path", default=os.environ.get("CHROME_PATH"))
     parser.add_argument("--headless", action=argparse.BooleanOptionalAction, default=True)
@@ -124,7 +126,16 @@ def main(argv: list[str] | None = None) -> int:
     if jsonl_path.is_file():
         try:
             sync_exit = sync_main(
-                ["--db", str(db_path), "--jsonl", str(jsonl_path), "--source", "topcv"]
+                [
+                    "--db",
+                    str(db_path),
+                    "--jsonl",
+                    str(jsonl_path),
+                    "--source",
+                    "topcv",
+                    "--run-type",
+                    args.run_type,
+                ]
             )
         except Exception as exc:
             print(f"[SYNC ERROR] {exc}", file=sys.stderr)

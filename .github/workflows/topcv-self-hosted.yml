@@ -43,6 +43,7 @@ jobs:
       LIMIT: ${{ github.event_name == 'schedule' && '20' || inputs.limit }}
       TARGET_TOTAL: ${{ github.event_name == 'schedule' && '1000' || inputs.target_total }}
       SYNC_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.sync_only && 'true' || 'false' }}
+      RUN_TYPE: ${{ github.event_name == 'schedule' && 'hourly' || 'manual' }}
 
     steps:
       - name: Checkout
@@ -83,6 +84,7 @@ jobs:
             "--state-root", $env:TOPCV_STATE_ROOT,
             "--limit", $env:LIMIT,
             "--target-total", $env:TARGET_TOTAL,
+            "--run-type", $env:RUN_TYPE,
             "--headless"
           )
           if ($env:SYNC_ONLY -eq "true") {
