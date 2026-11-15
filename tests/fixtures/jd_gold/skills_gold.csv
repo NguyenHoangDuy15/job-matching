@@ -1,0 +1,598 @@
+jd_id,skill_id,skill_name,level,nguon
+vj_000,adaptability,Thích nghi,required,bo_sot_d07
+vj_000,data_analysis,Phân tích dữ liệu,preferred,bo_sot_d07
+vj_000,english,,required,gold_d04
+vj_000,excel,,required,gold_d04
+vj_000,logical_thinking,,required,gold_d04
+vj_000,office_skills,,required,gold_d04
+vj_000,problem_solving,,required,gold_d04
+vj_000,self_learning,Tự học,required,bo_sot_d07
+vj_000,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_001,,3D,preferred,bo_sot_d07
+vj_001,,Animation,preferred,bo_sot_d07
+vj_001,,Dựng video,preferred,bo_sot_d07
+vj_001,,Thiết kế đồ họa,required,bo_sot_d07
+vj_001,teamwork,,required,gold_d04
+vj_002,illustrator,,required,gold_d04
+vj_002,,Bất động sản,preferred,bo_sot_d07
+vj_002,,Thiết kế đồ họa,required,bo_sot_d07
+vj_002,photoshop,,required,gold_d04
+vj_003,ansible,,required,gold_d04
+vj_003,aws,,required,gold_d04
+vj_003,azure,,required,gold_d04
+vj_003,bash,,required,gold_d04
+vj_003,caching,,required,gold_d04
+vj_003,cloud_computing,,required,gold_d04
+vj_003,communication,,required,gold_d04
+vj_003,devops,,required,gold_d04
+vj_003,gcp,,required,gold_d04
+vj_003,grafana,,required,gold_d04
+vj_003,monitoring,,required,gold_d04
+vj_003,networking,,required,gold_d04
+vj_003,,Chef,required,bo_sot_d07
+vj_003,,Puppet,required,bo_sot_d07
+vj_003,nginx,Load Balancing,required,bo_sot_d07
+vj_003,powershell,,required,gold_d04
+vj_003,prometheus,,required,gold_d04
+vj_003,python,,required,gold_d04
+vj_003,teamwork,,required,gold_d04
+vj_004,business_analysis,,required,gold_d04
+vj_004,fintech,,preferred,gold_d04
+vj_004,istqb,ISTQB,preferred,bo_sot_d07
+vj_004,,CBAP,preferred,bo_sot_d07
+vj_004,,CCBA,preferred,bo_sot_d07
+vj_004,,PMI-PBA,preferred,bo_sot_d07
+vj_004,,T24,preferred,bo_sot_d07
+vj_004,,Visual Paradigm,required,bo_sot_d07
+vj_004,software_testing,,preferred,gold_d04
+vj_004,technical_writing,Technical Documentation,required,bo_sot_d07
+vj_004,uml,,required,gold_d04
+vj_004,user_story,,required,gold_d04
+vj_005,agile,,required,gold_d04
+vj_005,cisco,,preferred,gold_d04
+vj_005,communication,,required,gold_d04
+vj_005,english,,required,gold_d04
+vj_005,hardware,,required,gold_d04
+vj_005,networking,,required,gold_d04
+vj_005,,Document Management System,required,bo_sot_d07
+vj_005,,Jamf,preferred,bo_sot_d07
+vj_005,,MCSA,preferred,bo_sot_d07
+vj_005,,MCSE,preferred,bo_sot_d07
+vj_005,,MDM,preferred,bo_sot_d07
+vj_005,,Video Conferencing,required,bo_sot_d07
+vj_005,windows,,required,gold_d04
+vj_006,communication,,required,gold_d04
+vj_006,english,,preferred,gold_d04
+vj_006,erp,,preferred,gold_d04
+vj_006,,Phần mềm kế toán,preferred,bo_sot_d07
+vj_007,communication,,required,gold_d04
+vj_007,negotiation,,required,gold_d04
+vj_008,,After Effects,required,bo_sot_d07
+vj_008,,Compositing,preferred,bo_sot_d07
+vj_008,,Houdini,required,bo_sot_d07
+vj_008,,Maya,required,bo_sot_d07
+vj_008,,Nuke,required,bo_sot_d07
+vj_008,teamwork,,required,gold_d04
+vj_008,unreal,Unreal Engine,required,bo_sot_d07
+vj_009,adaptability,,required,gold_d04
+vj_009,,Bán hàng,preferred,bo_sot_d07
+vj_010,attention_to_detail,,required,gold_d04
+vj_010,illustrator,,required,gold_d04
+vj_010,,Advertising,preferred,bo_sot_d07
+vj_010,,Art Direction,required,bo_sot_d07
+vj_010,,Branding,preferred,bo_sot_d07
+vj_010,,Marketing,preferred,bo_sot_d07
+vj_010,,Multimedia Design,preferred,bo_sot_d07
+vj_010,photoshop,,required,gold_d04
+vj_010,presentation,,required,gold_d04
+vj_010,problem_solving,,required,gold_d04
+vj_010,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_011,adobe_xd,,required,gold_d04
+vj_011,communication,,required,gold_d04
+vj_011,figma,,required,gold_d04
+vj_011,illustrator,,required,gold_d04
+vj_011,,Design Thinking,required,bo_sot_d07
+vj_011,,Human-centered Design,required,bo_sot_d07
+vj_011,,User Research,required,bo_sot_d07
+vj_011,photoshop,,required,gold_d04
+vj_011,teamwork,,required,gold_d04
+vj_011,ui_ux,,required,gold_d04
+vj_012,ab_testing,,required,gold_d04
+vj_012,agile,,required,gold_d04
+vj_012,artificial_intelligence,,preferred,gold_d04
+vj_012,blockchain,,preferred,gold_d04
+vj_012,business_analysis,Phân tích nghiệp vụ,preferred,bo_sot_d07
+vj_012,communication,,required,gold_d04
+vj_012,confluence,,required,gold_d04
+vj_012,data_analysis,,required,gold_d04
+vj_012,figma,,required,gold_d04
+vj_012,fintech,,preferred,gold_d04
+vj_012,jira,,required,gold_d04
+vj_012,machine_learning,,preferred,gold_d04
+vj_012,,Algorithmic Trading,preferred,bo_sot_d07
+vj_012,,Chứng khoán,required,bo_sot_d07
+vj_012,,Cryptocurrency,preferred,bo_sot_d07
+vj_012,,Tư duy chiến lược,required,bo_sot_d07
+vj_012,,User Research,required,bo_sot_d07
+vj_012,presentation,,required,gold_d04
+vj_012,problem_solving,,required,gold_d04
+vj_012,recommender,Recommender Systems,preferred,bo_sot_d07
+vj_012,scrum,Scrum,required,bo_sot_d07
+vj_012,sketch,,required,gold_d04
+vj_012,sql,,required,gold_d04
+vj_012,stakeholder_management,Stakeholder Management,required,bo_sot_d07
+vj_013,communication,,required,gold_d04
+vj_013,csharp,,required,gold_d04
+vj_013,dotnet,,required,gold_d04
+vj_013,java,,required,gold_d04
+vj_013,logical_thinking,,required,gold_d04
+vj_013,machine_learning,,required,gold_d04
+vj_013,,Lập trình web,required,bo_sot_d07
+vj_013,nodejs,,required,gold_d04
+vj_013,php,,required,gold_d04
+vj_013,sql,,required,gold_d04
+vj_013,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_013,vb_net,,required,gold_d04
+vj_014,communication,,required,gold_d04
+vj_014,english,,required,gold_d04
+vj_014,leadership,,required,gold_d04
+vj_014,mentoring,Mentoring,required,bo_sot_d07
+vj_014,negotiation,,required,gold_d04
+vj_014,networking,,required,gold_d04
+vj_014,,B2B Sales,required,bo_sot_d07
+vj_014,,Business Development,required,bo_sot_d07
+vj_014,,Tư duy chiến lược,required,bo_sot_d07
+vj_014,presentation,,required,gold_d04
+vj_014,stakeholder_management,Stakeholder Management,required,bo_sot_d07
+vj_014,time_management,Quản lý thời gian,required,bo_sot_d07
+vj_015,agile,,required,gold_d04
+vj_015,artificial_intelligence,,required,gold_d04
+vj_015,cloud_computing,,required,gold_d04
+vj_015,devops,,required,gold_d04
+vj_015,english,,required,gold_d04
+vj_015,git,,required,gold_d04
+vj_015,java,,required,gold_d04
+vj_015,jira,,required,gold_d04
+vj_015,,ITSM,preferred,bo_sot_d07
+vj_015,,Thiết kế giải pháp,required,bo_sot_d07
+vj_015,scrum,Scrum,required,bo_sot_d07
+vj_015,self_learning,,required,gold_d04
+vj_016,api,,required,gold_d04
+vj_016,api_testing,API Testing,required,bo_sot_d07
+vj_016,confluence,,required,gold_d04
+vj_016,jira,,required,gold_d04
+vj_016,mobile_testing,Mobile Testing,required,bo_sot_d07
+vj_016,,UAT,required,bo_sot_d07
+vj_016,rdbms,,required,gold_d04
+vj_016,software_testing,,required,gold_d04
+vj_016,technical_writing,Technical Documentation,required,bo_sot_d07
+vj_016,test_case,Test Case Design,required,bo_sot_d07
+vj_016,testrail,,required,gold_d04
+vj_017,communication,,required,gold_d04
+vj_017,negotiation,,required,gold_d04
+vj_017,,B2B Sales,required,bo_sot_d07
+vj_017,,Business Development,required,bo_sot_d07
+vj_017,,SaaS,required,bo_sot_d07
+vj_017,,Tư duy chiến lược,required,bo_sot_d07
+vj_017,presentation,,required,gold_d04
+vj_017,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_018,bash,Shell script,preferred,bo_sot_d07
+vj_018,docker,,preferred,gold_d04
+vj_018,hardware,,required,gold_d04
+vj_018,hyper_v,,preferred,gold_d04
+vj_018,linux,,required,gold_d04
+vj_018,monitoring,Monitoring & Observability,required,bo_sot_d07
+vj_018,,Centreon,preferred,bo_sot_d07
+vj_018,,Check MK,preferred,bo_sot_d07
+vj_018,,LPIC-1,required,bo_sot_d07
+vj_018,,MCITP,preferred,bo_sot_d07
+vj_018,,MCSA,preferred,bo_sot_d07
+vj_018,,MCSE,preferred,bo_sot_d07
+vj_018,,Quản trị hệ thống,required,bo_sot_d07
+vj_018,perl,,preferred,gold_d04
+vj_018,php,,preferred,gold_d04
+vj_018,python,,preferred,gold_d04
+vj_018,vmware,,required,gold_d04
+vj_018,windows,,required,gold_d04
+vj_018,windows_server,Windows Server,preferred,bo_sot_d07
+vj_018,zabbix,,preferred,gold_d04
+vj_020,aws,,required,gold_d04
+vj_020,azure,,required,gold_d04
+vj_020,ci_cd,,preferred,gold_d04
+vj_020,cloud_computing,,required,gold_d04
+vj_020,cloudformation,,required,gold_d04
+vj_020,cryptography,,required,gold_d04
+vj_020,gcp,,required,gold_d04
+vj_020,iam_sso,IAM & SSO,required,bo_sot_d07
+vj_020,monitoring,,required,gold_d04
+vj_020,networking,,required,gold_d04
+vj_020,,AWS Certified Security,preferred,bo_sot_d07
+vj_020,,CIS Benchmark,required,bo_sot_d07
+vj_020,,CloudTrail,required,bo_sot_d07
+vj_020,,GuardDuty,required,bo_sot_d07
+vj_020,,ISO 27017,required,bo_sot_d07
+vj_020,,NIST 800-53,required,bo_sot_d07
+vj_020,,Root Cause Analysis,required,bo_sot_d07
+vj_020,,SOAR,required,bo_sot_d07
+vj_020,,Threat Detection,required,bo_sot_d07
+vj_020,security,,required,gold_d04
+vj_020,siem,,required,gold_d04
+vj_020,teamwork,,required,gold_d04
+vj_020,technical_writing,,required,gold_d04
+vj_020,terraform,,required,gold_d04
+vj_021,agile,,required,gold_d04
+vj_021,automation_testing,Automation Testing,preferred,bo_sot_d07
+vj_021,communication,,preferred,gold_d04
+vj_021,csharp,,preferred,gold_d04
+vj_021,istqb,,preferred,gold_d04
+vj_021,japanese,,preferred,gold_d04
+vj_021,jira,,required,gold_d04
+vj_021,jmeter,,required,gold_d04
+vj_021,,SDLC,required,bo_sot_d07
+vj_021,php,,preferred,gold_d04
+vj_021,python,,preferred,gold_d04
+vj_021,scrum,Scrum,required,bo_sot_d07
+vj_021,selenium,,required,gold_d04
+vj_021,software_testing,Kiểm thử phần mềm,required,bo_sot_d07
+vj_022,,Bán hàng,required,bo_sot_d07
+vj_023,illustrator,Illustrator,required,bo_sot_d07
+vj_023,,After Effects,required,bo_sot_d07
+vj_023,,Bất động sản,required,bo_sot_d07
+vj_023,,Dựng video,required,bo_sot_d07
+vj_023,,Premiere Pro,required,bo_sot_d07
+vj_023,photoshop,Photoshop,required,bo_sot_d07
+vj_023,teamwork,,required,gold_d04
+vj_024,agile,,required,gold_d04
+vj_024,aws,,required,gold_d04
+vj_024,ci_cd,,required,gold_d04
+vj_024,communication,,required,gold_d04
+vj_024,confluence,,required,gold_d04
+vj_024,docker,,preferred,gold_d04
+vj_024,english,,required,gold_d04
+vj_024,gcp,,required,gold_d04
+vj_024,jira,,required,gold_d04
+vj_024,kafka,,required,gold_d04
+vj_024,linux,,preferred,gold_d04
+vj_024,,Omniverse,preferred,bo_sot_d07
+vj_024,,ROS,preferred,bo_sot_d07
+vj_024,,ZeroMQ,preferred,bo_sot_d07
+vj_024,nodejs,,required,gold_d04
+vj_024,problem_solving,,required,gold_d04
+vj_024,project_management,,required,gold_d04
+vj_024,rabbitmq,,preferred,gold_d04
+vj_024,rdbms,,required,gold_d04
+vj_024,react,,required,gold_d04
+vj_024,snowflake,,required,gold_d04
+vj_024,tdd,,required,gold_d04
+vj_024,teamwork,,required,gold_d04
+vj_024,threejs,,preferred,gold_d04
+vj_024,time_management,,required,gold_d04
+vj_024,unit_testing,,required,gold_d04
+vj_024,unity,,preferred,gold_d04
+vj_025,api,,preferred,gold_d04
+vj_025,attention_to_detail,,required,gold_d04
+vj_025,bash,,required,gold_d04
+vj_025,communication,,required,gold_d04
+vj_025,english,,required,gold_d04
+vj_025,git,,preferred,gold_d04
+vj_025,javascript,,preferred,gold_d04
+vj_025,logical_thinking,,required,gold_d04
+vj_025,,Low-code/No-code,required,bo_sot_d07
+vj_025,powershell,,required,gold_d04
+vj_025,problem_solving,,required,gold_d04
+vj_025,python,,preferred,gold_d04
+vj_025,self_learning,Tự học,required,bo_sot_d07
+vj_025,teamwork,,required,gold_d04
+vj_025,technical_writing,,required,gold_d04
+vj_026,api,,required,gold_d04
+vj_026,automation_testing,,required,gold_d04
+vj_026,aws,,preferred,gold_d04
+vj_026,azure,,preferred,gold_d04
+vj_026,caching,,required,gold_d04
+vj_026,ci_cd,,required,gold_d04
+vj_026,cloud_computing,,preferred,gold_d04
+vj_026,communication,,required,gold_d04
+vj_026,database_design,Database Design,required,bo_sot_d07
+vj_026,design_patterns,,required,gold_d04
+vj_026,docker,,required,gold_d04
+vj_026,dsa,,required,gold_d04
+vj_026,english,,required,gold_d04
+vj_026,excel,,required,gold_d04
+vj_026,gcp,,preferred,gold_d04
+vj_026,golang,,required,gold_d04
+vj_026,grpc,gRPC,required,bo_sot_d07
+vj_026,jenkins,,required,gold_d04
+vj_026,kubernetes,Kubernetes,required,bo_sot_d07
+vj_026,linux,,required,gold_d04
+vj_026,machine_learning,,required,gold_d04
+vj_026,message_queue,Message Queue,required,bo_sot_d07
+vj_026,microservices,,required,gold_d04
+vj_026,mongodb,,required,gold_d04
+vj_026,mysql,,required,gold_d04
+vj_026,nosql,,required,gold_d04
+vj_026,office_skills,Tin học văn phòng,required,bo_sot_d07
+vj_026,oop,,required,gold_d04
+vj_026,postgresql,,required,gold_d04
+vj_026,problem_solving,,required,gold_d04
+vj_026,pubsub,Pub/Sub,required,bo_sot_d07
+vj_026,python,,required,gold_d04
+vj_026,pytorch,,preferred,gold_d04
+vj_026,rdbms,,required,gold_d04
+vj_026,rest_api,,required,gold_d04
+vj_026,system_design,,required,gold_d04
+vj_026,teamwork,,required,gold_d04
+vj_026,tensorflow,,preferred,gold_d04
+vj_026,websocket,,required,gold_d04
+vj_026,windows,,required,gold_d04
+vj_027,css,,required,gold_d04
+vj_027,english,,required,gold_d04
+vj_027,html,,required,gold_d04
+vj_027,javascript,,required,gold_d04
+vj_027,logical_thinking,,required,gold_d04
+vj_027,mysql,,required,gold_d04
+vj_027,php,,required,gold_d04
+vj_027,problem_solving,,required,gold_d04
+vj_027,rdbms,,required,gold_d04
+vj_027,self_learning,Tự học,required,bo_sot_d07
+vj_027,wordpress,,required,gold_d04
+vj_028,communication,,required,gold_d04
+vj_028,html,,required,gold_d04
+vj_028,java,,required,gold_d04
+vj_028,,Vulnerability Assessment,required,bo_sot_d07
+vj_028,owasp,,required,gold_d04
+vj_028,pentest,Penetration Testing,required,bo_sot_d07
+vj_028,problem_solving,,required,gold_d04
+vj_028,rdbms,,required,gold_d04
+vj_028,security,,required,gold_d04
+vj_029,communication,,required,gold_d04
+vj_029,crm,,preferred,gold_d04
+vj_029,ecommerce,,required,gold_d04
+vj_029,excel,,required,gold_d04
+vj_029,negotiation,,required,gold_d04
+vj_029,office_skills,,required,gold_d04
+vj_029,teamwork,,required,gold_d04
+vj_029,time_management,,required,gold_d04
+vj_030,api,,required,gold_d04
+vj_030,business_analysis,,required,gold_d04
+vj_030,communication,,required,gold_d04
+vj_030,english,,preferred,gold_d04
+vj_030,erp,,required,gold_d04
+vj_030,logical_thinking,,required,gold_d04
+vj_030,odoo,,required,gold_d04
+vj_030,problem_solving,,required,gold_d04
+vj_030,user_story,,required,gold_d04
+vj_031,api_testing,,required,gold_d04
+vj_031,artificial_intelligence,Trí tuệ nhân tạo,required,bo_sot_d07
+vj_031,attention_to_detail,,required,gold_d04
+vj_031,automation_testing,,required,gold_d04
+vj_031,communication,,required,gold_d04
+vj_031,english,,required,gold_d04
+vj_031,korean,,required,gold_d04
+vj_031,mobile_testing,Mobile Testing,required,bo_sot_d07
+vj_031,performance_testing,,required,gold_d04
+vj_031,problem_solving,,required,gold_d04
+vj_031,software_testing,,required,gold_d04
+vj_031,teamwork,,required,gold_d04
+vj_031,test_case,Test Case Design,required,bo_sot_d07
+vj_032,english,,required,gold_d04
+vj_032,,Social Media Marketing,required,bo_sot_d07
+vj_033,business_analysis,Phân tích nghiệp vụ,required,bo_sot_d07
+vj_033,,Dự án chính phủ,required,bo_sot_d07
+vj_033,,Quản lý rủi ro,required,bo_sot_d07
+vj_033,,SDLC,required,bo_sot_d07
+vj_033,project_management,,required,gold_d04
+vj_034,ansible,,required,gold_d04
+vj_034,aws,,required,gold_d04
+vj_034,aws_ec2,,required,gold_d04
+vj_034,aws_lambda,AWS Lambda,required,bo_sot_d07
+vj_034,aws_rds,AWS RDS,required,bo_sot_d07
+vj_034,aws_s3,AWS S3,required,bo_sot_d07
+vj_034,azure,,required,gold_d04
+vj_034,azure_devops,,required,gold_d04
+vj_034,bash,,required,gold_d04
+vj_034,ci_cd,,required,gold_d04
+vj_034,cloud_computing,,required,gold_d04
+vj_034,cloudformation,,required,gold_d04
+vj_034,cloudwatch,,required,gold_d04
+vj_034,communication,,required,gold_d04
+vj_034,devops,,required,gold_d04
+vj_034,docker,,required,gold_d04
+vj_034,elk,,required,gold_d04
+vj_034,english,,required,gold_d04
+vj_034,gcp,,required,gold_d04
+vj_034,git,,required,gold_d04
+vj_034,github_actions,,required,gold_d04
+vj_034,gitlab_ci,,required,gold_d04
+vj_034,grafana,,required,gold_d04
+vj_034,jenkins,,required,gold_d04
+vj_034,kubernetes,,required,gold_d04
+vj_034,linux,,required,gold_d04
+vj_034,logical_thinking,,required,gold_d04
+vj_034,mongodb,,required,gold_d04
+vj_034,monitoring,,required,gold_d04
+vj_034,mysql,,required,gold_d04
+vj_034,negotiation,,required,gold_d04
+vj_034,,Cloud SQL,required,bo_sot_d07
+vj_034,,CloudFront,required,bo_sot_d07
+vj_034,,Compute Engine,required,bo_sot_d07
+vj_034,,Quản trị hệ thống,required,bo_sot_d07
+vj_034,,Route 53,required,bo_sot_d07
+vj_034,postgresql,,required,gold_d04
+vj_034,powershell,,required,gold_d04
+vj_034,presentation,Thuyết trình,required,bo_sot_d07
+vj_034,problem_solving,,required,gold_d04
+vj_034,prometheus,,required,gold_d04
+vj_034,python,,required,gold_d04
+vj_034,rdbms,,required,gold_d04
+vj_034,redis,,required,gold_d04
+vj_034,self_learning,Tự học,required,bo_sot_d07
+vj_034,sql,,required,gold_d04
+vj_034,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_034,technical_writing,,required,gold_d04
+vj_034,terraform,,required,gold_d04
+vj_035,figma,,required,gold_d04
+vj_035,logical_thinking,,required,gold_d04
+vj_035,,Vẽ tay,preferred,bo_sot_d07
+vj_035,teamwork,,required,gold_d04
+vj_036,illustrator,,required,gold_d04
+vj_036,,After Effects,required,bo_sot_d07
+vj_036,,Bất động sản,required,bo_sot_d07
+vj_036,,Canva,required,bo_sot_d07
+vj_036,,CapCut,required,bo_sot_d07
+vj_036,,Dựng video,required,bo_sot_d07
+vj_036,,In ấn,required,bo_sot_d07
+vj_036,,InDesign,required,bo_sot_d07
+vj_036,,Premiere Pro,required,bo_sot_d07
+vj_036,,Thiết kế đồ họa,required,bo_sot_d07
+vj_036,photoshop,,required,gold_d04
+vj_036,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_037,business_analysis,Phân tích nghiệp vụ,required,bo_sot_d07
+vj_037,communication,,required,gold_d04
+vj_037,erp,,required,gold_d04
+vj_037,logical_thinking,,required,gold_d04
+vj_037,odoo,,required,gold_d04
+vj_037,oracle_db,,required,gold_d04
+vj_037,presentation,,required,gold_d04
+vj_037,problem_solving,,required,gold_d04
+vj_037,project_management,,required,gold_d04
+vj_037,teamwork,,required,gold_d04
+vj_038,adaptability,,required,gold_d04
+vj_038,communication,,required,gold_d04
+vj_038,excel,,required,gold_d04
+vj_038,negotiation,,required,gold_d04
+vj_038,,Marketing,preferred,bo_sot_d07
+vj_038,office_skills,,required,gold_d04
+vj_038,teamwork,,required,gold_d04
+vj_038,time_management,,required,gold_d04
+vj_039,agile,,required,gold_d04
+vj_039,angular,,required,gold_d04
+vj_039,bootstrap,,required,gold_d04
+vj_039,css,,required,gold_d04
+vj_039,git,,required,gold_d04
+vj_039,html,,required,gold_d04
+vj_039,javascript,,required,gold_d04
+vj_039,mongodb,,required,gold_d04
+vj_039,mysql,,required,gold_d04
+vj_039,,IndexedDB,required,bo_sot_d07
+vj_039,redis,,required,gold_d04
+vj_039,scrum,Scrum,preferred,bo_sot_d07
+vj_039,typescript,,required,gold_d04
+vj_040,illustrator,Illustrator,required,bo_sot_d07
+vj_040,,Thiết kế đồ họa,required,bo_sot_d07
+vj_040,,Thiết kế ấn phẩm in,preferred,bo_sot_d07
+vj_040,photoshop,Photoshop,required,bo_sot_d07
+vj_041,attention_to_detail,,required,gold_d04
+vj_041,business_analysis,Phân tích nghiệp vụ,required,bo_sot_d07
+vj_041,communication,,required,gold_d04
+vj_041,english,,required,gold_d04
+vj_041,excel,,required,gold_d04
+vj_041,,B2B,preferred,bo_sot_d07
+vj_041,,Dự án chính phủ,preferred,bo_sot_d07
+vj_041,,Lập trình,required,bo_sot_d07
+vj_041,,Triển khai phần mềm,required,bo_sot_d07
+vj_041,office_skills,,required,gold_d04
+vj_041,presentation,,required,gold_d04
+vj_041,problem_solving,,required,gold_d04
+vj_041,sql,,required,gold_d04
+vj_041,teamwork,,required,gold_d04
+vj_041,technical_writing,Technical Documentation,required,bo_sot_d07
+vj_041,time_management,,required,gold_d04
+vj_042,communication,,required,gold_d04
+vj_042,english,,preferred,gold_d04
+vj_042,,Bán hàng,required,bo_sot_d07
+vj_043,business_analysis,Phân tích nghiệp vụ,required,bo_sot_d07
+vj_043,crm,,preferred,gold_d04
+vj_043,english,,required,gold_d04
+vj_043,erp,,preferred,gold_d04
+vj_043,fintech,Nghiệp vụ ngân hàng,required,bo_sot_d07
+vj_043,,Application Support,required,bo_sot_d07
+vj_043,,SharePoint,preferred,bo_sot_d07
+vj_043,,Tiếng Pháp,required,bo_sot_d07
+vj_043,office_skills,,preferred,gold_d04
+vj_044,artificial_intelligence,,preferred,gold_d04
+vj_044,business_analysis,,required,gold_d04
+vj_044,communication,,required,gold_d04
+vj_044,confluence,,required,gold_d04
+vj_044,database_design,,required,gold_d04
+vj_044,erp,,preferred,gold_d04
+vj_044,excel,,required,gold_d04
+vj_044,figma,,required,gold_d04
+vj_044,iot,,preferred,gold_d04
+vj_044,jira,,required,gold_d04
+vj_044,leadership,Lãnh đạo,required,bo_sot_d07
+vj_044,mentoring,Mentoring,required,bo_sot_d07
+vj_044,negotiation,,required,gold_d04
+vj_044,,BIM,preferred,bo_sot_d07
+vj_044,,CBAP,preferred,bo_sot_d07
+vj_044,,GIS,preferred,bo_sot_d07
+vj_044,,Logistics,preferred,bo_sot_d07
+vj_044,,PMI-PBA,preferred,bo_sot_d07
+vj_044,,Xây dựng,preferred,bo_sot_d07
+vj_044,office_skills,,required,gold_d04
+vj_044,presentation,Thuyết trình,required,bo_sot_d07
+vj_044,product_management,,preferred,gold_d04
+vj_044,uml,,required,gold_d04
+vj_045,illustrator,,required,gold_d04
+vj_045,,Adobe Audition,required,bo_sot_d07
+vj_045,,After Effects,required,bo_sot_d07
+vj_045,,Bất động sản,preferred,bo_sot_d07
+vj_045,,Dựng video,required,bo_sot_d07
+vj_045,,Premiere Pro,required,bo_sot_d07
+vj_045,photoshop,,required,gold_d04
+vj_045,teamwork,,required,gold_d04
+vj_045,time_management,,required,gold_d04
+vj_046,active_directory,,required,gold_d04
+vj_046,argocd,,required,gold_d04
+vj_046,ci_cd,,required,gold_d04
+vj_046,clickhouse,,preferred,gold_d04
+vj_046,docker,,required,gold_d04
+vj_046,english,,required,gold_d04
+vj_046,erp,,required,gold_d04
+vj_046,fastapi,,required,gold_d04
+vj_046,gitlab,,required,gold_d04
+vj_046,gitlab_ci,,required,gold_d04
+vj_046,jenkins,,required,gold_d04
+vj_046,kafka,,required,gold_d04
+vj_046,kubernetes,,required,gold_d04
+vj_046,linux,,required,gold_d04
+vj_046,machine_learning,,required,gold_d04
+vj_046,,CDC,required,bo_sot_d07
+vj_046,,Debezium,required,bo_sot_d07
+vj_046,,High Availability,required,bo_sot_d07
+vj_046,,Patroni,required,bo_sot_d07
+vj_046,,pg_dump,required,bo_sot_d07
+vj_046,,pgBackRest,required,bo_sot_d07
+vj_046,,Pritunl,required,bo_sot_d07
+vj_046,,RKE2,preferred,bo_sot_d07
+vj_046,odoo,,required,gold_d04
+vj_046,postgresql,,required,gold_d04
+vj_046,problem_solving,,required,gold_d04
+vj_046,python,,required,gold_d04
+vj_046,query_optimization,Query Optimization,required,bo_sot_d07
+vj_046,sql,,required,gold_d04
+vj_046,superset,,preferred,gold_d04
+vj_046,teamwork,,required,gold_d04
+vj_046,veeam,Backup & Recovery,required,bo_sot_d07
+vj_046,vpn,,required,gold_d04
+vj_046,xml,,required,gold_d04
+vj_047,english,,required,gold_d04
+vj_047,illustrator,Illustrator,preferred,bo_sot_d07
+vj_047,,Color Correction,required,bo_sot_d07
+vj_047,,Compositing,required,bo_sot_d07
+vj_047,,InDesign,preferred,bo_sot_d07
+vj_047,,Photo Retouching,required,bo_sot_d07
+vj_047,photoshop,,preferred,gold_d04
+vj_047,teamwork,Làm việc nhóm,required,bo_sot_d07
+vj_047,time_management,,required,gold_d04
+vj_048,negotiation,,required,gold_d04
+vj_048,,Tư vấn bán hàng,required,bo_sot_d07
+vj_049,communication,,required,gold_d04
+vj_049,hardware,,required,gold_d04
+vj_049,networking,,required,gold_d04
+vj_049,,FAST Accounting,required,bo_sot_d07
+vj_049,,MISA,required,bo_sot_d07
+vj_049,,Troubleshooting,required,bo_sot_d07
+vj_049,office_skills,,required,gold_d04
+vj_049,security,,required,gold_d04
+vj_049,veeam,Backup & Recovery,required,bo_sot_d07
+vj_049,windows,,required,gold_d04
