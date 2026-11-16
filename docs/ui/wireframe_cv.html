@@ -1,0 +1,259 @@
+<!doctype html>
+<!--
+  Nguồn của docs/ui/wireframe_cv.png (S2-H08 · US-11, US-12, US-13 · cho Sprint 3: S3-H01..H04).
+  Xuất lại PNG (PowerShell, tại thư mục gốc repo):
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1640,2140 --screenshot="$PWD\docs\ui\wireframe_cv.png" "$PWD\docs\ui\wireframe_cv.html"
+  Dữ liệu trong hình là giả lập.
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe Hồ sơ CV: tải CV, xác nhận kỹ năng có dẫn chứng</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 2140px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .wide { grid-column: 1 / -1; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .url { background: #eee; border-bottom: 1px solid #ccc; padding: 3px 12px; font: 12px Consolas, monospace; color: #555; }
+  .nav { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-bottom: 1px solid #bbb; }
+  .nav .logo { font-weight: 700; margin-right: 10px; } .nav .on { font-weight: 700; text-decoration: underline; }
+  .nav .soon { color: #aaa; } .nav .sp { flex: 1; } .nav .user { border: 1px solid #999; border-radius: 14px; padding: 2px 10px; }
+  .main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; } h3 { margin: 0 0 3px; font-size: 13px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; } .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; background: #fff; }
+  .btn.pri { background: #333; color: #fff; } .btn.dis { border-color: #bbb; color: #bbb; } .btn.danger { border-color: #c33; color: #c33; }
+  .input { border: 1px solid #999; border-radius: 4px; padding: 5px 8px; color: #888; background: #fff; }
+  .chip { display: inline-block; border: 1px solid #666; border-radius: 12px; padding: 1px 8px; margin: 2px 3px 2px 0; font-size: 12px; }
+  .chip.strong { background: #333; color: #fff; border-color: #333; }
+  .chip.listed { border-style: dashed; color: #555; }
+  .chip.self { border-style: dotted; background: #f3f3f3; }
+  .tag { display: inline-block; border: 1px solid #999; border-radius: 3px; padding: 0 6px; margin-right: 3px; font-size: 11px; background: #f3f3f3; }
+  .warn { border: 1px solid #c33; color: #c33; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .ok { border: 1px solid #2a7; color: #2a7; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .err { border: 1px solid #c33; background: #fff3f3; color: #a22; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .drop { border: 2px dashed #888; border-radius: 6px; padding: 22px; text-align: center; color: #555; background: #fafafa; }
+  .bar { height: 8px; border: 1px solid #999; border-radius: 4px; overflow: hidden; background: #fff; }
+  .bar span { display: block; height: 100%; background: #555; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .steps div { border: 1px solid #999; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
+  .steps .done { background: #333; color: #fff; border-color: #333; } .steps .now { border: 2px solid #333; font-weight: 600; }
+  .ev { border-left: 3px solid #333; background: #f6f6f6; padding: 3px 8px; font-size: 12px; font-style: italic; }
+  .skill { display: grid; grid-template-columns: 150px 1fr auto; gap: 4px 10px; align-items: start; border-bottom: 1px solid #e3e3e3; padding: 5px 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  ol, ul { margin: 4px 0; padding-left: 20px; }
+  .flow { display: flex; align-items: stretch; gap: 6px; }
+  .flow .st { flex: 1; border: 1px solid #333; border-radius: 4px; padding: 5px 7px; font-size: 12px; }
+  .flow .ar { align-self: center; font-size: 16px; color: #555; }
+</style>
+</head>
+<body>
+<h1>Wireframe Hồ sơ CV: tải CV, xác nhận kỹ năng có dẫn chứng</h1>
+<p class="sub">S2-H08 · US-11, US-12, US-13 · Cho Sprint 3 (S3-H01 tải CV, S3-H02 xác nhận kỹ năng, S3-H03 số năm/chức danh, S3-H04 Hồ sơ của tôi) · Chỉ vai trò Người tìm việc (proxy chặn /ho-so cho vai trò khác) · Dòng xám dưới mỗi màn là API cần. Dữ liệu giả lập.</p>
+
+<div class="grid">
+
+  <!-- 1. Tải CV -->
+  <div class="frame" style="height:600px">
+    <div class="title">1 · Tải CV — S3-H01 · US-11</div>
+    <div class="url">/ho-so/tai-cv</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="soon">Việc phù hợp</span><span class="on">Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main">
+      <h2>Tải CV để nhận việc phù hợp</h2>
+      <div class="drop">
+        <b>Kéo thả CV vào đây</b> hoặc <u>chọn tệp từ máy</u><br>
+        <span class="small">PDF hoặc DOCX · tối đa 5 MB · CV 1 hoặc 2 cột · PDF phải có chữ chọn được (không phải ảnh chụp)</span>
+      </div>
+      <div class="box row"><span class="tag">PDF</span><b style="flex:1">CV_NguyenVanMinh_Backend.pdf</b><span class="muted small">1,2 MB</span><span class="btn">Đổi tệp</span></div>
+      <div class="box">
+        <b>Đồng ý xử lý CV</b> <span class="muted small">(điều khoản phiên bản v1 · lưu thời điểm + phiên bản)</span>
+        <ul class="small">
+          <li>Hệ thống đọc CV để tìm kỹ năng, số năm kinh nghiệm và gợi ý việc làm.</li>
+          <li>Họ tên, email, số điện thoại, địa chỉ được che trước khi phân tích.</li>
+          <li>CV lưu tối đa 30 ngày. Bạn xóa CV bất cứ lúc nào ở trang Hồ sơ của tôi.</li>
+        </ul>
+        <div>☐ Tôi đã đọc và đồng ý cho hệ thống xử lý CV theo mục đích trên.</div>
+      </div>
+      <div class="row"><span class="btn dis">Tải lên và phân tích</span><span class="muted small">Khóa cho tới khi có tệp hợp lệ VÀ đã tick đồng ý (không tick sẵn).</span></div>
+      <div class="err">Kiểm tra ngay trên trình duyệt, trước khi gửi: <b>"Tệp quá lớn (tối đa 5 MB)."</b> · <b>"Chỉ nhận PDF hoặc DOCX."</b> Tệp bị từ chối không được tải lên.</div>
+      <div class="note">Đã có 5 CV: vùng kéo thả bị khóa, hiện "Bạn đã có 5 CV. Xóa bớt ở Hồ sơ của tôi để tải CV mới."</div>
+    </div>
+    <div class="api">Storage: upload bucket cvs (private) → u/{uid}/{cv_id}.pdf · ghi app.cvs (parse_status = queued) + consent</div>
+  </div>
+
+  <!-- 2. Đang phân tích -->
+  <div class="frame" style="height:600px">
+    <div class="title">2 · Đang tải lên và phân tích — S3-H01 · US-12</div>
+    <div class="url">/ho-so/tai-cv (cùng trang, sau khi bấm "Tải lên và phân tích")</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="soon">Việc phù hợp</span><span class="on">Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main">
+      <h2>Đang đọc CV của bạn…</h2>
+      <div class="box row"><span class="tag">PDF</span><b style="flex:1">CV_NguyenVanMinh_Backend.pdf</b><span class="muted small">1,2 MB</span></div>
+      <div><span class="small">Tải lên 100%</span><div class="bar"><span style="width:100%"></span></div></div>
+      <div class="steps">
+        <div class="done">✓ Tải lên</div>
+        <div class="done">✓ Đọc văn bản</div>
+        <div class="now">● Che thông tin cá nhân</div>
+        <div>○ Tìm kỹ năng + dẫn chứng</div>
+      </div>
+      <div class="muted small">Thường mất dưới 15 giây. Bạn có thể ở lại trang này; xong sẽ tự chuyển sang màn xác nhận.</div>
+      <div class="box">
+        <h3>Khi lỗi (giữ nguyên tệp đã chọn, không mất dữ liệu)</h3>
+        <div class="err" style="margin-bottom:5px"><b>Không đọc được chữ trong CV.</b> CV có thể là ảnh chụp/scan. Hãy xuất lại PDF từ Word/Google Docs rồi tải lại. <span class="btn">Tải CV khác</span></div>
+        <div class="err" style="margin-bottom:5px"><b>Phân tích lâu hơn bình thường.</b> CV đã được lưu; hệ thống vẫn đang xử lý. <span class="btn">Thử lại</span> <span class="btn">Về Hồ sơ của tôi</span></div>
+        <div class="err"><b>CV này bạn đã tải trước đó</b> (trùng nội dung tệp). <span class="btn">Mở hồ sơ đã có</span></div>
+      </div>
+      <div class="note">Tải lên xong nhưng phân tích lỗi: CV vẫn nằm trong Hồ sơ của tôi với trạng thái "Lỗi phân tích", có nút Phân tích lại.</div>
+    </div>
+    <div class="api">POST /cv/parse {cv_id} (FastAPI · Cloud Run · Authorization: Bearer JWT Supabase) → app.cvs.parse_status: parsing → parsed | failed (≤ 15 giây)</div>
+  </div>
+
+  <!-- 3. Xác nhận hồ sơ kỹ năng -->
+  <div class="frame wide" style="height:712px">
+    <div class="title">3 · Xác nhận hồ sơ kỹ năng có dẫn chứng — S3-H02, S3-H03 · US-12</div>
+    <div class="url">/ho-so/{cv_id}/xac-nhan</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="soon">Việc phù hợp</span><span class="on">Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main" style="display:grid; grid-template-columns: 1fr 340px; gap: 14px; align-content: start">
+      <div style="display:flex; flex-direction:column; gap:9px; min-width:0">
+        <div class="row"><h2 style="flex:1">Kiểm tra lại những gì hệ thống đọc được</h2><span class="muted small">CV_NguyenVanMinh_Backend.pdf · tải lúc 09:12 16/11</span></div>
+        <div class="row">
+          <div class="box" style="flex:1">Chức danh mong muốn<br><div class="input" style="color:#222">Backend Developer</div><span class="small muted">Gợi ý từ vị trí gần nhất trong CV, sửa được</span></div>
+          <div class="box" style="width:260px">Tổng số năm kinh nghiệm<br><div class="row"><div class="input" style="color:#222; width:70px">1,5</div> năm</div><span class="small muted">Tính từ các mốc thời gian trong CV: 03/2024 – 09/2025</span></div>
+        </div>
+
+        <div class="box">
+          <div class="row"><h3 style="flex:1">Có bằng chứng <span class="chip strong">8</span></h3><span class="small muted">Kỹ năng xuất hiện trong Kinh nghiệm / Dự án</span></div>
+          <div class="skill"><span><span class="chip strong">Java</span></span><div class="ev">"Xây REST API bằng <b>Java</b> Spring Boot cho hệ thống đặt lịch, 20k người dùng" <span class="muted">— Kinh nghiệm · Công ty A</span></div><span class="btn">Xóa</span></div>
+          <div class="skill"><span><span class="chip strong">Spring Boot</span></span><div class="ev">"…REST API bằng Java <b>Spring Boot</b> cho hệ thống đặt lịch…" <span class="muted">— Kinh nghiệm · Công ty A</span></div><span class="btn">Xóa</span></div>
+          <div class="skill"><span><span class="chip strong">PostgreSQL</span></span><div class="ev">"Thiết kế schema và tối ưu truy vấn <b>PostgreSQL</b>, giảm 40% thời gian báo cáo" <span class="muted">— Dự án · Đồ án tốt nghiệp</span></div><span class="btn">Xóa</span></div>
+          <div class="small muted" style="padding-top:4px">+ 5 kỹ năng khác (Docker, REST API, Git, Redis, JUnit) · <u>Xem tất cả</u></div>
+        </div>
+
+        <div class="box">
+          <div class="row"><h3 style="flex:1">Chỉ được liệt kê <span class="chip listed">3</span></h3><span class="small muted">Chỉ có trong mục Kỹ năng, chưa thấy dùng ở đâu</span></div>
+          <div class="row" style="flex-wrap:wrap"><span class="chip listed">Kubernetes ×</span><span class="chip listed">React ×</span><span class="chip listed">AWS ×</span>
+            <span class="small muted">Rê chuột: "Kỹ năng: Java, Spring, Kubernetes, React, AWS" — mục Kỹ năng</span></div>
+        </div>
+
+        <div class="box">
+          <div class="row"><h3 style="flex:1">Tự thêm <span class="chip self">1</span></h3><span class="small muted">Bạn thêm, không có trong CV · nhãn "Tự thêm"</span></div>
+          <div class="row"><span class="chip self">Kafka · Tự thêm ×</span>
+            <div class="input" style="flex:1; position:relative">kaf|  <span class="small" style="color:#222">▸ Kafka &nbsp; ▸ Kafka Streams</span></div><span class="btn">Thêm</span></div>
+          <div class="small muted">Gợi ý lấy từ từ điển kỹ năng của hệ thống (gõ không dấu được). Không nhận kỹ năng ngoài từ điển.</div>
+        </div>
+
+        <div class="row" style="margin-top:2px"><span class="btn">← Tải CV khác</span><span class="sp" style="flex:1"></span><span class="muted small">Chưa lưu thay đổi</span><span class="btn pri">Lưu hồ sơ</span></div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:9px">
+        <div class="box">
+          <h3>Mức bằng chứng nghĩa là gì?</h3>
+          <div class="small"><span class="chip strong">Có bằng chứng</span> dùng trong kinh nghiệm/dự án, kèm câu trích.<br>
+          <span class="chip listed">Chỉ liệt kê</span> chỉ ghi tên trong mục Kỹ năng.<br>
+          <span class="chip self">Tự thêm</span> bạn bổ sung, không có trong CV.</div>
+          <div class="small muted" style="margin-top:4px">Khi chấm việc phù hợp (Sprint 4), "Có bằng chứng" được tính nặng hơn "Chỉ liệt kê".</div>
+        </div>
+        <div class="box small">
+          <h3>Câu trích đã che thông tin cá nhân</h3>
+          Họ tên, email, SĐT, địa chỉ trong câu trích hiện thành <span class="tag">[ĐÃ CHE]</span>. Câu trích dài tối đa ~200 ký tự, in đậm tên kỹ năng.
+        </div>
+        <div class="box small">
+          <h3>Sau khi bấm Lưu hồ sơ</h3>
+          <span class="ok">Đã lưu hồ sơ</span> → về <b>Hồ sơ của tôi</b>. Tải lại trang vẫn thấy dữ liệu đã lưu (S3-H03).<br>
+          Rời trang khi chưa lưu: hỏi "Bỏ các thay đổi chưa lưu?"
+        </div>
+        <div class="box small">
+          <h3>Trường hợp đặc biệt</h3>
+          <ul>
+            <li>Không tìm thấy kỹ năng nào: hiện "Chưa thấy kỹ năng nào trong CV", vẫn cho Tự thêm.</li>
+            <li>CV đang phân tích: hiện màn 2 thay vì màn này.</li>
+            <li>cv_id của người khác: 404 "Không tìm thấy CV" (RLS chặn).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="api">GET hồ sơ: app.cvs (target_title, years_exp) + app.cv_skills (skill, evidence_level strong|listed|user_added, evidence) · Lưu: cv_skills.confirmed = true, ghi user_added · Gợi ý: tìm trong ref.skills theo tên/alias</div>
+  </div>
+
+  <!-- 4. Hồ sơ của tôi -->
+  <div class="frame" style="height:440px">
+    <div class="title">4 · Hồ sơ của tôi — S3-H04 · US-13</div>
+    <div class="url">/ho-so</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="soon">Việc phù hợp</span><span class="on">Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main">
+      <div class="row"><h2 style="flex:1">Hồ sơ của tôi <span class="muted small">(3/5 CV)</span></h2><span class="btn pri">+ Tải CV mới</span></div>
+      <table class="small">
+        <tr><th>CV</th><th>Trạng thái</th><th>Kỹ năng</th><th>Tự xóa sau</th><th></th></tr>
+        <tr><td><b>CV_Backend.pdf</b> <span class="chip strong">CV chính</span><br><span class="muted">Backend Developer · 1,5 năm</span></td><td><span class="ok">Đã xác nhận</span></td><td>8 có bằng chứng · 3 liệt kê · 1 tự thêm</td><td>14/12</td><td><span class="btn">Sửa</span> <span class="btn danger">Xóa</span></td></tr>
+        <tr><td><b>CV_Fullstack.docx</b><br><span class="muted">Fullstack Developer · 1,5 năm</span></td><td><span class="tag">Chưa xác nhận</span></td><td>6 · 4 · 0</td><td>10/12</td><td><span class="btn">Đặt làm CV chính</span> <span class="btn">Xác nhận</span> <span class="btn danger">Xóa</span></td></tr>
+        <tr><td><b>CV_scan.pdf</b></td><td><span class="warn">Lỗi phân tích</span></td><td>—</td><td>08/12</td><td><span class="btn">Phân tích lại</span> <span class="btn danger">Xóa</span></td></tr>
+      </table>
+      <div class="box small"><b>Xóa CV?</b> "CV_Fullstack.docx và mọi kỹ năng đọc từ CV này sẽ bị xóa vĩnh viễn, không khôi phục được." <span class="btn">Hủy</span> <span class="btn danger">Xóa vĩnh viễn</span></div>
+      <div class="small muted">CV chính: dùng mặc định khi chấm Việc phù hợp (Sprint 4). Chỉ 1 CV chính. Xóa CV chính → CV mới nhất còn lại thành CV chính.</div>
+      <div class="note">Chưa có CV nào: hiện ô lớn "Bạn chưa tải CV nào" + nút Tải CV, thay cho bảng.</div>
+    </div>
+    <div class="api">Đọc app.cvs của chính mình (RLS owner) · đặt is_primary · xóa = xóa file Storage + app.cvs (cascade cv_skills, cv_chunks) — S3-T02</div>
+  </div>
+
+  <!-- 5. Trạng thái, lỗi, quyền -->
+  <div class="frame" style="height:440px">
+    <div class="title">5 · Trạng thái, lỗi và phân quyền (áp dụng cho màn 1–4)</div>
+    <div class="main">
+      <table class="small">
+        <tr><th>Tình huống</th><th>Kiểm ở đâu</th><th>Người dùng thấy</th></tr>
+        <tr><td>Tệp &gt; 5 MB</td><td>Trình duyệt + DB (size_bytes ≤ 5 MB)</td><td>"Tệp quá lớn (tối đa 5 MB)."</td></tr>
+        <tr><td>Không phải PDF/DOCX</td><td>Trình duyệt + DB (mime)</td><td>"Chỉ nhận PDF hoặc DOCX."</td></tr>
+        <tr><td>Chưa tick đồng ý</td><td>Trình duyệt</td><td>Nút Tải lên bị khóa</td></tr>
+        <tr><td>Đã đủ 5 CV</td><td>Trình duyệt + API</td><td>Vùng kéo thả khóa + hướng dẫn xóa bớt</td></tr>
+        <tr><td>Trùng tệp đã tải</td><td>DB (file_sha256)</td><td>"CV này bạn đã tải trước đó" + mở hồ sơ cũ</td></tr>
+        <tr><td>PDF ảnh scan / không có chữ</td><td>/cv/parse</td><td>"Không đọc được chữ trong CV…"</td></tr>
+        <tr><td>Phân tích &gt; 15 giây / lỗi mạng</td><td>Web</td><td>"Phân tích lâu hơn bình thường" + Thử lại</td></tr>
+        <tr><td>Khách mở /ho-so/*</td><td>proxy</td><td>Chuyển /dang-nhap?next=/ho-so/tai-cv</td></tr>
+        <tr><td>HR / Admin mở /ho-so/*</td><td>proxy</td><td>Trang 403</td></tr>
+        <tr><td>Mở cv_id của người khác</td><td>RLS (owner) + Storage policy</td><td>404 "Không tìm thấy CV"</td></tr>
+      </table>
+      <div class="small muted">Thông báo lỗi luôn bằng tiếng Việt, trang không bị trắng; tệp đã chọn được giữ lại để thử lại.</div>
+    </div>
+  </div>
+
+  <!-- 6. Luồng + câu hỏi -->
+  <div class="frame wide" style="height:222px">
+    <div class="title">6 · Luồng dữ liệu và câu hỏi cần chốt ở Backlog Refinement</div>
+    <div class="main">
+      <div class="flow">
+        <div class="st"><b>Web: chọn tệp</b><br>kiểm định dạng, dung lượng, đồng ý</div><span class="ar">→</span>
+        <div class="st"><b>Supabase Storage</b><br>bucket cvs (private) · u/{uid}/{cv_id}</div><span class="ar">→</span>
+        <div class="st"><b>app.cvs</b><br>parse_status = queued · lưu consent</div><span class="ar">→</span>
+        <div class="st"><b>POST /cv/parse</b><br>trích văn bản → tách section → che PII → kỹ năng + dẫn chứng</div><span class="ar">→</span>
+        <div class="st"><b>app.cv_skills</b><br>strong | listed + evidence · years_exp</div><span class="ar">→</span>
+        <div class="st"><b>Màn 3: xác nhận</b><br>sửa, thêm, xóa → confirmed = true</div>
+      </div>
+      <div class="row" style="align-items:start; gap:16px">
+        <ol class="small" style="flex:1">
+          <li><b>Tùng:</b> web ghi app.cvs / cv_skills thế nào? Schema app không mở ra web → cần view/RPC trong schema api (vd. api.create_cv, api.save_cv_profile) hay để FastAPI ghi hết?</li>
+          <li><b>Tùng:</b> lưu consent ở đâu: cột data_consent_version/at của app.profiles hay bảng riêng có lịch sử (S3-T02)?</li>
+          <li><b>Duy:</b> /cv/parse trả đồng bộ (chờ ≤ 15 giây) hay trả 202 rồi web hỏi lại parse_status? Màn 2 đang vẽ theo cách chờ + tự chuyển.</li>
+        </ol>
+        <ol class="small" start="4" style="flex:1">
+          <li><b>Duy:</b> câu trích (evidence) đã che PII chưa, dài tối đa bao nhiêu ký tự? Một kỹ năng có nhiều câu trích thì lấy câu nào?</li>
+          <li><b>Cả nhóm:</b> API tìm kỹ năng cho ô Tự thêm (ref.skills theo tên/alias) dùng chung cho bộ lọc kỹ năng ở trang Việc làm (đang thiếu từ S2-H03)?</li>
+          <li><b>Cả nhóm:</b> cho sửa số năm kinh nghiệm theo từng kỹ năng (cột cv_skills.years) hay chỉ tổng số năm như màn 3?</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
