@@ -1,0 +1,62 @@
+# Che thông tin cá nhân trong CV (S3-D03, US-12 AC4). Dùng bởi cvparser.redact.
+# So khớp không dấu, chữ thường (skillkit.sections.fold) trừ khi ghi khác.
+# Đổi file này thì tăng `version`: worker biết các CV cũ cần che lại.
+
+version: pii-1
+
+# Nhãn thay thế trong văn bản đã che (DB app.cvs.text_redacted và mọi thứ gửi ra ngoài).
+placeholders:
+  PERSON: "[HỌ_TÊN]"
+  EMAIL: "[EMAIL]"
+  PHONE: "[SĐT]"
+  ADDRESS: "[ĐỊA_CHỈ]"
+  DOB: "[NGÀY_SINH]"
+  ID_NUMBER: "[SỐ_GIẤY_TỜ]"
+  PROFILE_URL: "[LINK]"
+  PERSONAL_ATTR: "[ẨN]"
+
+# Họ người Việt (phủ > 99% dân số). Dùng để nhận tên: họ + 1–3 chữ viết hoa.
+# Bỏ các họ hiếm trùng từ thường hay đứng đầu tiêu đề (An, Sơn, Tăng, Gia, Quang, Hồng...).
+surnames: [nguyen, tran, le, pham, hoang, huynh, phan, vu, vo, dang, bui, do, ho, ngo, duong,
+  ly, luong, trinh, dinh, dao, doan, mai, cao, lam, ha, chau, chu, kieu, luc, mac, nghiem, ong,
+  phung, quach, thai, than, tieu, trieu, truong, vuong, kim, khuc, khong, luu, lai, giang, hua,
+  hau, diep, dam, dau, quan, tong, bach, au, cu, ton, thach, nong, banh, khuu, lieu, ninh, thieu,
+  uong, vuu, la, ta, to, tu, lu]
+
+# Nhãn đứng trước giá trị cần che (so ở đầu dòng hoặc sau "·", "|", ","; có ":" phía sau).
+labels:
+  PERSON: [ho va ten, ho ten, ten, full name, name, nguoi tham chieu, reference, referee]
+  ADDRESS: [dia chi, dia chi lien he, dia chi thuong tru, dia chi tam tru, noi o, cho o, que quan,
+    nguyen quan, address, home address, current address, hometown]
+  DOB: [ngay sinh, sinh ngay, ngay thang nam sinh, nam sinh, date of birth, dob, birthday, birth date]
+  ID_NUMBER: [cccd, cmnd, cmt, can cuoc, can cuoc cong dan, so cccd, so cmnd, ho chieu, passport,
+    id card, id number, national id]
+  PERSONAL_ATTR: [gioi tinh, gender, sex, tinh trang hon nhan, hon nhan, marital status, ton giao,
+    religion, dan toc, ethnicity, quoc tich, nationality, chieu cao, can nang, height, weight]
+
+# Từ khóa địa chỉ, dùng cho đoạn KHÔNG có nhãn trong phần đầu CV. Đoạn là địa chỉ khi có
+# ≥ 2 điểm: từ mạnh 1 điểm; từ yếu (cũng là từ thường: "nền tảng", "đường ống") chỉ tính khi đi
+# ngay trước số hoặc chữ viết hoa ("đường Láng", "quận 3", "tầng 5"); "P.5", "Q.3" 1 điểm.
+address_strong: [so nha, ngo, ngach, hem, kiet, phuong, huyen, thi tran, thi xa, to dan pho,
+  khu pho, khu do thi, chung cu, street, ward, district, alley]
+address_weak: [duong, pho, quan, xa, tang, lo, ap, thon, xom, toa nha, can ho, road, lane, floor,
+  building, apartment, st]
+
+# Không phải tên người dù trông giống: tổ chức, trường, địa danh. Dòng/đoạn có các từ này thì
+# luật họ + chữ hoa không áp dụng (tên tỉnh lấy thêm từ bảng tỉnh của ingestion.location).
+not_name_words: [cong ty, tnhh, co phan, tap doan, ngan hang, truong, dai hoc, cao dang, hoc vien,
+  vien, benh vien, so, bo, uy ban, trung tam, chi nhanh, van phong, jsc, ltd, co ltd, corp, inc,
+  group, bank, university, college, institute, academy, school, company, technology, technologies,
+  software, solutions, studio, agency, quan, huyen, phuong, tinh, thanh pho, tp, khu, duong, pho]
+
+# Chữ trên dòng đầu CV cho thấy đó là chức danh / tiêu đề, không phải tên người.
+title_words: [developer, engineer, designer, analyst, tester, manager, lead, leader, intern,
+  architect, consultant, specialist, officer, administrator, admin, scientist, owner, devops, qa,
+  qc, ba, lap trinh vien, ky su, chuyen vien, nhan vien, thuc tap, truong phong, giam doc,
+  thiet ke, phan tich, kiem thu, cv, curriculum, vitae, resume, ho so, so yeu ly lich, profile,
+  frontend, backend, fullstack, full-stack, data, mobile, web, software, senior, junior]
+
+# Trang cá nhân mang tên/định danh người.
+profile_domains: [facebook.com, fb.com, fb.me, m.facebook.com, linkedin.com, github.com,
+  gitlab.com, twitter.com, x.com, instagram.com, tiktok.com, behance.net, dribbble.com,
+  medium.com, zalo.me, t.me, youtube.com, topcv.vn/xem-cv]
