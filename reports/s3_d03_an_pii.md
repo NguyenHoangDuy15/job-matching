@@ -79,8 +79,8 @@ from cvparser.extract import extract_document
 from cvparser.redact import redact
 from cvparser.sections import split_sections
 
-result = extract_document(data, filename=name)            # văn bản gốc: chỉ trong bộ nhớ
+result = extract_document(data, filename=name)  # văn bản gốc: chỉ trong bộ nhớ
 red = redact(result.text, known_names=[profile.full_name])
-secs = split_sections(red.text)                            # tách section trên văn bản ĐÃ che
+secs = split_sections(red.text)  # tách section trên văn bản ĐÃ che
 # lưu app.cvs.text_redacted = red.text; mọi lời gọi LLM/embedding chỉ nhận red.text
 ```
