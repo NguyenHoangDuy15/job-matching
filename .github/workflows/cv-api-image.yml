@@ -1,0 +1,43 @@
+# Build image API đọc CV (S3-D05) và đẩy lên GHCR khi main đổi phần code API dùng; sau đó
+# "Factory reboot" Hugging Face Space để Space kéo image mới. Hướng dẫn: docs/deploy/cv-api.md.
+name: cv-api-image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "config/**"
+      - "db/seed/**"
+      - "Dockerfile"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/cv-api-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Đăng nhập GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build và đẩy image
+        run: |
+          image=ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/job-matching-api
+          mkdir -p models
+          docker build -t "$image:latest" -t "$image:${GITHUB_SHA::7}" .
+          docker push "$image:latest"
+          docker push "$image:${GITHUB_SHA::7}"
+      - name: Factory reboot Hugging Face Space
+        # Bỏ qua nếu chưa cài (secret HF_TOKEN + biến HF_SPACE, ví dụ "ten-tai-khoan/jobmatch-cv-api").
+        if: ${{ vars.HF_SPACE != '' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $HF_TOKEN" \
+            "https://huggingface.co/api/spaces/${{ vars.HF_SPACE }}/restart?factory=true"

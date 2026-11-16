@@ -1,0 +1,16 @@
+# Hugging Face Space miễn phí ngủ sau 48 giờ không có request; dậy mất 1–2 phút (vượt 15 giây của
+# US-12). Ping /health mỗi ngày để API luôn thức. Cần biến CV_API_URL (Settings → Variables).
+name: cv-api-keepwarm
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: ${{ vars.CV_API_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: curl -fsS --retry 5 --retry-delay 30 --max-time 180 "${{ vars.CV_API_URL }}/health"
