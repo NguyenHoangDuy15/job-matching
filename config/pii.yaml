@@ -2,7 +2,7 @@
 # So khớp không dấu, chữ thường (skillkit.sections.fold) trừ khi ghi khác.
 # Đổi file này thì tăng `version`: worker biết các CV cũ cần che lại.
 
-version: pii-1
+version: pii-2
 
 # Nhãn thay thế trong văn bản đã che (DB app.cvs.text_redacted và mọi thứ gửi ra ngoài).
 placeholders:
@@ -26,6 +26,7 @@ surnames: [nguyen, tran, le, pham, hoang, huynh, phan, vu, vo, dang, bui, do, ho
 # Nhãn đứng trước giá trị cần che (so ở đầu dòng hoặc sau "·", "|", ","; có ":" phía sau).
 labels:
   PERSON: [ho va ten, ho ten, ten, full name, name, nguoi tham chieu, reference, referee]
+  PROFILE_URL: [portfolio, website, personal website, blog, homepage, trang ca nhan]
   ADDRESS: [dia chi, dia chi lien he, dia chi thuong tru, dia chi tam tru, noi o, cho o, que quan,
     nguyen quan, address, home address, current address, hometown]
   DOB: [ngay sinh, sinh ngay, ngay thang nam sinh, nam sinh, date of birth, dob, birthday, birth date]
@@ -44,10 +45,16 @@ address_weak: [duong, pho, quan, xa, tang, lo, ap, thon, xom, toa nha, can ho, r
 
 # Không phải tên người dù trông giống: tổ chức, trường, địa danh. Dòng/đoạn có các từ này thì
 # luật họ + chữ hoa không áp dụng (tên tỉnh lấy thêm từ bảng tỉnh của ingestion.location).
-not_name_words: [cong ty, tnhh, co phan, tap doan, ngan hang, truong, dai hoc, cao dang, hoc vien,
-  vien, benh vien, so, bo, uy ban, trung tam, chi nhanh, van phong, jsc, ltd, co ltd, corp, inc,
+not_name_words: [cong ty, tnhh, co phan, tap doan, ngan hang, dai hoc, cao dang, hoc vien,
+  benh vien, so, bo, uy ban, trung tam, chi nhanh, van phong, jsc, ltd, co ltd, corp, inc,
   group, bank, university, college, institute, academy, school, company, technology, technologies,
-  software, solutions, studio, agency, quan, huyen, phuong, tinh, thanh pho, tp, khu, duong, pho]
+  software, solutions, studio, agency, thanh pho, tp, khu]
+
+# Từ địa danh/tổ chức TRÙNG tên người khi bỏ dấu: Quận/Quân, Huyện/Huyền, Phường/Phương,
+# Tỉnh/Tình, Đường/Dương, Trường/Trương, Viện/Viên, Phố/Phó (S3-D06: tên có "Quân" không bị che).
+# Ghi CÓ DẤU. Dòng có dấu: chỉ chặn khi đúng chữ có dấu này. Dòng không dấu ("VO DUC QUAN"):
+# chỉ chặn khi từ đứng đầu dòng (địa danh mở đầu bằng "Quận", "Phường"…; tên mở đầu bằng họ).
+place_words: [quận, huyện, phường, tỉnh, đường, trường, viện, phố]
 
 # Chữ trên dòng đầu CV cho thấy đó là chức danh / tiêu đề, không phải tên người.
 title_words: [developer, engineer, designer, analyst, tester, manager, lead, leader, intern,
@@ -59,4 +66,10 @@ title_words: [developer, engineer, designer, analyst, tester, manager, lead, lea
 # Trang cá nhân mang tên/định danh người.
 profile_domains: [facebook.com, fb.com, fb.me, m.facebook.com, linkedin.com, github.com,
   gitlab.com, twitter.com, x.com, instagram.com, tiktok.com, behance.net, dribbble.com,
-  medium.com, zalo.me, t.me, youtube.com, topcv.vn/xem-cv]
+  medium.com, zalo.me, t.me, youtube.com, topcv.vn/xem-cv, huggingface.co, kaggle.com,
+  leetcode.com, codeforces.com, scholar.google.com]
+
+# Trang cá nhân dạng tên miền con: phần trước tên miền là tên người ("an-portfolio.vercel.app").
+profile_hosts: [vercel.app, netlify.app, github.io, gitlab.io, notion.site, wordpress.com,
+  blogspot.com, wixsite.com, carrd.co, pages.dev, webflow.io]
+

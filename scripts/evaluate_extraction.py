@@ -175,9 +175,12 @@ def build_gold(
         sid, how = resolver.resolve(r["ky_nang_bo_sot"])
         key = (r["jd_id"], sid or f"new:{_key(r['ky_nang_bo_sot'])}")
         if sid and key in pred:
+            # Máy đã gắn thẻ này (người gán ghi nhầm là sót, hoặc từ điển đã được sửa): không phải
+            # bỏ sót, nhưng VẪN là thẻ chuẩn. Bỏ khỏi gold thì chính thẻ đúng đó bị tính là sai.
             warnings.append(
                 f"{r['jd_id']} '{r['ky_nang_bo_sot']}': máy đã có thẻ {sid}, không tính bỏ sót"
             )
+            gold.setdefault(key, r["muc"])
             continue
         if key in gold:
             continue
@@ -322,19 +325,21 @@ def cmd_score(labeler: SkillLabeler, report_name: str) -> int:
     with FIXTURE.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["jd_id", "skill_id", "skill_name", "level", "nguon"])
-        names = {
-            a["jd_id"] + "|" + (a["skill_id"] or "new:" + _key(a["ky_nang_bo_sot"])): a[
-                "ky_nang_bo_sot"
-            ]
-            for a in added
-        }
+        names = {}  # tên người gán ghi, cả dòng bỏ sót mà máy nay đã gắn (không mất tên)
+        for r in bo_sot:
+            sid = resolver.resolve(r["ky_nang_bo_sot"])[0]
+            names.setdefault(
+                r["jd_id"] + "|" + (sid or "new:" + _key(r["ky_nang_bo_sot"])), r["ky_nang_bo_sot"]
+            )
         for (j, s), lvl in sorted(gold.items()):
             src = "gold_d04" if (j, s) in from_mentions else "bo_sot_d07"
             w.writerow(
                 [
                     j,
                     "" if s.startswith("new:") else s,
-                    names.get(f"{j}|{s}", s[4:] if s.startswith("new:") else ""),
+                    names.get(f"{j}|{s}", s[4:] if s.startswith("new:") else "")
+                    if src == "bo_sot_d07"
+                    else "",
                     lvl,
                     src,
                 ]

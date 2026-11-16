@@ -8,12 +8,25 @@
 #     không kết thúc bằng dấu chấm/phẩy.
 # Thêm cách viết mới: thêm một dòng ở đây, tăng `version` để worker biết đọc lại CV cũ.
 
-version: cv-sections-1
+version: cv-sections-2
 max_extra_words: 2
 max_heading_words: 8
 
 sections:
   header:  # phần đầu CV: tên, chức danh, liên hệ (vùng PII)
+    # CV song ngữ: mỗi phần ngôn ngữ mở đầu lại bằng tên + liên hệ (S3-D06)
+    - part i english version
+    - part ii english version
+    - part i vietnamese version
+    - part ii vietnamese version
+    - english version
+    - vietnamese version
+    - phan i phien ban tieng anh
+    - phan ii phien ban tieng anh
+    - phan i phien ban tieng viet
+    - phan ii phien ban tieng viet
+    - phien ban tieng anh
+    - phien ban tieng viet
     - thong tin ca nhan
     - thong tin lien he
     - lien he
@@ -153,6 +166,8 @@ sections:
     - honors
     - honors va awards
     - achievements
+    - key achievements
+    - notable achievements
     - volunteer
     - volunteering
   other:

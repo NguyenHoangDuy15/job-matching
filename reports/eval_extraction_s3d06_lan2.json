@@ -1,0 +1,405 @@
+{
+  "model_version": "dict-430d0df1+rules-v1-eb5abe00+jev_local_v1",
+  "jd": 50,
+  "jd_co_the_chuan": 49,
+  "the_may": 403,
+  "the_chuan": 597,
+  "the_chuan_tu_gold_d04": 394,
+  "the_chuan_bo_sung": 192,
+  "micro": {
+    "skill": {
+      "precision": 0.995,
+      "recall": 0.672,
+      "f1": 0.802,
+      "tp": 401,
+      "pred": 403,
+      "gold": 597
+    },
+    "skill_level": {
+      "precision": 0.975,
+      "recall": 0.658,
+      "f1": 0.786,
+      "tp": 393,
+      "pred": 403,
+      "gold": 597
+    }
+  },
+  "macro_f1_theo_jd": 0.717,
+  "theo_kieu_trinh_bay": {
+    "inline": {
+      "precision": 1.0,
+      "recall": 0.809,
+      "f1": 0.894,
+      "tp": 38,
+      "pred": 38,
+      "gold": 47
+    },
+    "itviec_en": {
+      "precision": 1.0,
+      "recall": 0.643,
+      "f1": 0.783,
+      "tp": 63,
+      "pred": 63,
+      "gold": 98
+    },
+    "itviec_vi": {
+      "precision": 1.0,
+      "recall": 0.636,
+      "f1": 0.778,
+      "tp": 56,
+      "pred": 56,
+      "gold": 88
+    },
+    "markdown": {
+      "precision": 1.0,
+      "recall": 0.659,
+      "f1": 0.795,
+      "tp": 29,
+      "pred": 29,
+      "gold": 44
+    },
+    "numbered_caps": {
+      "precision": 1.0,
+      "recall": 0.605,
+      "f1": 0.754,
+      "tp": 26,
+      "pred": 26,
+      "gold": 43
+    },
+    "topcv": {
+      "precision": 0.989,
+      "recall": 0.674,
+      "f1": 0.802,
+      "tp": 89,
+      "pred": 90,
+      "gold": 132
+    },
+    "unseen": {
+      "precision": 1.0,
+      "recall": 0.606,
+      "f1": 0.755,
+      "tp": 20,
+      "pred": 20,
+      "gold": 33
+    },
+    "vietnamworks": {
+      "precision": 0.988,
+      "recall": 0.714,
+      "f1": 0.829,
+      "tp": 80,
+      "pred": 81,
+      "gold": 112
+    }
+  },
+  "loi": {
+    "the_sai": [
+      [
+        "vj_020",
+        "aws_iam"
+      ],
+      [
+        "vj_024",
+        "leadership"
+      ]
+    ],
+    "sai_muc": [
+      [
+        "vj_000",
+        "data_analysis",
+        "required",
+        "preferred"
+      ],
+      [
+        "vj_002",
+        "illustrator",
+        "preferred",
+        "required"
+      ],
+      [
+        "vj_002",
+        "photoshop",
+        "preferred",
+        "required"
+      ],
+      [
+        "vj_020",
+        "cloudformation",
+        "preferred",
+        "required"
+      ],
+      [
+        "vj_020",
+        "terraform",
+        "preferred",
+        "required"
+      ],
+      [
+        "vj_026",
+        "machine_learning",
+        "preferred",
+        "required"
+      ],
+      [
+        "vj_039",
+        "scrum",
+        "required",
+        "preferred"
+      ],
+      [
+        "vj_047",
+        "photoshop",
+        "required",
+        "preferred"
+      ]
+    ],
+    "bo_sot_theo_nguyen_nhan": {
+      "co_trong_tu_dien_khong_bat_duoc": 59,
+      "ngoai_tu_dien": 133,
+      "bo_sot_khi_doc_so_bo": 4
+    },
+    "ngoai_tu_dien_hay_gap": [
+      [
+        "dựng video",
+        4
+      ],
+      [
+        "thiết kế đồ họa",
+        4
+      ],
+      [
+        "bất động sản",
+        4
+      ],
+      [
+        "after effects",
+        4
+      ],
+      [
+        "bán hàng",
+        3
+      ],
+      [
+        "tư duy chiến lược",
+        3
+      ],
+      [
+        "premiere pro",
+        3
+      ],
+      [
+        "cbap",
+        2
+      ],
+      [
+        "pmi-pba",
+        2
+      ],
+      [
+        "mcsa",
+        2
+      ],
+      [
+        "mcse",
+        2
+      ],
+      [
+        "compositing",
+        2
+      ],
+      [
+        "marketing",
+        2
+      ],
+      [
+        "user research",
+        2
+      ],
+      [
+        "b2b sales",
+        2
+      ],
+      [
+        "business development",
+        2
+      ],
+      [
+        "quản trị hệ thống",
+        2
+      ],
+      [
+        "sdlc",
+        2
+      ],
+      [
+        "dự án chính phủ",
+        2
+      ],
+      [
+        "indesign",
+        2
+      ],
+      [
+        "3d",
+        1
+      ],
+      [
+        "animation",
+        1
+      ],
+      [
+        "chef",
+        1
+      ],
+      [
+        "puppet",
+        1
+      ],
+      [
+        "ccba",
+        1
+      ],
+      [
+        "t24",
+        1
+      ],
+      [
+        "visual paradigm",
+        1
+      ],
+      [
+        "document management system",
+        1
+      ],
+      [
+        "jamf",
+        1
+      ],
+      [
+        "mdm",
+        1
+      ]
+    ],
+    "co_trong_tu_dien_ma_khong_bat": [
+      [
+        "Làm việc nhóm → teamwork",
+        7
+      ],
+      [
+        "Phân tích nghiệp vụ → business_analysis",
+        5
+      ],
+      [
+        "Tự học → self_learning",
+        4
+      ],
+      [
+        "Illustrator → illustrator",
+        3
+      ],
+      [
+        "Stakeholder Management → stakeholder_management",
+        2
+      ],
+      [
+        "Mentoring → mentoring",
+        2
+      ],
+      [
+        "Mobile Testing → mobile_testing",
+        2
+      ],
+      [
+        "Test Case Design → test_case",
+        2
+      ],
+      [
+        "Photoshop → photoshop",
+        2
+      ],
+      [
+        "Thuyết trình → presentation",
+        2
+      ],
+      [
+        "Backup & Recovery → veeam",
+        2
+      ],
+      [
+        "Thích nghi → adaptability",
+        1
+      ],
+      [
+        "Load Balancing → nginx",
+        1
+      ],
+      [
+        "ISTQB → istqb",
+        1
+      ],
+      [
+        "Unreal Engine → unreal",
+        1
+      ],
+      [
+        "Recommender Systems → recommender",
+        1
+      ],
+      [
+        "Quản lý thời gian → time_management",
+        1
+      ],
+      [
+        "API Testing → api_testing",
+        1
+      ],
+      [
+        "Monitoring & Observability → monitoring",
+        1
+      ],
+      [
+        "Windows Server → windows_server",
+        1
+      ],
+      [
+        "Shell script → bash",
+        1
+      ],
+      [
+        "IAM & SSO → iam_sso",
+        1
+      ],
+      [
+        "Kiểm thử phần mềm → software_testing",
+        1
+      ],
+      [
+        "Automation Testing → automation_testing",
+        1
+      ],
+      [
+        "Kubernetes → kubernetes",
+        1
+      ],
+      [
+        "Message Queue → message_queue",
+        1
+      ],
+      [
+        "Pub/Sub → pubsub",
+        1
+      ],
+      [
+        "gRPC → grpc",
+        1
+      ],
+      [
+        "Tin học văn phòng → office_skills",
+        1
+      ],
+      [
+        "Database Design → database_design",
+        1
+      ]
+    ]
+  }
+}

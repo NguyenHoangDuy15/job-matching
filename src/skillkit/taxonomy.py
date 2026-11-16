@@ -90,8 +90,11 @@ class Skill(BaseModel):
 
 
 class Taxonomy:
-    def __init__(self, skills: list[Skill]) -> None:
+    def __init__(self, skills: list[Skill], stop_phrases: list[str] = ()) -> None:
         self._by_id = {s.id: s for s in skills}
+        # Cụm chứa một alias nhưng KHÔNG phải kỹ năng ("khoa học máy tính" chứa "học máy"):
+        # bộ khớp lấy cụm dài nhất nên cụm chặn nuốt alias bên trong rồi bị bỏ.
+        self.stop_phrases: list[str] = [_norm(p) for p in stop_phrases]
         self._children: dict[str, list[str]] = {s.id: [] for s in skills}
         for s in sorted(skills, key=lambda s: s.id):
             if s.parent is not None:
@@ -218,4 +221,11 @@ def load_taxonomy(path: str | Path) -> Taxonomy:
     _check_unique_ids(skills)
     _check_unique_terms(skills)
     _check_parents(skills)
-    return Taxonomy(skills)
+    stops = raw.get("stop_phrases") or []
+    if not isinstance(stops, list) or not all(isinstance(x, str) for x in stops):
+        raise TaxonomyError(f"{path}: 'stop_phrases' phải là danh sách chuỗi")
+    terms = {_norm(t) for s in skills for t in [s.id, *s.terms()]}
+    for phrase in stops:
+        if _norm(phrase) in terms:
+            raise TaxonomyError(f"stop_phrases: '{phrase}' trùng alias của một kỹ năng")
+    return Taxonomy(skills, stops)

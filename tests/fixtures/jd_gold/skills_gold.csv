@@ -162,19 +162,19 @@ vj_016,api_testing,API Testing,required,bo_sot_d07
 vj_016,confluence,,required,gold_d04
 vj_016,jira,,required,gold_d04
 vj_016,mobile_testing,Mobile Testing,required,bo_sot_d07
-vj_016,,UAT,required,bo_sot_d07
 vj_016,rdbms,,required,gold_d04
 vj_016,software_testing,,required,gold_d04
 vj_016,technical_writing,Technical Documentation,required,bo_sot_d07
 vj_016,test_case,Test Case Design,required,bo_sot_d07
 vj_016,testrail,,required,gold_d04
+vj_016,uat,UAT,required,bo_sot_d07
 vj_017,communication,,required,gold_d04
 vj_017,negotiation,,required,gold_d04
 vj_017,,B2B Sales,required,bo_sot_d07
 vj_017,,Business Development,required,bo_sot_d07
-vj_017,,SaaS,required,bo_sot_d07
 vj_017,,Tư duy chiến lược,required,bo_sot_d07
 vj_017,presentation,,required,gold_d04
+vj_017,saas,SaaS,required,bo_sot_d07
 vj_017,teamwork,Làm việc nhóm,required,bo_sot_d07
 vj_018,bash,Shell script,preferred,bo_sot_d07
 vj_018,docker,,preferred,gold_d04

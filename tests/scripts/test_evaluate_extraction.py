@@ -78,7 +78,10 @@ def test_build_gold_skips_already_found_and_marks_new(resolver):
     ]
     gold, added, warnings = build_gold({}, rows, resolver, pred)
     assert len(warnings) == 1
-    assert gold == {("a", "new:công cụ zzz"): "preferred"}
+    # Máy đã có thẻ người gán ghi là sót: không phải bỏ sót nhưng vẫn là thẻ chuẩn (không thành
+    # thẻ sai khi từ điển vừa được sửa để bắt được nó).
+    assert gold == {("a", "python"): "required", ("a", "new:công cụ zzz"): "preferred"}
+    assert [r["ky_nang_bo_sot"] for r in added] == ["Công cụ Zzz"]
     assert added[0]["match"] == "none"
 
 

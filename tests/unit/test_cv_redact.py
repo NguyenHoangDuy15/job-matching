@@ -150,3 +150,25 @@ def test_result_has_no_pii_values():
     red = redact("Nguyễn Văn A\nEmail: a@example.com")
     dumped = red.model_dump_json(exclude={"text"})
     assert "example.com" not in dumped and "Nguyễn" not in dumped
+
+
+@pytest.mark.parametrize("name", ["VO DUC QUAN", "TRẦN ĐỨC QUÂN", "Ngô Thị Huyền", "LY THU PHUONG"])
+def test_names_like_district_words_are_masked(name):
+    """Quân/Huyền/Phương bỏ dấu trùng quận/huyện/phường: vẫn là tên (S3-D06, CV thật)."""
+    out = redact(f"PART I — ENGLISH VERSION\n{name}\nBackend Developer\nKỸ NĂNG\nJava").text
+    assert name not in out and "[HỌ_TÊN]" in out
+
+
+def test_place_lines_still_not_names():
+    for line in ("Quận Cầu Giấy", "Phường Bến Nghé", "Trường Sơn Hà"):
+        assert redact(f"KỸ NĂNG\nJava\nHỌC VẤN\n{line}").text.endswith(line)
+
+
+def test_portfolio_links_masked_everywhere():
+    text = (
+        "Nguyễn Văn A\nApp Store / Play Store Portfolio: an.dev | huggingface.co/anvan\n"
+        "Portfolio: an.dev | Web: an-portfolio.vercel.app\nKỸ NĂNG\nJava"
+    )
+    out = redact(text).text
+    assert "an.dev" not in out and "anvan" not in out and "an-portfolio" not in out
+    assert "huggingface.co/[LINK]" in out

@@ -27,7 +27,7 @@ def test_pdf_basic_and_metadata_has_no_author():
     assert r.status == "ok" and r.file.kind == "pdf" and r.file.page_count == 1
     assert "KINH NGHIỆM LÀM VIỆC" in r.text and "Spring Boot" in r.text
     assert "author" not in r.metadata
-    assert r.parser_version == "cvparser-1/pdf-2"
+    assert r.parser_version == "cvparser-1/pdf-3"
     assert len(r.file.sha256) == 64
 
 
@@ -57,6 +57,28 @@ def test_pdf_repeated_header_once_and_page_numbers_dropped():
     assert "Page 1" not in r.text and "Page 2" not in r.text
     terraform = [x for x in r.text.split("\n") if "Terraform module" in x]
     assert len(terraform) == 25  # các dòng giống nhau trừ con số không bị coi là header
+
+
+def test_pdf_footer_with_page_number_kept_once_without_number():
+    """Footer "CV – X (Bilingual) Page 1 of 3" khác nhau mỗi trang ở số trang: vẫn là footer,
+    gom một lần ở đầu văn bản, bỏ phần số trang (S3-D06, CV thật)."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    for page in (1, 2, 3):
+        c.setFont("Helvetica", 11)
+        for k in range(5):
+            c.drawString(60, 780 - 20 * k, f"Experience line {page}-{k} with Java and Docker")
+        c.setFont("Helvetica", 8)
+        c.drawString(60, 30, f"CV 01 - Java Backend Developer (Bilingual EN/VI) Page {page} of 3")
+        c.showPage()
+    c.save()
+    r = extract_document(buf.getvalue())
+    assert r.blocks[0].source == "header"
+    assert r.blocks[0].text == "CV 01 - Java Backend Developer (Bilingual EN/VI)"
+    assert "Page" not in r.text and r.text.count("Bilingual") == 1
 
 
 def test_pdf_truncated_pages_is_partial():
