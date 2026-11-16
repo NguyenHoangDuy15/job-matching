@@ -1,0 +1,132 @@
+# S3-D03: 10 mẫu khó cho bộ che PII (cộng với 10 CV mẫu ở tests/fixtures/cv = 20 mẫu).
+# Mọi thông tin là GIẢ: email @example.com/.vn, SĐT 0912 000 1xx (tests/fixtures/cv/fake_pii.yaml).
+#   pii:  chuỗi PHẢI bị che (kiểm cả dạng không dấu, viết hoa, bỏ dấu cách/chấm với SĐT)
+#   keep: chuỗi PHẢI còn nguyên (kỹ năng, công ty, trường, khoảng thời gian, tỉnh)
+
+samples:
+  - id: p01
+    note: tên IN HOA không dấu, SĐT có ngoặc và gạch
+    text: |
+      NGUYEN VAN HUNG
+      Backend Developer
+      Mobile: (+84) 912-000-111 | Email: hung.nv@example.com
+      KINH NGHIỆM
+      Công ty Cổ phần Công nghệ Sao Mai | 03/2021 – nay
+      - Phát triển API bằng Java Spring Boot và PostgreSQL
+    pii: [NGUYEN VAN HUNG, (+84) 912-000-111, hung.nv@example.com]
+    keep: [Backend Developer, Công ty Cổ phần Công nghệ Sao Mai, 03/2021 – nay, Java, Spring Boot, PostgreSQL]
+
+  - id: p02
+    note: tên kiểu Anh (tên trước họ), email viết lách
+    text: |
+      Hung Nguyen
+      Data Engineer
+      hung [at] example [dot] com
+      SUMMARY
+      Data engineer with 4 years building pipelines on Apache Airflow and Spark.
+      EXPERIENCE
+      Lotus Data | 2020 – 2024
+    pii: [Hung Nguyen, "hung [at] example [dot] com"]
+    keep: [Data Engineer, Apache Airflow, Spark, Lotus Data, 2020 – 2024]
+
+  - id: p03
+    note: dòng thông tin cá nhân có nhãn, nhiều trường trên một dòng
+    text: |
+      THÔNG TIN CÁ NHÂN
+      Họ và tên: Trần Thị Mai · Ngày sinh: 12/03/1999 · Giới tính: Nữ
+      CCCD: 001199000111 · Điện thoại: 0912.000.113
+      KỸ NĂNG
+      Python, SQL, Power BI
+      HỌC VẤN
+      Đại học Kinh tế Quốc dân | 2017 – 2021
+    pii: [Trần Thị Mai, 12/03/1999, Nữ, "001199000111", 0912.000.113]
+    keep: [Python, SQL, Power BI, Đại học Kinh tế Quốc dân, 2017 – 2021]
+
+  - id: p04
+    note: địa chỉ HCM viết tắt, tên đường trùng tên người, không có nhãn
+    text: |
+      Lê Hoàng Nam
+      Frontend Developer
+      123/4 Nguyễn Trãi, P.5, Q.3, TP.HCM
+      0912 000 114
+      KỸ NĂNG
+      ReactJS, TypeScript, Next.js
+    pii: [Lê Hoàng Nam, "123/4 Nguyễn Trãi, P.5, Q.3", 0912 000 114]
+    keep: [Frontend Developer, TP.HCM, ReactJS, TypeScript, Next.js]
+
+  - id: p05
+    note: link trang cá nhân
+    text: |
+      Phạm Minh Đức
+      DevOps Engineer
+      facebook.com/duc.pham.99 · linkedin.com/in/ducpham · https://github.com/ducpm
+      Email: duc.pham@example.vn
+      SKILLS
+      Docker, Kubernetes, Terraform, AWS
+    pii: [Phạm Minh Đức, facebook.com/duc.pham.99, linkedin.com/in/ducpham, github.com/ducpm, duc.pham@example.vn]
+    keep: [DevOps Engineer, Docker, Kubernetes, Terraform, AWS]
+
+  - id: p06
+    note: tên lặp lại trong thân CV, người tham chiếu có nhãn
+    text: |
+      Võ Thanh Hà
+      Business Analyst
+      Email: ha.vo@example.com
+      GIỚI THIỆU
+      Tôi là Hà, chuyên viên BA 3 năm trong lĩnh vực ngân hàng.
+      KINH NGHIỆM
+      Ngân hàng TMCP Phương Nam Giả Định | 2021 – nay
+      NGƯỜI THAM CHIẾU
+      Người tham chiếu: Đặng Quốc Bảo – Trưởng phòng CNTT, 0912 000 116
+    pii: [Võ Thanh Hà, ha.vo@example.com, "Tôi là Hà", Đặng Quốc Bảo, 0912 000 116]
+    keep: [Business Analyst, Ngân hàng TMCP Phương Nam Giả Định, 2021 – nay, Trưởng phòng CNTT]
+
+  - id: p07
+    note: SĐT dính chữ, cạnh khoảng năm và mức lương dễ nhầm
+    text: |
+      Đinh Công Sơn
+      Tel:0912000117 Zalo: 0912 000 117
+      MỤC TIÊU
+      Mức lương mong muốn 15.000.000 – 20.000.000 VND, làm việc từ 2019 – 2024 tại Hà Nội.
+      KINH NGHIỆM
+      Công ty TNHH Phần mềm Biển Xanh | 06/2019 – 12/2024 | Mã dự án 2019120501
+    pii: [Đinh Công Sơn, "0912000117", 0912 000 117]
+    keep: [15.000.000 – 20.000.000 VND, 2019 – 2024, Hà Nội, Công ty TNHH Phần mềm Biển Xanh, 06/2019 – 12/2024, "2019120501"]
+
+  - id: p08
+    note: tên trùng từ thường / kỹ năng, địa chỉ có nhãn giữ tỉnh
+    text: |
+      Đỗ Hoàng Long
+      Mobile Developer
+      Địa chỉ: Số 8 ngách 12/34 đường Láng, phường Láng Thượng, quận Đống Đa, Hà Nội
+      KỸ NĂNG
+      Flutter, Kotlin, Swift
+      Kinh nghiệm làm việc với Firebase và Google Cloud
+    pii: [Đỗ Hoàng Long, "Số 8 ngách 12/34 đường Láng, phường Láng Thượng, quận Đống Đa"]
+    keep: [Mobile Developer, Hà Nội, Flutter, Kotlin, Swift, Firebase, Google Cloud]
+
+  - id: p09
+    note: CV tiếng Anh, tên nước ngoài, địa chỉ có nhãn
+    text: |
+      John Michael Smith
+      Senior Software Engineer
+      Address: 45 Fake Street, District 1, Ho Chi Minh City
+      Phone: +84 912 000 119 · Email: john.smith@example.com
+      EXPERIENCE
+      Blue Lotus Cloud | 2018 – Present
+      - Built microservices with Go and gRPC
+    pii: [John Michael Smith, "45 Fake Street, District 1", +84 912 000 119, john.smith@example.com]
+    keep: [Senior Software Engineer, Ho Chi Minh City, Blue Lotus Cloud, 2018 – Present, Go, gRPC]
+
+  - id: p10
+    note: không có tên ở đầu CV, tên nằm cuối (chữ ký), ngày sinh và quê quán có nhãn
+    text: |
+      HỒ SƠ ỨNG TUYỂN – KỸ SƯ KIỂM THỬ
+      Ngày sinh: 05/09/2000
+      Quê quán: Xã Hòa Bình, huyện Tây Hòa, Phú Yên
+      KỸ NĂNG
+      Selenium, Postman, Jira
+      Xác nhận thông tin trên là đúng sự thật.
+      Ngô Thị Hồng
+    pii: [05/09/2000, "Xã Hòa Bình, huyện Tây Hòa", Ngô Thị Hồng]
+    keep: [KỸ SƯ KIỂM THỬ, Selenium, Postman, Jira]

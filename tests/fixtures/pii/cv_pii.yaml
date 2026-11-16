@@ -1,0 +1,12 @@
+# PII GIẢ có trong 10 CV mẫu (tests/fixtures/cv/samples), gán tay theo nội dung trong
+# scripts/make_cv_samples.py. Mỗi chuỗi phải bị che sau redact().
+cv01: [Nguyễn Văn Hùng, hung.nguyen@example.com, 0912 000 101, "Số 12 ngõ 34 phố Hoa Sữa, phường Thành Công"]
+cv02: [Tran Thi Mai, mai.tran@example.com, +84 912 000 102, "56 Fictional Street, Ward 7"]
+cv03: [Lê Minh Khoa, khoa.le@example.vn, 0912 000 103]
+cv04: [Phạm Thu Trang, trang.pham@example.com, 0912 000 104]
+cv05: [Hoang Quoc Viet, viet.hoang@example.com, 0912 000 105]
+cv06: [Bùi Ngọc Lan, lan.bui@example.com, 0912 000 106]
+cv07: [Trịnh Gia Bảo, bao.trinh@example.vn, 0912 000 107]
+cv08: [Đỗ Thanh Tùng, tung.do@example.vn, 0912 000 108]
+cv09: [Vũ Hải Yến, yen.vu@example.com, 0912 000 109]
+cv10: [Mai Anh Tuấn, tuan.mai@example.com, 0912 000 110]
