@@ -68,9 +68,18 @@ jobs:
           [[ "$MAX_JOBS" =~ ^[0-9]+$ ]] || { echo "::error::max_jobs phải là số: $MAX_JOBS"; exit 1; }
           echo "nguồn: $SOURCES · tối đa $MAX_JOBS tin/nguồn · run_type $RUN_TYPE"
 
-      - name: Crawl, upsert, đóng tin cũ, gắn kỹ năng
+      - name: Cache tokenizer bge-m3 (đếm token khi cắt đoạn, S3-D07)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-bge-m3-tokenizer
+
+      - name: Crawl, upsert, đóng tin cũ, gắn kỹ năng, vector hóa
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Bước ④ vector hóa (S3-D07): Cloudflare Workers AI bge-m3. Chưa có secret thì tự bỏ qua.
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           args=()
           for s in $SOURCES; do args+=("--source=$s"); done
