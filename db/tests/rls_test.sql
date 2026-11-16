@@ -421,6 +421,74 @@ set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000d","user_ro
 select api.admin_set_account_status('00000000-0000-0000-0000-00000000000a', 'active', null);
 reset role;
 
+-- Test nhóm 5b (S3-D05, US-12): API đọc CV gọi RPC bằng JWT người dùng; RLS chặn CV người khác
+select set_config('test.cv_a', id::text, false) from app.cvs where storage_path = 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf';
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+do $$
+declare v_state text;
+begin
+  begin
+    perform api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+    insert into results values ('seekerB cannot claim A cv for parsing', 'claimed', 'P0002');
+  exception when others then
+    get stacked diagnostics v_state = returned_sqlstate;
+    insert into results values ('seekerB cannot claim A cv for parsing', v_state, 'P0002');
+  end;
+  begin
+    perform api.save_cv_profile(current_setting('test.cv_a')::uuid, 'x', '{}', 1, 'x', '[]', 'v');
+    insert into results values ('seekerB cannot save profile into A cv', 'saved', '55000');
+  exception when others then
+    get stacked diagnostics v_state = returned_sqlstate;
+    insert into results values ('seekerB cannot save profile into A cv', v_state, '55000');
+  end;
+end $$;
+reset role;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'seeker claims own cv for parsing', storage_path, 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf'
+  from api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+do $$
+declare v_state text;
+begin
+  perform api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+  insert into results values ('second claim while parsing is refused', 'claimed', '55P03');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('second claim while parsing is refused', v_state, '55P03');
+end $$;
+-- Lưu hồ sơ: python (đã có dòng máy tạo) + java; slug lạ bị bỏ
+insert into results select 'seeker saves own cv profile (skills written)',
+  api.save_cv_profile(current_setting('test.cv_a')::uuid, '[HỌ_TÊN] Backend', '{"skills":["Java"]}', 2.46, 'Backend Developer',
+    '[{"skill_id":"python","evidence_level":"strong","evidence":"ETL bằng Python","years":2.0},
+      {"skill_id":"java","evidence_level":"listed","evidence":"Java"},
+      {"skill_id":"khong-co-slug-nay","evidence_level":"strong","evidence":"x"}]', 'test')::text,
+  '2';
+insert into results select 'saved cv is parsed with years and title',
+  parse_status || '|' || years_exp::text || '|' || target_title, 'parsed|2.5|Backend Developer'
+  from app.cvs where id = current_setting('test.cv_a')::uuid;
+-- Người dùng tự thêm docker; đọc lại CV không được ghi đè dòng tự thêm
+insert into app.cv_skills (cv_id, skill_id, evidence_level, confirmed)
+  values (current_setting('test.cv_a')::uuid, (select id from ref.skills where slug = 'docker'), 'user_added', true);
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 1, 't',
+  '[{"skill_id":"docker","evidence_level":"listed","evidence":"Docker"},
+    {"skill_id":"python","evidence_level":"listed","evidence":"Python"}]', 'test');
+insert into results select 're-parse keeps user_added skill', evidence_level::text, 'user_added'
+  from app.cv_skills where cv_id = current_setting('test.cv_a')::uuid
+   and skill_id = (select id from ref.skills where slug = 'docker');
+-- java của lần đọc trước bị xóa, python ghi lại theo lần đọc mới
+insert into results select 're-parse replaces machine skills', string_agg(r.slug || ':' || s.evidence_level, ','), 'python:listed'
+  from app.cv_skills s join ref.skills r on r.id = s.skill_id
+ where s.cv_id = current_setting('test.cv_a')::uuid and not s.confirmed;
+-- File lỗi: parse_status = failed + mã lỗi
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.fail_cv_parse(current_setting('test.cv_a')::uuid, 'ocr_required');
+insert into results select 'failed parse records error code', parse_status || '|' || parse_error, 'failed|ocr_required'
+  from app.cvs where id = current_setting('test.cv_a')::uuid;
+reset role;
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
