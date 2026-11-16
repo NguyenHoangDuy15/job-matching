@@ -20,6 +20,7 @@ from ingestion.fx import FxRate, FxSyncResult, load_latest_pg, sync_rates_pg
 from ingestion.location import ProvinceIndex, build_index, normalize_key, normalize_location
 from ingestion.models import JobPostingRaw
 from ingestion.salary import parse_salary, to_vnd
+from ingestion.seniority import infer_seniority, source_signals
 
 try:  # S2-D03 (PR #618): tách JD thành 4 section. Chưa có thì ghi toàn văn vào description.
     from skillkit.sections import split_text
@@ -116,6 +117,9 @@ def build_job_row(
     today: date,
 ) -> JobRow:
     loc = normalize_location(posting.location_text(), title=posting.title, index=index)
+    seniority, _ = infer_seniority(
+        posting.title, posting.years_exp_min, *source_signals(posting.json_ld)
+    )
     work_mode = "remote" if posting.remote else loc.work_mode
 
     parsed = parse_salary(posting.salary_text())
@@ -127,6 +131,7 @@ def build_job_row(
         "title": posting.title,
         "title_norm": normalize_key(posting.title),
         "work_mode": work_mode,
+        "seniority": seniority,  # suy từ nguồn/tiêu đề/số năm; không đưa vào content_hash
         "employment_type": posting.employment_type,
         "years_exp_min": posting.years_exp_min,
         "salary_raw": parsed.raw or None,

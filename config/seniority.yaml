@@ -1,0 +1,60 @@
+# Suy cấp bậc tin tuyển dụng → core.jobs.seniority (enum core.seniority). Bộ lọc "Cấp bậc" trên web.
+# Thứ tự tín hiệu: ô cấp bậc của nguồn → từ khóa trong tiêu đề → số năm kinh nghiệm tối thiểu.
+# Regex so trên tiêu đề đã bỏ dấu, chữ thường (fold). Đổi file này thì chạy lại
+# `uv run python scripts/backfill_seniority.py --apply` để gắn lại tin cũ.
+
+# Từ khóa tiêu đề, xét theo thứ tự (cấp cao trước): "Senior Manager" → manager, "Junior/Senior" → senior.
+title:
+  manager:
+    - '\b(truong|pho) (phong|ban|bo phan|khoi)\b'
+    - '\b(pho )?giam doc\b'
+    - '\bhead of\b'
+    - '\b(director|chief \w+ officer|cto|cio|ciso|vp|vice president)\b'
+    # Project/Product/Account... Manager đã bị bỏ ở title_ignore: "manager" còn lại là cấp quản lý.
+    - '\bmanager\b'
+  lead:
+    - '\b(tech|team|technical|engineering|qa|test|dev|project) lead(er)?\b'
+    - '\blead (developer|engineer|dev|qa|tester|designer|data|software|backend|frontend|mobile|devops|ai|ml|ba|business)\b'
+    - '\btruong nhom\b'
+    - '\bprincipal\b'
+    - '^lead\b'
+  senior:
+    - '\b(senior|snr)\b'
+    - '\bsr\b'
+    - '\bcao cap\b'
+  middle:
+    - '\b(middle|mid|mid-level|intermediate)\b'
+  junior:
+    - '\b(junior|jr)\b'
+  fresher:
+    - '\b(fresher|new grad|moi tot nghiep)\b'
+  intern:
+    - '\b(intern|internship|thuc tap sinh|thuc tap|tts)\b'
+
+# Từ trông như cấp bậc nhưng là vai trò: bỏ trước khi so (Project Manager vẫn có thể Junior/Senior).
+title_ignore:
+  - '\b(project|product|program|account|key account|relationship|community|content|brand|marketing|sales|shop|store|office|case|property) manager\b'
+  - '\blead generation\b'
+  # "Trợ lý Giám đốc", "Assistant to the CTO": trợ lý, không phải người quản lý.
+  - '\b(tro ly|thu ky|assistant to|assistant of|personal assistant)\b.*$'
+
+# Ô "Cấp bậc" trên trang nguồn (TopCV `job_level`). "Nhân viên" quá rộng: không dùng.
+source_text:
+  intern: ['thuc tap sinh', 'sinh vien']
+  fresher: ['moi tot nghiep']
+  lead: ['truong nhom', 'giam sat']
+  manager: ['truong phong', 'pho phong', 'quan ly', 'giam doc', 'truong chi nhanh']
+
+# VietnamWorks jobLevelId, đối chiếu với tiêu đề trên dữ liệu thật 17/11/2026:
+# 3 = Giám đốc trở lên, 7 = Trưởng/Phó phòng. 5 = "Nhân viên" (gồm cả Tech Lead lẫn kỹ sư 2 năm),
+# 1 chưa rõ: không dùng.
+vietnamworks_level_id:
+  3: manager
+  7: manager
+
+# Số năm kinh nghiệm tối thiểu → cấp bậc, khi tiêu đề và nguồn không nói gì. [từ, đến) năm.
+years:
+  - [0, 0.5, fresher]
+  - [0.5, 3, junior]
+  - [3, 5, middle]
+  - [5, 100, senior]
