@@ -2,7 +2,7 @@
 --  Từ điển kỹ năng (S2-D03, US-10/AC2) — SINH TỰ ĐỘNG từ config/skills.yaml.
 --  Không sửa tay: chạy `PYTHONPATH=src uv run python scripts/build_skill_seed.py`.
 --  Cần chạy sau migration 0001 và seed_reference_data.sql (ref.skill_categories).
---  379 kỹ năng, 1257 cách viết.
+--  379 kỹ năng, 1267 cách viết.
 -- =====================================================================
 
 insert into ref.skills (slug, name, category_id, kind, source) values
@@ -396,8 +396,10 @@ delete from ref.skill_aliases
 where alias_norm not in (
   'a/b testing',
   'a/b test',
+  'a/b tests',
   'ab testing',
   'ab test',
+  'ab tests',
   'abap',
   'active directory',
   'ad ds',
@@ -644,6 +646,8 @@ where alias_norm not in (
   'data analytics',
   'phân tích số liệu',
   'analytics',
+  'data analyst',
+  'chuyên viên phân tích dữ liệu',
   'data engineering',
   'kỹ thuật dữ liệu',
   'data engineer',
@@ -1409,6 +1413,7 @@ where alias_norm not in (
   'spring core',
   'spring boot',
   'springboot',
+  'spring-boot',
   'java spring boot',
   'spring cloud',
   'spring security',
@@ -1485,7 +1490,8 @@ where alias_norm not in (
   'team player',
   'technical documentation',
   'viết tài liệu kỹ thuật',
-  'tài liệu kỹ thuật',
+  'soạn tài liệu kỹ thuật',
+  'viết tài liệu',
   'technical writing',
   'tensorflow',
   'tensor flow',
@@ -1543,6 +1549,10 @@ where alias_norm not in (
   'wireframes',
   'prototype',
   'prototyping',
+  'user testing',
+  'usability testing',
+  'kiểm thử người dùng',
+  'kiểm thử khả dụng',
   'uikit',
   'uml',
   'use case diagram',
@@ -1658,8 +1668,10 @@ select v.alias_norm, s.id, v.needs_context, v.context_rule::jsonb
 from (values
   ('a/b testing', 'ab_testing', false, null),
   ('a/b test', 'ab_testing', false, null),
+  ('a/b tests', 'ab_testing', false, null),
   ('ab testing', 'ab_testing', false, null),
   ('ab test', 'ab_testing', false, null),
+  ('ab tests', 'ab_testing', false, null),
   ('abap', 'abap', false, null),
   ('active directory', 'active_directory', false, null),
   ('ad ds', 'active_directory', false, null),
@@ -1906,6 +1918,8 @@ from (values
   ('data analytics', 'data_analysis', false, null),
   ('phân tích số liệu', 'data_analysis', false, null),
   ('analytics', 'data_analysis', false, null),
+  ('data analyst', 'data_analysis', false, null),
+  ('chuyên viên phân tích dữ liệu', 'data_analysis', false, null),
   ('data engineering', 'data_engineering', false, null),
   ('kỹ thuật dữ liệu', 'data_engineering', false, null),
   ('data engineer', 'data_engineering', false, null),
@@ -2671,6 +2685,7 @@ from (values
   ('spring core', 'spring', false, null),
   ('spring boot', 'spring_boot', false, null),
   ('springboot', 'spring_boot', false, null),
+  ('spring-boot', 'spring_boot', false, null),
   ('java spring boot', 'spring_boot', false, null),
   ('spring cloud', 'spring_cloud', false, null),
   ('spring security', 'spring_security', false, null),
@@ -2747,7 +2762,8 @@ from (values
   ('team player', 'teamwork', false, null),
   ('technical documentation', 'technical_writing', false, null),
   ('viết tài liệu kỹ thuật', 'technical_writing', false, null),
-  ('tài liệu kỹ thuật', 'technical_writing', false, null),
+  ('soạn tài liệu kỹ thuật', 'technical_writing', false, null),
+  ('viết tài liệu', 'technical_writing', false, null),
   ('technical writing', 'technical_writing', false, null),
   ('tensorflow', 'tensorflow', false, null),
   ('tensor flow', 'tensorflow', false, null),
@@ -2805,6 +2821,10 @@ from (values
   ('wireframes', 'ui_ux', false, null),
   ('prototype', 'ui_ux', false, null),
   ('prototyping', 'ui_ux', false, null),
+  ('user testing', 'ui_ux', false, null),
+  ('usability testing', 'ui_ux', false, null),
+  ('kiểm thử người dùng', 'ui_ux', false, null),
+  ('kiểm thử khả dụng', 'ui_ux', false, null),
   ('uikit', 'uikit', false, null),
   ('uml', 'uml', false, null),
   ('use case diagram', 'uml', false, null),

@@ -223,6 +223,24 @@ def _cell(row: list, i: int | None) -> str | None:
 # ----------------------------------------------------------------------------- kỹ năng
 
 
+_URL = re.compile(
+    r"(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)*\.(?:com|net|org|io|vn|me|dev|app|co|ai)(?:/\S*)?",
+    re.I,
+)
+
+
+def _non_skill_spans(line: str, pos: int, entries: list[Entry]) -> list[tuple[int, int]]:
+    """Đoạn không lấy kỹ năng: đường dẫn URL ("github.com/[LINK]") và tên công ty ở dòng tiêu đề
+    việc làm ("Blue Lotus Cloud | DevOps Engineer | 2021 – nay": "Cloud" không phải kỹ năng)."""
+    spans = [m.span() for m in _URL.finditer(line)]
+    for e in entries:
+        if e.section == "experience" and e.text_start == pos and e.org:
+            i = line.find(e.org)
+            if i >= 0:
+                spans.append((i, i + len(e.org)))
+    return spans
+
+
 def _snippet(line: str, s: int, e: int, max_chars: int) -> tuple[str, tuple[int, int]]:
     body = _BULLET.sub("", line, count=1).strip()
     shift = line.find(body) if body else 0
@@ -257,7 +275,10 @@ def _skills(
             continue
         line = prepare(raw)[0]
         lead = len(raw) - len(raw.lstrip())
+        skip = _non_skill_spans(line, pos, entries)
         for m in matcher.find(line):
+            if any(a <= m.start and m.end <= b for a, b in skip):
+                continue
             section = secs.section_at(pos + lead + m.start)
             level = cfg.fallback_level if fallback else cfg.levels.get(section)
             if level is None:

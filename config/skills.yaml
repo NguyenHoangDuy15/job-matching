@@ -139,7 +139,7 @@ skills:
     ambiguous: true
     context: [java, boot, mvc, hibernate, jpa, backend, microservice, microservices, maven, gradle, kotlin]
     rule: {terms: [Spring], forms: [Spring]}
-  - {id: spring_boot, name: Spring Boot, level: 3, parent: java, category: 2, kind: framework, aliases: [springboot, java spring boot]}
+  - {id: spring_boot, name: Spring Boot, level: 3, parent: java, category: 2, kind: framework, aliases: [springboot, spring-boot, java spring boot]}
   - {id: spring_cloud, name: Spring Cloud, level: 3, parent: java, category: 2, kind: framework}
   - {id: spring_security, name: Spring Security, level: 3, parent: java, category: 2, kind: framework}
   - {id: hibernate, name: Hibernate, level: 3, parent: java, category: 2, kind: framework}
@@ -282,7 +282,7 @@ skills:
   - {id: responsive, name: Responsive Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [responsive web design, responsive]}
   - {id: pwa, name: PWA, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [progressive web app]}
   - {id: seo, name: SEO, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [search engine optimization]}
-  - {id: ui_ux, name: UI/UX Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [ui/ux, ui ux, ux/ui, ux design, ui design, thiết kế ui/ux, user experience, user interface, wireframe, wireframes, prototype, prototyping]}
+  - {id: ui_ux, name: UI/UX Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [ui/ux, ui ux, ux/ui, ux design, ui design, thiết kế ui/ux, user experience, user interface, wireframe, wireframes, prototype, prototyping, user testing, usability testing, kiểm thử người dùng, kiểm thử khả dụng]}
   - {id: figma, name: Figma, level: 3, parent: ui_ux, kind: tool}
   - {id: adobe_xd, name: Adobe XD, level: 3, parent: ui_ux, kind: tool, aliases: []}
   - {id: sketch, name: Sketch, level: 3, parent: ui_ux, kind: tool,
@@ -357,9 +357,9 @@ skills:
   - {id: ocr, name: OCR, level: 2, parent: group_data_ai, kind: hard, aliases: [nhận dạng ký tự quang học]}
   - {id: speech, name: Speech Recognition, level: 2, parent: group_data_ai, kind: hard, aliases: [asr, speech-to-text, nhận dạng giọng nói, text-to-speech, tts]}
   - {id: statistics, name: Thống kê, level: 2, parent: group_data_ai, kind: hard, aliases: [statistics, statistical analysis, xác suất thống kê, probability]}
-  - {id: data_analysis, name: Phân tích dữ liệu, level: 2, parent: group_data_ai, kind: hard, aliases: [data analysis, data analytics, phân tích số liệu, analytics]}
+  - {id: data_analysis, name: Phân tích dữ liệu, level: 2, parent: group_data_ai, kind: hard, aliases: [data analysis, data analytics, phân tích số liệu, analytics, data analyst, chuyên viên phân tích dữ liệu]}
   - {id: data_visualization, name: Data Visualization, level: 2, parent: group_data_ai, kind: hard, aliases: [trực quan hóa dữ liệu, data visualisation, dashboard, dashboards]}
-  - {id: ab_testing, name: A/B Testing, level: 2, parent: group_data_ai, kind: hard, aliases: [a/b test, ab testing, ab test]}
+  - {id: ab_testing, name: A/B Testing, level: 2, parent: group_data_ai, kind: hard, aliases: [a/b test, a/b tests, ab testing, ab test, ab tests]}
   - {id: big_data, name: Big Data, level: 2, parent: group_data_ai, kind: hard, aliases: [dữ liệu lớn, bigdata]}
   - {id: etl, name: ETL, level: 2, parent: group_data_ai, kind: hard, aliases: [elt, etl/elt, data pipeline, data pipelines, pipeline dữ liệu]}
   - {id: data_warehouse, name: Data Warehouse, level: 2, parent: group_data_ai, kind: hard, aliases: [kho dữ liệu, data warehousing, dwh, data lake, lakehouse, data mart]}
@@ -540,7 +540,7 @@ skills:
   - {id: fintech, name: Fintech, level: 2, parent: group_qa_security_process, kind: domain, aliases: [banking domain, nghiệp vụ ngân hàng, core banking, payment gateway, cổng thanh toán, e-wallet, ví điện tử]}
   - {id: ecommerce, name: E-commerce, level: 2, parent: group_qa_security_process, kind: domain, aliases: [ecommerce, thương mại điện tử, e commerce]}
   - {id: code_review, name: Code Review, level: 2, parent: group_qa_security_process, kind: hard, aliases: [review code, clean code]}
-  - {id: technical_writing, name: Technical Documentation, level: 2, parent: group_qa_security_process, kind: hard, aliases: [viết tài liệu kỹ thuật, tài liệu kỹ thuật, technical writing, technical documentation]}
+  - {id: technical_writing, name: Technical Documentation, level: 2, parent: group_qa_security_process, kind: hard, aliases: [viết tài liệu kỹ thuật, soạn tài liệu kỹ thuật, viết tài liệu, technical writing, technical documentation]}
   - {id: office_skills, name: Tin học văn phòng, level: 2, parent: group_qa_security_process, kind: tool, aliases: [microsoft office, ms office, office 365, microsoft 365, powerpoint, google workspace, phần mềm văn phòng, thành thạo tin học văn phòng]}
   # Kỹ năng mềm và ngoại ngữ
   - {id: english, name: Tiếng Anh, level: 2, parent: group_qa_security_process, kind: soft, aliases: [english, tiếng anh giao tiếp, tiếng anh chuyên ngành, toeic, ielts, business english, tiếng anh cơ bản]}
