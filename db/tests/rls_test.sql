@@ -45,7 +45,8 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000000b', 'hra@x.vn',    '{"full_name":"Trần HR A"}'::jsonb),
   ('00000000-0000-0000-0000-00000000000c', 'hrb@x.vn',    '{"full_name":"Lê HR B"}'::jsonb),
   ('00000000-0000-0000-0000-00000000000d', 'admin@x.vn',  '{"full_name":"Phạm Admin"}'::jsonb),
-  ('00000000-0000-0000-0000-00000000000e', 'hr_applicant@companyc.vn', '{"full_name":"Hoàng HR Mới","requested_role":"hr","company_name":"Công ty C","work_email":"hr_applicant@companyc.vn"}'::jsonb);
+  ('00000000-0000-0000-0000-00000000000e', 'hr_applicant@companyc.vn', '{"full_name":"Hoàng HR Mới","requested_role":"hr","company_name":"Công ty C","work_email":"hr_applicant@companyc.vn"}'::jsonb),
+  ('00000000-0000-0000-0000-00000000000f', 'seeker2@x.vn', '{"full_name":"Đỗ Ứng Viên B"}'::jsonb);
 
 insert into app.organizations (id, name) values
   ('10000000-0000-0000-0000-00000000000a', 'Công ty A'),
@@ -73,20 +74,35 @@ insert into core.job_skills (job_id, skill_id, level) values
   (4, (select id from ref.skills where slug = 'sql'),     'required');
 
 insert into app.cvs (owner_user_id, uploaded_by, storage_path, file_sha256, mime, size_bytes) values
-  ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf', '\x01', 'application/pdf', 1000);
+  ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf', '\x01', 'application/pdf', 1000),
+  ('00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-00000000000f', 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf', '\x03', 'application/pdf', 1000);
+-- Kỹ năng trích từ CV của seeker A (để kiểm tra seeker B không đọc được app.cv_skills của A)
+insert into app.cv_skills (cv_id, skill_id, evidence_level, evidence)
+select c.id, (select id from ref.skills where slug = 'python'), 'strong', 'Dự án ETL bằng Python'
+from app.cvs c where c.storage_path = 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf';
 insert into app.cvs (org_id, job_id, uploaded_by, storage_path, file_sha256, mime, size_bytes, delete_after) values
   ('10000000-0000-0000-0000-00000000000a', 3, '00000000-0000-0000-0000-00000000000b', 'o/10000000-0000-0000-0000-00000000000a/3/c1.pdf', '\x02', 'application/pdf', 1000, current_date - 1);
 
 insert into storage.objects (bucket_id, name) values
   ('cvs', 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf'),
-  ('cvs', 'o/10000000-0000-0000-0000-00000000000a/3/c1.pdf');
+  ('cvs', 'o/10000000-0000-0000-0000-00000000000a/3/c1.pdf'),
+  ('cvs', 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf');
 
 -- 4. Bảng lưu kết quả kiểm thử
 create temp table results(test text, got text, expected text);
 grant all on results to anon, authenticated;
 
+-- Test nhóm 0: Bucket 'cvs' được migration tạo đúng cấu hình (S3-T01)
+insert into results select 'bucket cvs: private, 5MB, pdf/docx only',
+  (select (not public
+           and file_size_limit = 5242880
+           and allowed_mime_types @> array['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+           and cardinality(allowed_mime_types) = 2)::text
+   from storage.buckets where id = 'cvs'),
+  'true';
+
 -- Test nhóm 1: Đăng ký tự động, Trigger Login & Custom Access Token Hook
-insert into results select 'trigger created 5 profiles on register', count(*)::text, '5' from app.profiles;
+insert into results select 'trigger created 6 profiles on register', count(*)::text, '6' from app.profiles;
 insert into results select 'hr applicant auto-created pending_hr request', count(*)::text, '1' from app.hr_requests where user_id = '00000000-0000-0000-0000-00000000000e' and status = 'pending';
 insert into results select 'jwt hook injects hr role & org_id',
   (public.custom_access_token_hook('{"user_id":"00000000-0000-0000-0000-00000000000b","claims":{"sub":"00000000-0000-0000-0000-00000000000b"}}'::jsonb)->'claims'->>'user_role'),
@@ -160,6 +176,75 @@ begin
 end $$;
 reset role;
 
+-- Test nhóm 3b (S3-T01, US-11): Seeker B không đọc / sửa / xóa / ghi đè được CV và file của seeker A
+-- Giả định B đã biết cv_id của A (lộ qua URL/log) để thử ghi trực tiếp
+select set_config('test.cv_a', id::text, false) from app.cvs where storage_path = 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf';
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'seekerB sees only own cv', string_agg(storage_path, ','), 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf' from app.cvs;
+insert into results select 'seekerB cannot read A cv_skills', count(*)::text, '0' from app.cv_skills;
+insert into results select 'seekerB sees only own storage file', string_agg(name, ','), 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf' from storage.objects;
+insert into results select 'seekerB cannot open A file by exact path', count(*)::text, '0'
+  from storage.objects where bucket_id = 'cvs' and name = 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf';
+do $$
+declare
+  v_rows int;
+begin
+  -- Sửa / xóa CV và file của A: RLS lọc hết dòng → 0 dòng bị ảnh hưởng
+  update app.cvs set is_primary = true where owner_user_id = '00000000-0000-0000-0000-00000000000a';
+  get diagnostics v_rows = row_count;
+  insert into results values ('seekerB cannot update A cv row', v_rows::text, '0');
+
+  delete from app.cvs where owner_user_id = '00000000-0000-0000-0000-00000000000a';
+  get diagnostics v_rows = row_count;
+  insert into results values ('seekerB cannot delete A cv row', v_rows::text, '0');
+
+  delete from storage.objects where name = 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf';
+  get diagnostics v_rows = row_count;
+  insert into results values ('seekerB cannot delete A file', v_rows::text, '0');
+
+  -- Tải file vào thư mục của A, hoặc ra ngoài thư mục u/{uid}/ → bị chặn bởi WITH CHECK
+  begin
+    insert into storage.objects (bucket_id, name) values ('cvs', 'u/00000000-0000-0000-0000-00000000000a/evil.pdf');
+    insert into results values ('seekerB cannot upload into A folder', 'inserted', 'denied');
+  exception when insufficient_privilege then
+    insert into results values ('seekerB cannot upload into A folder', 'denied', 'denied');
+  end;
+  begin
+    insert into storage.objects (bucket_id, name) values ('cvs', 'cv-root.pdf');
+    insert into results values ('seekerB cannot upload outside u/{uid}/', 'inserted', 'denied');
+  exception when insufficient_privilege then
+    insert into results values ('seekerB cannot upload outside u/{uid}/', 'denied', 'denied');
+  end;
+
+  -- Tạo bản ghi CV đứng tên A → bị chặn
+  begin
+    insert into app.cvs (owner_user_id, uploaded_by, storage_path, file_sha256, mime, size_bytes)
+    values ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000f',
+            'u/00000000-0000-0000-0000-00000000000a/fake.pdf', '\x04', 'application/pdf', 1000);
+    insert into results values ('seekerB cannot insert cv owned by A', 'inserted', 'denied');
+  exception when insufficient_privilege then
+    insert into results values ('seekerB cannot insert cv owned by A', 'denied', 'denied');
+  end;
+
+  -- Biết (đoán) được cv_id của A rồi gắn thêm kỹ năng vào CV đó → bị chặn
+  begin
+    insert into app.cv_skills (cv_id, skill_id, evidence_level)
+    values (current_setting('test.cv_a')::uuid, (select id from ref.skills where slug = 'sql'), 'user_added');
+    insert into results values ('seekerB cannot add skill to A cv', 'inserted', 'denied');
+  exception when insufficient_privilege then
+    insert into results values ('seekerB cannot add skill to A cv', 'denied', 'denied');
+  end;
+end $$;
+reset role;
+
+-- Chạy với quyền superuser: dữ liệu của A vẫn nguyên vẹn sau các lần thử của B
+insert into results select 'A cv + file + skills intact after B attempts',
+  (select count(*) from app.cvs where owner_user_id = '00000000-0000-0000-0000-00000000000a' and not is_primary)::text || '/' ||
+  (select count(*) from storage.objects where name like 'u/00000000-0000-0000-0000-00000000000a/%')::text || '/' ||
+  (select count(*) from app.cv_skills s join app.cvs c on c.id = s.cv_id where c.owner_user_id = '00000000-0000-0000-0000-00000000000a')::text,
+  '1/1/1';
+
 -- Test nhóm 4: HR Công ty A & HR Công ty B (Cô lập dữ liệu đa tổ chức)
 set role authenticated;
 set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000b","user_role":"hr","account_status":"active","org_id":"10000000-0000-0000-0000-00000000000a"}';
@@ -179,7 +264,7 @@ set role authenticated;
 set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000d","user_role":"admin","account_status":"active"}';
 insert into results select 'admin sees all jobs', count(*)::text, '4' from core.jobs;
 insert into results select 'admin cannot read CVs (least privilege)', count(*)::text, '0' from app.cvs;
-insert into results select 'admin sees all 5 profiles', count(*)::text, '5' from app.profiles;
+insert into results select 'admin sees all 6 profiles', count(*)::text, '6' from app.profiles;
 
 -- Admin duyệt yêu cầu HR của user E
 select api.admin_review_hr_request(
