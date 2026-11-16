@@ -1,0 +1,46 @@
+lang: vi
+landmarks:
+- Trịnh Gia Bảo
+- Thiết kế UI/UX
+- LIÊN HỆ
+- bao.trinh@example.vn
+- 0912 000 107
+- Huế
+- KỸ NĂNG
+- Figma
+- Adobe XD
+- Photoshop
+- Illustrator
+- Prototyping
+- GIỚI THIỆU
+- Nhà thiết kế UI/UX yêu thích sản phẩm số đơn giản, dễ dùng.
+- KINH NGHIỆM
+- Công ty TNHH Sáng tạo Cố Đô
+- 01/2022 – nay
+- UI/UX Designer
+- Thiết kế ứng dụng đặt tour du lịch trên Figma
+- Thực hiện kiểm thử người dùng với 20 khách hàng
+- HỌC VẤN
+- Đại học Nghệ thuật Huế
+- Thiết kế đồ họa
+- 2017 – 2021
+order:
+- - LIÊN HỆ
+  - KỸ NĂNG
+- - GIỚI THIỆU
+  - KINH NGHIỆM
+  - HỌC VẤN
+contiguous:
+- - bao.trinh@example.vn
+  - 0912 000 107
+  - Huế
+- - Figma
+  - Adobe XD
+  - Photoshop
+  - Illustrator
+  - Prototyping
+- - Thiết kế ứng dụng đặt tour du lịch trên Figma
+  - Thực hiện kiểm thử người dùng với 20 khách hàng
+min_tables: 0
+file: cv07.pdf
+manual: true

@@ -1,0 +1,36 @@
+lang: en
+landmarks:
+- Tran Thi Mai
+- Data Analyst
+- SUMMARY
+- Data analyst with three years of experience turning sales data into dashboards and forecasting models
+  for retail teams.
+- WORK EXPERIENCE
+- Lotus Retail Analytics
+- 01/2022 – Present
+- Built Power BI dashboards used by 40 store managers every week
+- Automated reporting pipelines with Python, pandas and SQL
+- Designed A/B tests for promotion campaigns
+- Green River Consulting
+- Junior Analyst
+- 06/2020 – 12/2021
+- Cleaned survey data and produced Excel reports for clients
+- EDUCATION
+- University of Economics HCMC
+- Bachelor of Statistics
+- 2016 – 2020
+- SKILLS
+- Python, SQL, Power BI, Excel, pandas, scikit-learn, Tableau
+- Statistics, A/B testing, data visualization
+order:
+- - SUMMARY
+  - WORK EXPERIENCE
+  - EDUCATION
+  - SKILLS
+contiguous:
+- - Built Power BI dashboards used by 40 store managers every week
+  - Automated reporting pipelines with Python, pandas and SQL
+  - Designed A/B tests for promotion campaigns
+min_tables: 0
+file: cv02.pdf
+manual: false

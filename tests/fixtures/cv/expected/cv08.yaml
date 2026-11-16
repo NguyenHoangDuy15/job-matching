@@ -1,0 +1,33 @@
+lang: vi
+landmarks:
+- Đỗ Thanh Tùng
+- Lập trình viên Mobile
+- Mục tiêu nghề nghiệp
+- Xây dựng ứng dụng di động mượt, ổn định cho hàng triệu người dùng.
+- Kinh nghiệm làm việc
+- Công ty Cổ phần Ứng dụng Mây Hồng
+- 04/2022 – nay
+- Lập trình viên Flutter
+- Phát triển ứng dụng đặt lịch khám bằng Flutter và Firebase
+- Viết unit test, đạt độ phủ 80%
+- Công ty TNHH Di động Hải Âu
+- 09/2020 – 03/2022
+- Lập trình viên Android
+- Bảo trì ứng dụng ví điện tử viết bằng Kotlin
+- Học vấn
+- Học viện Công nghệ Bưu chính Viễn thông
+- 2016 – 2020
+- Kỹ năng
+- Flutter, Dart, Kotlin, Firebase, REST API, Git
+- 'English: good reading and writing'
+order:
+- - Mục tiêu nghề nghiệp
+  - Kinh nghiệm làm việc
+  - Học vấn
+  - Kỹ năng
+contiguous:
+- - Phát triển ứng dụng đặt lịch khám bằng Flutter và Firebase
+  - Viết unit test, đạt độ phủ 80%
+min_tables: 0
+file: cv08.docx
+manual: false

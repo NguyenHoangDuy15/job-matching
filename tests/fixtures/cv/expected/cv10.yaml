@@ -1,0 +1,29 @@
+lang: vi
+landmarks:
+- Mai Anh Tuấn
+- Kỹ sư An toàn thông tin
+- TÓM TẮT
+- Kỹ sư bảo mật 3 năm kinh nghiệm kiểm thử xâm nhập ứng dụng web.
+- KINH NGHIỆM
+- Công ty Cổ phần An ninh Mạng Cửa Biển
+- 03/2022 – nay
+- Kỹ sư Pentest
+- Kiểm thử xâm nhập 30 ứng dụng web theo OWASP Top 10
+- Viết báo cáo lỗ hổng và hướng dẫn khắc phục
+- HỌC VẤN
+- Đại học Hàng hải Việt Nam
+- An toàn thông tin
+- 2017 – 2021
+- KỸ NĂNG
+- Burp Suite, Kali Linux, Nmap, Metasploit, Python, OWASP
+order:
+- - TÓM TẮT
+  - KINH NGHIỆM
+  - HỌC VẤN
+  - KỸ NĂNG
+contiguous:
+- - Kiểm thử xâm nhập 30 ứng dụng web theo OWASP Top 10
+  - Viết báo cáo lỗ hổng và hướng dẫn khắc phục
+min_tables: 0
+file: cv10.docx
+manual: true

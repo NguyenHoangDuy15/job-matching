@@ -17,6 +17,9 @@ data/storage/*
 *.docx
 *.doc
 *.zip
+# CV mẫu GIẢ cho test (S3-D01): tests/fixtures/cv/README.md
+!tests/fixtures/cv/**/*.pdf
+!tests/fixtures/cv/**/*.docx
 # Model đã train: giữ thư mục (.gitkeep) để Dockerfile COPY được, bỏ nội dung
 models/*
 !models/.gitkeep

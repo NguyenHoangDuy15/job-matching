@@ -1,0 +1,35 @@
+lang: vi
+landmarks:
+- Nguyễn Văn Hùng
+- Lập trình viên Backend
+- MỤC TIÊU NGHỀ NGHIỆP
+- Trở thành kỹ sư backend vững về hệ thống phân tán và tối ưu hiệu năng trong 2 năm tới.
+- KINH NGHIỆM LÀM VIỆC
+- Công ty Cổ phần Công nghệ Sao Mai
+- 03/2023 – nay
+- Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày
+- Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo
+- Triển khai Docker và Kubernetes cho 12 dịch vụ
+- Công ty TNHH Phần mềm Biển Xanh
+- 07/2021 – 02/2023
+- Thực tập sinh rồi Lập trình viên Java
+- Viết dịch vụ đồng bộ đơn hàng bằng Kafka và Redis
+- HỌC VẤN
+- Đại học Bách khoa Hà Nội
+- Kỹ thuật phần mềm
+- 2017 – 2021
+- KỸ NĂNG
+- Java, Spring Boot, PostgreSQL, Redis, Kafka, Docker, Kubernetes, Git
+- 'Tiếng Anh: đọc hiểu tài liệu kỹ thuật (TOEIC 750)'
+order:
+- - MỤC TIÊU NGHỀ NGHIỆP
+  - KINH NGHIỆM LÀM VIỆC
+  - HỌC VẤN
+  - KỸ NĂNG
+contiguous:
+- - Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày
+  - Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo
+  - Triển khai Docker và Kubernetes cho 12 dịch vụ
+min_tables: 0
+file: cv01.pdf
+manual: false
