@@ -1,0 +1,109 @@
+# Nhãn chuẩn hồ sơ JSON cho 10 CV mẫu (S3-D04). Soạn từ nội dung GIẢ của từng CV
+# (scripts/make_cv_samples.py + tests/fixtures/cv/manual), tính tại as_of.
+#
+# - years_exp: chỉ khoảng trong Kinh nghiệm, gộp chồng nhau, tính trọn tháng, không tính thực tập.
+# - strong: kỹ năng có trong Kinh nghiệm/Dự án; listed: chỉ có ở Kỹ năng/Tóm tắt/Chứng chỉ/...
+# - dictionary_issues: kỹ năng mà TỪ ĐIỂN (skills.yaml) nhận sai hoặc thiếu alias, không phải lỗi
+#   luật D04. Bỏ khỏi phép so sánh, ghi vào báo cáo để S3-D06 sửa alias.
+# - evidence: vài kỹ năng kiểm thêm mục và ngữ cảnh (công ty / tên dự án) của câu trích.
+
+as_of: 2026-11-18
+
+cvs:
+  cv01:
+    target_title: Lập trình viên Backend
+    years_exp: 5.4          # 07/2021 – 02/2023 và 03/2023 – nay (liền nhau) = 65 tháng
+    strong: [java, spring_boot, postgresql, docker, kubernetes, kafka, redis, api, database_design,
+             fintech, nodejs, mongodb, aws_ec2]
+    listed: [git, english]
+    dictionary_issues:
+      technical_writing: '"đọc hiểu tài liệu kỹ thuật" là đọc, không phải viết tài liệu'
+    evidence:
+      docker: {section: experience, context: Công ty Cổ phần Công nghệ Sao Mai}
+      mongodb: {section: projects, context: Hệ thống đặt vé xem phim (đồ án tốt nghiệp)}
+      git: {section: skills}
+
+  cv02:
+    target_title: Data Analyst
+    years_exp: 6.5          # 06/2020 – 12/2021 và 01/2022 – nay = 78 tháng
+    strong: [power_bi, python, pandas, sql, excel, data_visualization, data_analysis, scikit_learn]
+    listed: [statistics, tableau, time_series]
+    dictionary_issues:
+      ab_testing: 'kinh nghiệm ghi "A/B tests" nhưng từ điển chỉ có "A/B testing" → lẽ ra strong'
+    evidence:
+      excel: {section: experience, context: Green River Consulting}
+      scikit_learn: {section: projects, context: Customer Churn Prediction}
+
+  cv03:
+    target_title: Lập trình viên Frontend   # phần đầu CV 2 cột không có chức danh → việc gần nhất
+    years_exp: 6.3          # 08/2020 – 04/2022 và 05/2022 – nay = 76 tháng
+    strong: [react, typescript, nextjs, tailwind, firebase]
+    listed: [jest, redux, english, japanese]
+    dictionary_issues:
+      github: 'chỉ là tên miền link dự án "github.com/[LINK]", không phải bằng chứng dùng GitHub'
+    evidence:
+      react: {section: experience, context: Công ty TNHH Giải pháp Số Cầu Rồng}
+      firebase: {section: projects, context: Ứng dụng quản lý chi tiêu}
+
+  cv04:
+    target_title: Kiểm thử phần mềm
+    years_exp: 6.5          # bảng: 06/2020 – 01/2022 và 02/2022 – nay = 78 tháng
+    strong: [postman, api_testing, test_case]
+    listed: [selenium, sql, jira, istqb, automation_testing]
+    evidence:
+      postman: {section: experience, context: Công ty Cổ phần Phần mềm Ánh Dương}
+      test_case: {section: experience, context: Công ty TNHH Dịch vụ Số Hoàng Gia}
+
+  cv05:
+    target_title: DevOps Engineer
+    years_exp: 7.9          # 01/2019 – 02/2021 và 03/2021 – nay = 95 tháng
+    strong: [kubernetes, helm, argocd, terraform, aws, networking, devops, grafana, monitoring,
+             data_visualization]
+    listed: [prometheus, gitlab_ci, linux, bash, english]
+    dictionary_issues:
+      cloud_computing: 'bắt từ tên công ty "Blue Lotus Cloud"'
+    evidence:
+      terraform: {section: experience, context: Silver Peak Software}
+      grafana: {section: projects, context: Homelab GitOps}
+
+  cv06:
+    target_title: Kỹ sư Dữ liệu
+    years_exp: 4.8          # 02/2022 – nay = 58 tháng
+    strong: [airflow, dbt, bigquery, etl, data_warehouse]
+    listed: [python, sql, spark, docker]
+    evidence:
+      airflow: {section: experience, context: Công ty Cổ phần Dữ liệu Bình Minh}
+
+  cv07:
+    target_title: UI/UX Designer            # phần đầu CV 2 cột chỉ có liên hệ → việc gần nhất
+    years_exp: 4.9          # 01/2022 – nay = 59 tháng
+    strong: [figma, ui_ux]
+    listed: [adobe_xd, photoshop, illustrator]
+    dictionary_issues:
+      software_testing: '"kiểm thử người dùng" (user testing) bị nhận thành kiểm thử phần mềm'
+    evidence:
+      figma: {section: experience, context: Công ty TNHH Sáng tạo Cố Đô}
+
+  cv08:
+    target_title: Lập trình viên Mobile
+    years_exp: 6.2          # 09/2020 – 03/2022 và 04/2022 – nay = 75 tháng
+    strong: [flutter, firebase, kotlin, android, unit_testing, fintech]
+    listed: [dart, git, rest_api, english]
+    evidence:
+      kotlin: {section: experience, context: Công ty TNHH Di động Hải Âu}
+
+  cv09:
+    target_title: Chuyên viên Phân tích nghiệp vụ
+    years_exp: 7.4          # 07/2019 – 05/2021 và 06/2021 – nay = 89 tháng
+    strong: [business_analysis, uml]
+    listed: [jira, confluence, figma, sql, scrum]
+    evidence:
+      uml: {section: experience, context: Ngân hàng TMCP Phương Nam Giả Định}
+
+  cv10:
+    target_title: Kỹ sư An toàn thông tin
+    years_exp: 4.8          # 03/2022 – nay = 57 tháng
+    strong: [pentest, owasp, security]
+    listed: [python, security_tools]
+    evidence:
+      owasp: {section: experience, context: Công ty Cổ phần An ninh Mạng Cửa Biển}

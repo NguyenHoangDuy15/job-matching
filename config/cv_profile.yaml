@@ -1,0 +1,58 @@
+# Hồ sơ CV (S3-D04, US-12): mức bằng chứng, câu trích, số năm kinh nghiệm, chức danh mong muốn.
+# Dùng bởi cvparser.dates và cvparser.profile. Đổi file này thì tăng `version`.
+
+version: cv-profile-1
+
+# Mức bằng chứng theo section (cvparser.sections). Section không có ở đây → bỏ qua kỹ năng.
+evidence_level:
+  experience: strong
+  projects: strong
+  skills: listed
+  summary: listed
+  certifications: listed
+  languages: listed
+  education: listed
+  activities: listed
+
+# CV không có tên mục nào (sections fallback): mọi kỹ năng là listed.
+fallback_level: listed
+
+snippet_max_chars: 200
+
+# Từ chỉ "đến nay" (so không dấu, chữ thường).
+present_words: [nay, hien tai, hien nay, bay gio, present, now, current, currently, today, till now,
+  to date, ongoing]
+
+# Tên tháng (không dấu, chữ thường) → số tháng.
+month_names:
+  jan: 1
+  january: 1
+  feb: 2
+  february: 2
+  mar: 3
+  march: 3
+  apr: 4
+  april: 4
+  may: 5
+  jun: 6
+  june: 6
+  jul: 7
+  july: 7
+  aug: 8
+  august: 8
+  sep: 9
+  sept: 9
+  september: 9
+  oct: 10
+  october: 10
+  nov: 11
+  november: 11
+  dec: 12
+  december: 12
+
+# Khoảng chỉ có năm ("2019 – 2021"): (năm cuối − năm đầu) × 12 tháng; cùng năm = số tháng này.
+year_only_same_year_months: 6
+
+# Việc làm có chức danh / dòng chứa các từ này là thực tập: KHÔNG tính vào years_exp
+# (vẫn hiện trong danh sách việc làm, ghi chú số tháng đã bỏ).
+internship_words: [thuc tap, thuc tap sinh, tts, intern, internship, trainee, sinh vien thuc tap]
