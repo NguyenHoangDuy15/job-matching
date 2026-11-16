@@ -21,6 +21,7 @@ from ingestion.location import ProvinceIndex, build_index, normalize_key, normal
 from ingestion.models import JobPostingRaw
 from ingestion.salary import parse_salary, to_vnd
 from ingestion.seniority import infer_seniority, source_signals
+from ingestion.work_mode import infer_work_mode
 
 try:  # S2-D03 (PR #618): tách JD thành 4 section. Chưa có thì ghi toàn văn vào description.
     from skillkit.sections import split_text
@@ -120,7 +121,13 @@ def build_job_row(
     seniority, _ = infer_seniority(
         posting.title, posting.years_exp_min, *source_signals(posting.json_ld)
     )
-    work_mode = "remote" if posting.remote else loc.work_mode
+    work_mode, _ = infer_work_mode(
+        posting.title,
+        posting.location_text(),
+        posting.description_text,
+        has_province=bool(loc.province_codes),
+        telecommute=posting.remote,
+    )
 
     parsed = parse_salary(posting.salary_text())
     vnd = to_vnd(parsed, fx_rates)

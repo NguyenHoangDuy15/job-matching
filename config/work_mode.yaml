@@ -1,0 +1,61 @@
+# Suy hình thức làm việc (core.jobs.work_mode) từ tiêu đề + địa điểm + NỘI DUNG JD.
+# Trước đây chỉ đọc tiêu đề/địa điểm nên gần như mọi tin là onsite (Hybrid 2, Remote 2 / 1451).
+# Regex so trên văn bản đã bỏ dấu, chữ thường (skillkit.sections.fold). Đổi file này thì chạy
+#   uv run python scripts/rederive_jobs.py --field work_mode --apply
+#
+# Thứ tự: bỏ cụm loại trừ / phủ định → remote toàn phần → hybrid → có tỉnh thì onsite → unknown.
+# Phúc lợi WFH theo tháng/năm ("1 ngày WFH mỗi tháng", "24 ngày remote/năm") KHÔNG tính là hybrid:
+# người lọc Hybrid tìm việc có ngày làm từ xa hằng tuần.
+
+# Thuật ngữ kỹ thuật và chữ trùng: xóa khỏi văn bản trước khi so.
+exclude:
+  - 'hybrid[- ](cloud|app|apps|mobile|application|infrastructure|deployment|delivery|integration|environment|it|network|storage|search|vehicle|car)'
+  - '(scrum|agile|waterfall|kanban) ?/ ?hybrid|hybrid ?/ ?(scrum|agile|waterfall)|hybrid (agile|scrum|waterfall)'
+  - 'remote[- ](access|support|desktop|config|control|sensing|monitoring|server|repository|repo|debug|debugging|management|connection|assistance|troubleshooting|site|device|devices|team|teams|stakeholders)'
+  - '(ho tro|support|xu ly|troubleshoot\w*|khac phuc|giai dap)[^.;\n]{0,40}(remote|tu xa)'
+  - 'remote ?/ ?on-?site|on-?site ?/ ?remote|on-?site\)? hoac (tu xa|remote)|(tu xa|remote)\)? hoac (truc tiep|on-?site)'
+  - 'lam viec voi (doi tac|khach hang|team|doi ngu)[^.;\n]{0,20}(remote|tu xa)'
+  - 'hybrid[- ](monetization|revenue|business|pricing|approach|solution|solutions|system|systems|architecture|model of)'
+  # Câu giới thiệu công ty liệt kê mọi hình thức: "working on-site, hybrid, remote and hiring…"
+  - 'on-?site, hybrid,? (and |va )?remote|remote, hybrid,? (and |va )?on-?site'
+
+# Tiêu đề / địa điểm: chỉ cần có chữ (sau khi bỏ thuật ngữ kỹ thuật). Hybrid xét trước:
+# "(Remote/Hybrid)" vẫn có ngày lên văn phòng.
+head:
+  hybrid: '\bhybrid\b'
+  remote: '\b(remote|wfh|work from home|lam viec tu xa)\b'
+
+# Câu phủ định: xóa cụm để "không remote" không thành remote.
+negation:
+  - 'khong (ho tro |cho phep |ap dung |co |nhan )?(lam )?(remote|wfh|lam viec tu xa|work from home)'
+  - '\bno (remote|wfh|work from home)\b'
+  - 'not (a )?remote'
+
+remote:
+  - '(100 ?%|fully|full|hoan toan|toan bo) ?(remote|wfh|work from home|lam viec tu xa|online)\b'
+  - '\b(remote|wfh|lam viec tu xa|lam viec online) ?(100 ?%|hoan toan|toan thoi gian|full[- ]?time)'
+  - '(lam viec tu xa|remote|work) (tu|from|o) (bat ky dau|anywhere)'
+  - 'hinh thuc( lam viec)? ?:? ?(remote|lam viec tu xa|tu xa)\b(?! ?\d)'
+  - 'lam viec theo hinh thuc (online|remote|tu xa)\b(?! ?(va|hoac|/) ?offline)'
+  - 'lam viec tu xa[^.;\n]{0,40}(khong go bo|bat ky dau|vi tri dia ly)'
+  - 'lam viec (tai nha ?/ ?online|online ?/ ?tai nha)'
+  - '\b(remote) (job|position|role|opportunity)\b|vi tri remote'
+
+hybrid:
+  - '\bhybrid[- ](working|work|mode|model|schedule|arrangement|policy)\b'
+  - '(lam viec|che do|hinh thuc|mo hinh|work(ing)? (mode|style|arrangement|model)|lich lam viec)[^.;\n]{0,25}\bhybrid\b'
+  - '\bhybrid\b[^.;\n]{0,30}(van phong|office|tai nha|home|wfh|remote|tu xa)'
+  # N ngày WFH/remote mỗi tuần (cả hai thứ tự)
+  - '(\d|mot|hai|ba|one|two|three) ?(-|den|to) ?(\d)? ?(ngay|day|days) ?(wfh|remote|lam (viec )?(tu xa|online|tai nha)|work(ing)? from home)[^.;\n]{0,15}(/|moi|per|a|each|trong|1) ?(tuan|week)'
+  - '(\d|mot|hai|ba|one|two|three) (ngay|day|days) (wfh|remote|lam (viec )?(tu xa|online|tai nha)|work(ing)? from home)[^.;\n]{0,15}(/|moi|per|a|each|trong|1) ?(tuan|week)'
+  - '(wfh|remote|work(ing)? from home|lam (viec )?(tu xa|tai nha|online))[^.;\n]{0,15}(\d|mot|hai|ba|one|two|three)( ?- ?\d)? (ngay|day|days) ?(/|moi|per|a|each|trong|1) ?(tuan|week)'
+  # Làm từ xa vào một ngày cố định trong tuần (không tính thứ 7: thường là buổi làm thêm)
+  - '(thu (2|3|4|5|6|hai|ba|tu|nam|sau)|monday|tuesday|wednesday|thursday|friday)s?[^.;\n]{0,12}(lam (viec )?(remote|tu xa|online|tai nha)|\bwfh\b|work(ing)? from home)'
+  - '(\bwfh\b|work(ing)? from home|lam (viec )?(remote|tu xa|tai nha)) (on|vao|moi|every) (thu (2|3|4|5|6|hai|ba|tu|nam|sau)|monday|tuesday|wednesday|thursday|friday)'
+  # Số ngày lên văn phòng mỗi tuần (1–4 ngày)
+  - '(1|2|3|4|mot|hai|ba|bon) ngay (tai|o|len|lam viec tai) (van phong|office)[^.;\n]{0,5}(/|moi|per|trong|1)? ?(tuan|week)'
+  - '(1|2|3|4) (days|day) (in|at) (the )?office[^.;\n]{0,5}(/|per|a|each)? ?week'
+  - '(flexible|linh hoat)[^.;\n]{0,30}(office and home|home and office|van phong va (tai )?nha|giua van phong va nha)'
+  - 'lam viec tu xa linh hoat(?! ?\d)'
+  - '(remote|tu xa|wfh)[^.;\n]{0,25}(toi da|den|up ?to) \d{2} ?% (thoi gian|time)'
+  - 'wfh (culture|policy) (is )?flexible|flexible (wfh|work from home|remote work)\b(?! ?\d)'
