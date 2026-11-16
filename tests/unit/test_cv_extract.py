@@ -27,7 +27,7 @@ def test_pdf_basic_and_metadata_has_no_author():
     assert r.status == "ok" and r.file.kind == "pdf" and r.file.page_count == 1
     assert "KINH NGHIỆM LÀM VIỆC" in r.text and "Spring Boot" in r.text
     assert "author" not in r.metadata
-    assert r.parser_version == "cvparser-1/pdf-1"
+    assert r.parser_version == "cvparser-1/pdf-2"
     assert len(r.file.sha256) == 64
 
 
@@ -88,6 +88,44 @@ def test_pdf_blank_page_without_image_is_ocr_required():
     pdf.save(buf)
     r = extract_document(buf.getvalue())
     assert r.error.code == "ocr_required"
+
+
+def _letter_spaced_pdf() -> bytes:
+    """Đặt từng chữ một tại tọa độ riêng, như Chrome/Canva in chữ có letter-spacing."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    from reportlab.pdfgen import canvas
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    c.setFont("Helvetica", 14)
+    for y, text, spacing in [
+        (780, "WORK EXPERIENCE", 4),  # tiêu đề giãn chữ kiểu Canva
+        (750, "UI/UX Designer at Acme", 3),
+    ]:
+        x = 60.0
+        for ch in text:
+            if ch != " ":
+                c.drawString(x, y, ch)
+            x += stringWidth(ch, "Helvetica", 14) + spacing
+    c.drawString(60, 720, "Built design systems in Figma and Sketch for 3 products")
+    c.save()
+    return buf.getvalue()
+
+
+def test_pdf_letter_spaced_lines_keep_word_boundaries():
+    lines = extract_document(_letter_spaced_pdf()).text.split("\n")
+    assert lines == [
+        "WORK EXPERIENCE",
+        "UI/UX Designer at Acme",
+        "Built design systems in Figma and Sketch for 3 products",
+    ]
+
+
+def test_pdf_letter_spaced_canva_sample():
+    lines = extract_document(_read("cv07.pdf")).text.split("\n")
+    for want in ("LIÊN HỆ", "KỸ NĂNG", "Thiết kế UI/UX", "GIỚI THIỆU", "0912 000 107"):
+        assert want in lines
 
 
 def test_extension_mismatch_warning():

@@ -14,11 +14,15 @@ CV thật (S3-D06) để ở `data/cv_real/` (không lên git). Báo cáo chỉ 
 | cv03.pdf | PDF 2 cột (khung trái/phải) | script | Thứ tự đọc 2 cột |
 | cv04.pdf | PDF có 2 bảng kẻ khung | script | Bảng giữ nguyên hàng (`tables`) |
 | cv05.pdf | PDF 2 trang, header + số trang lặp | script | Header gom một lần, bỏ số trang |
-| cv06.pdf | PDF xuất từ Word/Google Docs | **làm tay** | PDF "đời thật": font subset, ligature |
-| cv07.pdf | PDF từ mẫu Canva 2 cột có icon | **làm tay** | Khó nhất: icon font, cột, chữ giãn cách |
+| cv06.pdf | PDF kiểu Google Docs (Arial 11pt, 1 cột) | **làm tay**¹ | PDF "đời thật": font subset, ligature |
+| cv07.pdf | PDF kiểu mẫu Canva 2 cột, icon SVG, tiêu đề giãn chữ | **làm tay**¹ | Khó nhất: icon font, cột, chữ giãn cách |
 | cv08.docx | DOCX style Heading, danh sách đánh số | script | Style heading, list |
 | cv09.docx | DOCX bảng bố cục 2 cột, header, ô gộp | script | Đọc hết cột trái rồi cột phải |
-| cv10.docx | DOCX có Text Box, footer | **làm tay** | Text box không lặp |
+| cv10.docx | DOCX có Text Box (DrawingML + VML fallback như Word ghi), footer | **làm tay**¹ | Text box không lặp |
+
+¹ Bản hiện tại: cv06, cv07 in từ HTML bằng Chrome headless (Skia/PDF, cùng engine Google Docs dùng
+khi xuất PDF); cv10 dựng bằng python-docx với XML text box chép theo Word. Có thể
+thay bằng file xuất thật từ Word/Canva theo mục "Làm tay" bên dưới, test không cần sửa.
 
 `edge/`: `scan_image_only.pdf` (→ `ocr_required`), `encrypted_userpw.pdf` (→ `encrypted`).
 `expected/cvXX.yaml`: cụm mốc phải có, thứ tự heading, nhóm dòng phải liền nhau, số bảng.

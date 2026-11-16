@@ -25,7 +25,7 @@ _PASSWORD_ERROR = 4  # FPDF_ERR_PASSWORD
 
 class PdfExtractor:
     kind = "pdf"
-    version = "pdf-1"
+    version = "pdf-2"  # pdf-2: dựng lại khoảng trắng cho dòng chữ giãn cách
 
     def extract(self, data: bytes, options: ExtractOptions) -> RawDocument:
         with _LOCK:
@@ -71,7 +71,7 @@ class PdfExtractor:
                 try:
                     textpage = page.get_textpage()
                     try:
-                        text = textpage.get_text_range()
+                        text = _page_text(textpage)
                     finally:
                         textpage.close()
                     if len(text.strip()) < MIN_CHARS_PER_PAGE and _has_image(page):
@@ -84,6 +84,64 @@ class PdfExtractor:
             raise ExtractionError(ErrorCode.CORRUPT_FILE, "pdf_read") from None
         finally:
             pdf.close()
+
+
+# Chữ giãn cách (letter-spacing, hay gặp ở tiêu đề mẫu Canva): PDFium chèn khoảng trắng "tự sinh"
+# giữa mọi chữ, nên "LIÊN HỆ" ra "L I Ê N H Ệ" và không còn biết đâu là ranh giới từ. Dòng như vậy
+# được dựng lại theo tọa độ: khe giữa hai chữ trong một từ ≈ độ giãn (gần như đều nhau), khe giữa
+# hai từ = độ giãn + bề rộng dấu cách. Dòng thường giữ nguyên văn bản PDFium trả về.
+_SPACED_RATIO = 0.6  # ≥ 60% khe giữa hai chữ liền nhau có khoảng trắng tự sinh → dòng giãn cách
+_WORD_GAP_EM = 0.15  # khe lớn hơn khe phổ biến của dòng ít nhất 0,15 cỡ chữ → ranh giới từ
+
+
+def _page_text(textpage) -> str:
+    n = textpage.count_chars()
+    if n <= 0:
+        return ""
+    text = textpage.get_text_range(0, n)
+    if len(text) != n:  # không khớp 1-1 ký tự ↔ chỉ số: không dựng lại được, giữ nguyên
+        return text
+    out, line = [], []
+    for i, ch in enumerate(text):
+        if ch in "\r\n":
+            out.append(_line_text(textpage, line))
+            line = []
+            out.append(ch)
+        else:
+            line.append(i)
+    out.append(_line_text(textpage, line))
+    return "".join(out)
+
+
+def _line_text(textpage, idx: list[int]) -> str:
+    raw = textpage.raw
+    chars = [(i, textpage.get_text_range(i, 1), pdfium_c.FPDFText_IsGenerated(raw, i)) for i in idx]
+    plain = "".join(ch for _, ch, _ in chars)
+    glyphs = [(i, ch) for i, ch, gen in chars if not ch.isspace()]
+    if len(glyphs) < 4:
+        return plain
+    # Khe giữa hai glyph liền nhau: có khoảng trắng thật (trong PDF) / tự sinh / không có gì.
+    seps: list[str | None] = []
+    pending, seen = None, False
+    for _, ch, gen in chars:
+        if ch.isspace():
+            pending = "gen" if gen and pending is None else "real" if not gen else pending
+        else:
+            if seen:
+                seps.append(pending)
+            seen, pending = True, None
+    if sum(s == "gen" for s in seps) < _SPACED_RATIO * len(seps):
+        return plain
+    boxes = [textpage.get_charbox(i, loose=True) for i, _ in glyphs]
+    gaps = [boxes[k + 1][0] - boxes[k][2] for k in range(len(boxes) - 1)]
+    typical = sorted(gaps)[len(gaps) // 2]
+    parts = [glyphs[0][1]]
+    for k, (gap, sep) in enumerate(zip(gaps, seps, strict=True)):
+        size = pdfium_c.FPDFText_GetFontSize(raw, glyphs[k][0]) or 10.0
+        if sep == "real" or gap > typical + _WORD_GAP_EM * size:
+            parts.append(" ")
+        parts.append(glyphs[k + 1][1])
+    return "".join(parts)
 
 
 _EDGE_LINES = 3  # header/footer nằm trong vài dòng đầu/cuối của trang
