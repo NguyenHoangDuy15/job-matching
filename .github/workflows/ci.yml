@@ -80,6 +80,8 @@ jobs:
         run: npm run lint
       - name: Kiểm kiểu TypeScript
         run: npm run typecheck
+      - name: Unit test (node --test)
+        run: npm test
       # Build không cần khóa Supabase: web tự hiện thông báo "chưa cấu hình" khi thiếu biến.
       - name: Build OpenNext (Cloudflare)
         run: npx opennextjs-cloudflare build
