@@ -2,12 +2,14 @@ lang: vi
 landmarks:
 - Phạm Thu Trang
 - Kiểm thử phần mềm
-- MỤC TIÊU NGHỀ NGHIỆP
+- I. MỤC TIÊU NGHỀ NGHIỆP
 - Phát triển thành kỹ sư kiểm thử tự động.
-- KINH NGHIỆM LÀM VIỆC
-- KỸ NĂNG
-- CHỨNG CHỈ
+- II. KINH NGHIỆM LÀM VIỆC
+- III. KỸ NĂNG
+- IV. CHỨNG CHỈ
 - ISTQB Foundation Level (2022)
+- V. SỞ THÍCH
+- Đọc sách, chạy bộ buổi sáng
 - Thời gian
 - Công ty
 - Vị trí
@@ -28,11 +30,31 @@ landmarks:
 - SQL
 - Jira
 order:
-- - MỤC TIÊU NGHỀ NGHIỆP
-  - KINH NGHIỆM LÀM VIỆC
-  - KỸ NĂNG
-  - CHỨNG CHỈ
+- - I. MỤC TIÊU NGHỀ NGHIỆP
+  - II. KINH NGHIỆM LÀM VIỆC
+  - III. KỸ NĂNG
+  - IV. CHỨNG CHỈ
+  - V. SỞ THÍCH
 contiguous: []
 min_tables: 2
+sections:
+- heading: I. MỤC TIÊU NGHỀ NGHIỆP
+  name: summary
+- heading: II. KINH NGHIỆM LÀM VIỆC
+  name: experience
+- heading: III. KỸ NĂNG
+  name: skills
+- heading: IV. CHỨNG CHỈ
+  name: certifications
+- heading: V. SỞ THÍCH
+  name: other
+section_of:
+  Phạm Thu Trang: header
+  Kiểm thử phần mềm: header
+  'Email: trang.pham@example.com': header
+  'Điện thoại: 0912 000 104': header
+  Phát triển thành kỹ sư kiểm thử tự động.: summary
+  ISTQB Foundation Level (2022): certifications
+  Đọc sách, chạy bộ buổi sáng: other
 file: cv04.pdf
 manual: false

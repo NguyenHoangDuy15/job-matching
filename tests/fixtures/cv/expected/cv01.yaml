@@ -10,26 +10,71 @@ landmarks:
 - Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày
 - Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo
 - Triển khai Docker và Kubernetes cho 12 dịch vụ
+- 'Dự án: Cổng thanh toán nội bộ'
+- 'Công nghệ: Java, Spring Boot, Kafka'
 - Công ty TNHH Phần mềm Biển Xanh
 - 07/2021 – 02/2023
 - Thực tập sinh rồi Lập trình viên Java
 - Viết dịch vụ đồng bộ đơn hàng bằng Kafka và Redis
-- HỌC VẤN
+- DỰ ÁN
+- Hệ thống đặt vé xem phim (đồ án tốt nghiệp)
+- '2021'
+- Xây dựng backend bằng Node.js và MongoDB
+- Triển khai trên AWS EC2
+- HỌC VẤN & BẰNG CẤP
 - Đại học Bách khoa Hà Nội
 - Kỹ thuật phần mềm
 - 2017 – 2021
 - KỸ NĂNG
 - Java, Spring Boot, PostgreSQL, Redis, Kafka, Docker, Kubernetes, Git
+- Kinh nghiệm làm việc với Docker và Kubernetes trên môi trường production
 - 'Tiếng Anh: đọc hiểu tài liệu kỹ thuật (TOEIC 750)'
 order:
 - - MỤC TIÊU NGHỀ NGHIỆP
   - KINH NGHIỆM LÀM VIỆC
-  - HỌC VẤN
+  - DỰ ÁN
+  - HỌC VẤN & BẰNG CẤP
   - KỸ NĂNG
 contiguous:
 - - Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày
   - Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo
   - Triển khai Docker và Kubernetes cho 12 dịch vụ
+- - Xây dựng backend bằng Node.js và MongoDB
+  - Triển khai trên AWS EC2
 min_tables: 0
+sections:
+- heading: MỤC TIÊU NGHỀ NGHIỆP
+  name: summary
+- heading: KINH NGHIỆM LÀM VIỆC
+  name: experience
+- heading: DỰ ÁN
+  name: projects
+- heading: HỌC VẤN & BẰNG CẤP
+  name: education
+- heading: KỸ NĂNG
+  name: skills
+section_of:
+  Nguyễn Văn Hùng: header
+  Lập trình viên Backend: experience
+  'Email: hung.nguyen@example.com': header
+  'Điện thoại: 0912 000 101': header
+  'Địa chỉ: Số 12 ngõ 34 phố Hoa Sữa, phường Thành Công, Hà Nội': header
+  Trở thành kỹ sư backend vững về hệ thống phân tán và tối ưu hiệu năng trong 2 năm tới.: summary
+  Công ty Cổ phần Công nghệ Sao Mai | 03/2023 – nay: experience
+  Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày: experience
+  Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo: experience
+  Triển khai Docker và Kubernetes cho 12 dịch vụ: experience
+  'Dự án: Cổng thanh toán nội bộ': experience
+  'Công nghệ: Java, Spring Boot, Kafka': experience
+  Công ty TNHH Phần mềm Biển Xanh | 07/2021 – 02/2023: experience
+  Thực tập sinh rồi Lập trình viên Java: experience
+  Viết dịch vụ đồng bộ đơn hàng bằng Kafka và Redis: experience
+  Hệ thống đặt vé xem phim (đồ án tốt nghiệp) | 2021: projects
+  Xây dựng backend bằng Node.js và MongoDB: projects
+  Triển khai trên AWS EC2: projects
+  Đại học Bách khoa Hà Nội | Kỹ thuật phần mềm | 2017 – 2021: education
+  Java, Spring Boot, PostgreSQL, Redis, Kafka, Docker, Kubernetes, Git: skills
+  Kinh nghiệm làm việc với Docker và Kubernetes trên môi trường production: skills
+  'Tiếng Anh: đọc hiểu tài liệu kỹ thuật (TOEIC 750)': skills
 file: cv01.pdf
 manual: false

@@ -24,5 +24,25 @@ contiguous:
 - - Xây dựng pipeline ETL bằng Apache Airflow và dbt
   - Quản lý kho dữ liệu trên Google BigQuery
 min_tables: 0
+sections:
+- heading: MỤC TIÊU NGHỀ NGHIỆP
+  name: summary
+- heading: KINH NGHIỆM LÀM VIỆC
+  name: experience
+- heading: HỌC VẤN
+  name: education
+- heading: KỸ NĂNG
+  name: skills
+section_of:
+  Bùi Ngọc Lan: header
+  Kỹ sư Dữ liệu: experience
+  'Email: lan.bui@example.com': header
+  'Điện thoại: 0912 000 106': header
+  Xây dựng nền tảng dữ liệu tin cậy cho doanh nghiệp.: summary
+  Công ty Cổ phần Dữ liệu Bình Minh | 02/2022 – nay: experience
+  Xây dựng pipeline ETL bằng Apache Airflow và dbt: experience
+  Quản lý kho dữ liệu trên Google BigQuery: experience
+  Đại học Quốc gia TP.HCM | Khoa học dữ liệu | 2017 – 2021: education
+  Python, SQL, Apache Airflow, dbt, BigQuery, Spark, Docker: skills
 file: cv06.pdf
 manual: true

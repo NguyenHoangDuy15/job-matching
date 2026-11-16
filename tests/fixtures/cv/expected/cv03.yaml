@@ -27,6 +27,10 @@ landmarks:
 - 08/2020 – 04/2022
 - Lập trình viên Web
 - Làm website giới thiệu sản phẩm bằng Next.js
+- DỰ ÁN CÁ NHÂN
+- Ứng dụng quản lý chi tiêu
+- github.com/example/chi-tieu
+- Next.js, Tailwind CSS và Firebase
 - HỌC VẤN
 - Đại học Đà Nẵng
 - Công nghệ thông tin
@@ -37,6 +41,7 @@ order:
   - NGOẠI NGỮ
 - - MỤC TIÊU
   - KINH NGHIỆM
+  - DỰ ÁN CÁ NHÂN
   - HỌC VẤN
 contiguous:
 - - khoa.le@example.vn
@@ -53,5 +58,43 @@ contiguous:
 - - Xây dựng trang quản trị bán hàng bằng ReactJS và TypeScript
   - Tối ưu tốc độ tải trang từ 4 giây xuống 1,5 giây
 min_tables: 0
+sections:
+- heading: LIÊN HỆ
+  name: header
+- heading: KỸ NĂNG
+  name: skills
+- heading: NGOẠI NGỮ
+  name: languages
+- heading: MỤC TIÊU
+  name: summary
+- heading: KINH NGHIỆM
+  name: experience
+- heading: DỰ ÁN CÁ NHÂN
+  name: projects
+- heading: HỌC VẤN
+  name: education
+section_of:
+  khoa.le@example.vn: header
+  0912 000 103: header
+  Đà Nẵng: header
+  ReactJS: skills
+  TypeScript: skills
+  Next.js: skills
+  Tailwind CSS: skills
+  Redux: skills
+  Jest: skills
+  Tiếng Anh giao tiếp: languages
+  Tiếng Nhật N3: languages
+  Phát triển giao diện web nhanh, dễ dùng và dễ bảo trì.: summary
+  Công ty TNHH Giải pháp Số Cầu Rồng | 05/2022 – nay: experience
+  Lập trình viên Frontend: experience
+  Xây dựng trang quản trị bán hàng bằng ReactJS và TypeScript: experience
+  Tối ưu tốc độ tải trang từ 4 giây xuống 1,5 giây: experience
+  Công ty Cổ phần Truyền thông Sông Hàn | 08/2020 – 04/2022: experience
+  Lập trình viên Web: experience
+  Làm website giới thiệu sản phẩm bằng Next.js: experience
+  Ứng dụng quản lý chi tiêu | github.com/example/chi-tieu: projects
+  Next.js, Tailwind CSS và Firebase: projects
+  Đại học Đà Nẵng | Công nghệ thông tin | 2016 – 2020: education
 file: cv03.pdf
 manual: false

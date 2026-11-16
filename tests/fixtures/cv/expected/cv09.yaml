@@ -14,7 +14,7 @@ landmarks:
 - Scrum Master PSM I
 - TÓM TẮT
 - Chuyên viên BA 4 năm trong lĩnh vực ngân hàng và bảo hiểm.
-- KINH NGHIỆM
+- CHẶNG ĐƯỜNG ĐÃ QUA
 - Ngân hàng TMCP Phương Nam Giả Định
 - 06/2021 – nay
 - Chuyên viên BA
@@ -32,7 +32,7 @@ order:
 - - KỸ NĂNG
   - CHỨNG CHỈ
 - - TÓM TẮT
-  - KINH NGHIỆM
+  - CHẶNG ĐƯỜNG ĐÃ QUA
   - HỌC VẤN
 contiguous:
 - - Phân tích nghiệp vụ
@@ -46,5 +46,34 @@ contiguous:
 - - Thu thập yêu cầu cho hệ thống cho vay trực tuyến
   - Viết tài liệu đặc tả và vẽ quy trình BPMN
 min_tables: 0
+sections:
+- heading: KỸ NĂNG
+  name: skills
+- heading: CHỨNG CHỈ
+  name: certifications
+- heading: TÓM TẮT
+  name: summary
+- heading: CHẶNG ĐƯỜNG ĐÃ QUA
+  name: experience
+- heading: HỌC VẤN
+  name: education
+section_of:
+  Phân tích nghiệp vụ: skills
+  BPMN: skills
+  SQL: skills
+  Jira: skills
+  Confluence: skills
+  Figma: skills
+  CBAP (2023): certifications
+  Scrum Master PSM I: certifications
+  Chuyên viên BA 4 năm trong lĩnh vực ngân hàng và bảo hiểm.: summary
+  Ngân hàng TMCP Phương Nam Giả Định | 06/2021 – nay: experience
+  Chuyên viên BA: experience
+  Thu thập yêu cầu cho hệ thống cho vay trực tuyến: experience
+  Viết tài liệu đặc tả và vẽ quy trình BPMN: experience
+  Công ty Bảo hiểm Hướng Dương | 07/2019 – 05/2021: experience
+  Nhân viên BA: experience
+  Chuẩn hóa quy trình bồi thường: experience
+  Đại học Cần Thơ | Hệ thống thông tin | 2015 – 2019: education
 file: cv09.docx
 manual: false

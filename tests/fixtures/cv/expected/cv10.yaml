@@ -25,5 +25,27 @@ contiguous:
 - - Kiểm thử xâm nhập 30 ứng dụng web theo OWASP Top 10
   - Viết báo cáo lỗ hổng và hướng dẫn khắc phục
 min_tables: 0
+sections:
+- heading: TÓM TẮT
+  name: summary
+- heading: KINH NGHIỆM
+  name: experience
+- heading: HỌC VẤN
+  name: education
+- heading: KỸ NĂNG
+  name: skills
+section_of:
+  Mai Anh Tuấn: header
+  Kỹ sư An toàn thông tin: header
+  tuan.mai@example.com: header
+  0912 000 110: header
+  Hải Phòng: header
+  Kỹ sư bảo mật 3 năm kinh nghiệm kiểm thử xâm nhập ứng dụng web.: summary
+  Công ty Cổ phần An ninh Mạng Cửa Biển | 03/2022 – nay: experience
+  Kỹ sư Pentest: experience
+  Kiểm thử xâm nhập 30 ứng dụng web theo OWASP Top 10: experience
+  Viết báo cáo lỗ hổng và hướng dẫn khắc phục: experience
+  Đại học Hàng hải Việt Nam | An toàn thông tin | 2017 – 2021: education
+  Burp Suite, Kali Linux, Nmap, Metasploit, Python, OWASP: skills
 file: cv10.docx
 manual: true
