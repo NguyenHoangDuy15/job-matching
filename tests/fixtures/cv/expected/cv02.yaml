@@ -5,7 +5,7 @@ landmarks:
 - SUMMARY
 - Data analyst with three years of experience turning sales data into dashboards and forecasting models
   for retail teams.
-- WORK EXPERIENCE
+- PROFESSIONAL EXPERIENCE
 - Lotus Retail Analytics
 - 01/2022 – Present
 - Built Power BI dashboards used by 40 store managers every week
@@ -15,22 +15,68 @@ landmarks:
 - Junior Analyst
 - 06/2020 – 12/2021
 - Cleaned survey data and produced Excel reports for clients
+- PROJECTS
+- Customer Churn Prediction
+- '2023'
+- Trained a gradient boosting model with scikit-learn on 200k records
+- Deployed the model as a Streamlit app
 - EDUCATION
 - University of Economics HCMC
 - Bachelor of Statistics
 - 2016 – 2020
-- SKILLS
+- TECHNICAL SKILLS
 - Python, SQL, Power BI, Excel, pandas, scikit-learn, Tableau
 - Statistics, A/B testing, data visualization
+- ACTIVITIES & AWARDS
+- Top 10 Vietnam Datathon 2021
+- Volunteer data mentor at a local coding club
 order:
 - - SUMMARY
-  - WORK EXPERIENCE
+  - PROFESSIONAL EXPERIENCE
+  - PROJECTS
   - EDUCATION
-  - SKILLS
+  - TECHNICAL SKILLS
+  - ACTIVITIES & AWARDS
 contiguous:
 - - Built Power BI dashboards used by 40 store managers every week
   - Automated reporting pipelines with Python, pandas and SQL
   - Designed A/B tests for promotion campaigns
+- - Trained a gradient boosting model with scikit-learn on 200k records
+  - Deployed the model as a Streamlit app
 min_tables: 0
+sections:
+- heading: SUMMARY
+  name: summary
+- heading: PROFESSIONAL EXPERIENCE
+  name: experience
+- heading: PROJECTS
+  name: projects
+- heading: EDUCATION
+  name: education
+- heading: TECHNICAL SKILLS
+  name: skills
+- heading: ACTIVITIES & AWARDS
+  name: activities
+section_of:
+  Tran Thi Mai: header
+  Data Analyst: header
+  'Email: mai.tran@example.com': header
+  'Phone: +84 912 000 102': header
+  'Address: 56 Fictional Street, Ward 7, Ho Chi Minh City': header
+  Data analyst with three years of experience turning sales data into dashboards and forecasting models for retail teams.: summary
+  Lotus Retail Analytics | Data Analyst | 01/2022 – Present: experience
+  Built Power BI dashboards used by 40 store managers every week: experience
+  Automated reporting pipelines with Python, pandas and SQL: experience
+  Designed A/B tests for promotion campaigns: experience
+  Green River Consulting | Junior Analyst | 06/2020 – 12/2021: experience
+  Cleaned survey data and produced Excel reports for clients: experience
+  Customer Churn Prediction | 2023: projects
+  Trained a gradient boosting model with scikit-learn on 200k records: projects
+  Deployed the model as a Streamlit app: projects
+  University of Economics HCMC | Bachelor of Statistics | 2016 – 2020: education
+  Python, SQL, Power BI, Excel, pandas, scikit-learn, Tableau: skills
+  Statistics, A/B testing, data visualization: skills
+  Top 10 Vietnam Datathon 2021: activities
+  Volunteer data mentor at a local coding club: activities
 file: cv02.pdf
 manual: false

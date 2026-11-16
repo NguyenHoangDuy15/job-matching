@@ -1,0 +1,187 @@
+# Tên mục (heading) CV Việt–Anh → section chuẩn (S3-D02, US-12). Dùng chung cho D04 (mức bằng
+# chứng), D05 (app.cvs.parsed_sections) và S6 (app.cv_chunks.section).
+#
+# So khớp sau khi: bỏ ký tự đầu dòng / số thứ tự ("1.", "II.", "01") / icon, bỏ dấu, chữ thường,
+# "&" và "and" → "va". Cụm dài thử trước. Một dòng là heading khi mở đầu bằng một cụm dưới đây và:
+#   - có ":" → heading kèm nội dung ("Kỹ năng: Python, SQL"), phần trước ":" không thêm từ nào;
+#   - không có ":" → thêm tối đa `max_extra_words` từ (hoặc "va ..." như "Học vấn & Chứng chỉ"),
+#     không kết thúc bằng dấu chấm/phẩy.
+# Thêm cách viết mới: thêm một dòng ở đây, tăng `version` để worker biết đọc lại CV cũ.
+
+version: cv-sections-1
+max_extra_words: 2
+max_heading_words: 8
+
+sections:
+  header:  # phần đầu CV: tên, chức danh, liên hệ (vùng PII)
+    - thong tin ca nhan
+    - thong tin lien he
+    - lien he
+    - lien lac
+    - contact
+    - contacts
+    - contact information
+    - contact info
+    - personal information
+    - personal info
+    - personal details
+  summary:
+    - muc tieu nghe nghiep
+    - muc tieu
+    - dinh huong nghe nghiep
+    - gioi thieu ban than
+    - gioi thieu
+    - tom tat
+    - tom tat ban than
+    - tong quan
+    - ve toi
+    - ve ban than
+    - summary
+    - professional summary
+    - career summary
+    - profile
+    - professional profile
+    - about me
+    - about
+    - objective
+    - career objective
+    - career objectives
+    - career goals
+    - overview
+  experience:
+    - kinh nghiem lam viec
+    - kinh nghiem
+    - kinh nghiem chuyen mon
+    - kinh nghiem thuc te
+    - qua trinh cong tac
+    - qua trinh lam viec
+    - lich su lam viec
+    - lich su cong tac
+    - work experience
+    - working experience
+    - experience
+    - experiences
+    - professional experience
+    - relevant experience
+    - employment history
+    - employment
+    - work history
+    - career history
+  projects:
+    - du an
+    - cac du an
+    - du an tieu bieu
+    - du an noi bat
+    - du an ca nhan
+    - du an da tham gia
+    - du an da thuc hien
+    - projects
+    - project
+    - personal projects
+    - key projects
+    - selected projects
+    - side projects
+    - academic projects
+    - project experience
+  education:
+    - hoc van
+    - trinh do hoc van
+    - qua trinh hoc tap
+    - hoc tap
+    - dao tao
+    - trinh do
+    - education
+    - academic background
+    - academic
+    - educational background
+    - education va training
+  skills:
+    - ky nang
+    - cac ky nang
+    - ky nang chuyen mon
+    - ky nang ky thuat
+    - ky nang mem
+    - ky nang cung
+    - ky nang lap trinh
+    - cong nghe
+    - cong nghe su dung
+    - cong cu
+    - chuyen mon
+    - skills
+    - skill
+    - technical skills
+    - soft skills
+    - hard skills
+    - key skills
+    - core skills
+    - tech stack
+    - technologies
+    - tools
+    - core competencies
+    - competencies
+    - expertise
+  certifications:
+    - chung chi
+    - cac chung chi
+    - bang cap
+    - bang cap va chung chi
+    - khoa hoc
+    - certifications
+    - certification
+    - certificates
+    - certificate
+    - licenses va certifications
+    - courses
+  languages:
+    - ngoai ngu
+    - ngon ngu
+    - trinh do ngoai ngu
+    - languages
+    - language
+    - language skills
+  activities:
+    - hoat dong
+    - hoat dong ngoai khoa
+    - hoat dong xa hoi
+    - giai thuong
+    - thanh tich
+    - danh hieu
+    - tinh nguyen
+    - activities
+    - extracurricular activities
+    - awards
+    - honors
+    - honors va awards
+    - achievements
+    - volunteer
+    - volunteering
+  other:
+    - so thich
+    - so thich ca nhan
+    - nguoi tham chieu
+    - nguoi gioi thieu
+    - thong tin them
+    - thong tin khac
+    - interests
+    - hobbies
+    - references
+    - additional information
+
+# Heading lạ (không có ở trên): dòng ngắn, IN HOA hoặc style Heading của DOCX, theo sau ≥ 2 dòng
+# nội dung. Đoán section theo từ gợi ý trong khối; cần ≥ min_hits và hơn hẳn section thứ hai.
+unknown_heading:
+  max_words: 6
+  min_hits: 2
+  cues:
+    experience: [cong ty, company, nhan vien, developer, engineer, lap trinh vien, ky su,
+                 thuc tap, intern, chuyen vien, truong nhom, team lead, phu trach]
+    projects: [du an, project, github, demo, tech stack, khach hang, client]
+    education: [dai hoc, cao dang, truong, university, college, bachelor, master, cu nhan,
+                ky su tot nghiep, gpa, chuyen nganh, major, thpt, tot nghiep]
+    certifications: [chung chi, certified, certificate, certification, aws certified, ccna]
+    languages: [tieng anh, tieng nhat, tieng trung, tieng han, english, japanese, ielts, toeic,
+                jlpt, topik]
+    other: [so thich, doc sach, du lich, the thao, am nhac, hobby, reading, travel]
+  # Khoảng thời gian "03/2023 – nay", "2019 - 2021": mỗi dòng có khoảng thời gian cộng điểm
+  # experience (và education nếu khối có từ học vấn).
+  date_range_points: 1

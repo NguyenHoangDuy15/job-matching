@@ -53,16 +53,27 @@ PERSONAS: dict[str, dict] = {
                     "- Xây dựng API thanh toán bằng Java Spring Boot, 2 triệu yêu cầu mỗi ngày",
                     "- Thiết kế cơ sở dữ liệu PostgreSQL, giảm 40% thời gian truy vấn báo cáo",
                     "- Triển khai Docker và Kubernetes cho 12 dịch vụ",
+                    "Dự án: Cổng thanh toán nội bộ",
+                    "Công nghệ: Java, Spring Boot, Kafka",
                     "Công ty TNHH Phần mềm Biển Xanh | 07/2021 – 02/2023",
                     "Thực tập sinh rồi Lập trình viên Java",
                     "- Viết dịch vụ đồng bộ đơn hàng bằng Kafka và Redis",
                 ],
             ),
-            ("HỌC VẤN", ["Đại học Bách khoa Hà Nội | Kỹ thuật phần mềm | 2017 – 2021"]),
+            (
+                "DỰ ÁN",
+                [
+                    "Hệ thống đặt vé xem phim (đồ án tốt nghiệp) | 2021",
+                    "- Xây dựng backend bằng Node.js và MongoDB",
+                    "- Triển khai trên AWS EC2",
+                ],
+            ),
+            ("HỌC VẤN & BẰNG CẤP", ["Đại học Bách khoa Hà Nội | Kỹ thuật phần mềm | 2017 – 2021"]),
             (
                 "KỸ NĂNG",
                 [
                     "Java, Spring Boot, PostgreSQL, Redis, Kafka, Docker, Kubernetes, Git",
+                    "Kinh nghiệm làm việc với Docker và Kubernetes trên môi trường production",
                     "Tiếng Anh: đọc hiểu tài liệu kỹ thuật (TOEIC 750)",
                 ],
             ),
@@ -86,7 +97,7 @@ PERSONAS: dict[str, dict] = {
                 ],
             ),
             (
-                "WORK EXPERIENCE",
+                "PROFESSIONAL EXPERIENCE",
                 [
                     "Lotus Retail Analytics | Data Analyst | 01/2022 – Present",
                     "- Built Power BI dashboards used by 40 store managers every week",
@@ -96,13 +107,25 @@ PERSONAS: dict[str, dict] = {
                     "- Cleaned survey data and produced Excel reports for clients",
                 ],
             ),
+            (
+                "PROJECTS",
+                [
+                    "Customer Churn Prediction | 2023",
+                    "- Trained a gradient boosting model with scikit-learn on 200k records",
+                    "- Deployed the model as a Streamlit app",
+                ],
+            ),
             ("EDUCATION", ["University of Economics HCMC | Bachelor of Statistics | 2016 – 2020"]),
             (
-                "SKILLS",
+                "TECHNICAL SKILLS",
                 [
                     "Python, SQL, Power BI, Excel, pandas, scikit-learn, Tableau",
                     "Statistics, A/B testing, data visualization",
                 ],
+            ),
+            (
+                "ACTIVITIES & AWARDS",
+                ["Top 10 Vietnam Datathon 2021", "Volunteer data mentor at a local coding club"],
             ),
         ],
     },
@@ -129,6 +152,13 @@ PERSONAS: dict[str, dict] = {
                     "- Làm website giới thiệu sản phẩm bằng Next.js",
                 ],
             ),
+            (
+                "DỰ ÁN CÁ NHÂN",
+                [
+                    "Ứng dụng quản lý chi tiêu | github.com/example/chi-tieu",
+                    "- Next.js, Tailwind CSS và Firebase",
+                ],
+            ),
             ("HỌC VẤN", ["Đại học Đà Nẵng | Công nghệ thông tin | 2016 – 2020"]),
         ],
     },
@@ -138,13 +168,14 @@ PERSONAS: dict[str, dict] = {
         "contact": ["Email: trang.pham@example.com", "Điện thoại: 0912 000 104"],
         "title": "Kiểm thử phần mềm",
         "sections": [
-            ("MỤC TIÊU NGHỀ NGHIỆP", ["Phát triển thành kỹ sư kiểm thử tự động."]),
-            ("KINH NGHIỆM LÀM VIỆC", []),
-            ("KỸ NĂNG", []),
-            ("CHỨNG CHỈ", ["ISTQB Foundation Level (2022)"]),
+            ("I. MỤC TIÊU NGHỀ NGHIỆP", ["Phát triển thành kỹ sư kiểm thử tự động."]),
+            ("II. KINH NGHIỆM LÀM VIỆC", []),
+            ("III. KỸ NĂNG", []),
+            ("IV. CHỨNG CHỈ", ["ISTQB Foundation Level (2022)"]),
+            ("V. SỞ THÍCH", ["Đọc sách, chạy bộ buổi sáng"]),
         ],
         "tables": {
-            "KINH NGHIỆM LÀM VIỆC": [
+            "II. KINH NGHIỆM LÀM VIỆC": [
                 ["Thời gian", "Công ty", "Vị trí", "Công việc chính"],
                 [
                     "02/2022 – nay",
@@ -154,7 +185,7 @@ PERSONAS: dict[str, dict] = {
                 ],
                 ["06/2020 – 01/2022", "Công ty TNHH Dịch vụ Số Hoàng Gia", "QC", "Viết test case"],
             ],
-            "KỸ NĂNG": [
+            "III. KỸ NĂNG": [
                 ["Kỹ năng", "Mức độ"],
                 ["Selenium", "Khá"],
                 ["Postman", "Tốt"],
@@ -193,6 +224,14 @@ PERSONAS: dict[str, dict] = {
                 ],
             ),
             (
+                "PERSONAL PROJECTS",
+                [
+                    "Homelab GitOps | 2022",
+                    "- Ran a k3s cluster managed by Argo CD and Terraform",
+                    "- Built Grafana dashboards for home network monitoring",
+                ],
+            ),
+            (
                 "CERTIFICATIONS",
                 [
                     "AWS Certified Solutions Architect – Associate",
@@ -206,6 +245,7 @@ PERSONAS: dict[str, dict] = {
                     "GitLab CI, Linux, Bash"
                 ],
             ),
+            ("LANGUAGES", ["English – IELTS 7.0", "Vietnamese – native"]),
         ],
     },
     "cv08": {
@@ -230,9 +270,17 @@ PERSONAS: dict[str, dict] = {
                     "# Bảo trì ứng dụng ví điện tử viết bằng Kotlin",
                 ],
             ),
+            (
+                "Dự án tiêu biểu",
+                [
+                    "Ứng dụng đặt lịch khám | 2023",
+                    "# Thiết kế kiến trúc BLoC cho ứng dụng Flutter",
+                    "# Tích hợp thanh toán qua cổng giả lập",
+                ],
+            ),
             ("Học vấn", ["Học viện Công nghệ Bưu chính Viễn thông | 2016 – 2020"]),
             (
-                "Kỹ năng",
+                "Kỹ năng chuyên môn",
                 [
                     "Flutter, Dart, Kotlin, Firebase, REST API, Git",
                     "English: good reading and writing",
@@ -252,7 +300,7 @@ PERSONAS: dict[str, dict] = {
         "sections": [
             ("TÓM TẮT", ["Chuyên viên BA 4 năm trong lĩnh vực ngân hàng và bảo hiểm."]),
             (
-                "KINH NGHIỆM",
+                "CHẶNG ĐƯỜNG ĐÃ QUA",
                 [
                     "Ngân hàng TMCP Phương Nam Giả Định | 06/2021 – nay",
                     "Chuyên viên BA",
@@ -370,6 +418,46 @@ def landmarks(p: dict) -> dict:
         "order": [left_order, order] if left_order else [order],
         "contiguous": contiguous,
         "min_tables": len(p.get("tables", {})),
+        **section_gold(p),
+    }
+
+
+# Nhãn chuẩn S3-D02: tên mục trong CV → section. Gán tay ở đây, KHÔNG lấy từ bộ tách section.
+SECTION_GOLD = {
+    "LIÊN HỆ": "header",
+    "MỤC TIÊU NGHỀ NGHIỆP": "summary", "I. MỤC TIÊU NGHỀ NGHIỆP": "summary", "MỤC TIÊU": "summary",
+    "Mục tiêu nghề nghiệp": "summary", "SUMMARY": "summary", "PROFILE": "summary",
+    "TÓM TẮT": "summary", "GIỚI THIỆU": "summary",
+    "KINH NGHIỆM LÀM VIỆC": "experience", "II. KINH NGHIỆM LÀM VIỆC": "experience",
+    "KINH NGHIỆM": "experience", "Kinh nghiệm làm việc": "experience",
+    "PROFESSIONAL EXPERIENCE": "experience", "EXPERIENCE": "experience",
+    "CHẶNG ĐƯỜNG ĐÃ QUA": "experience",  # heading lạ, không có trong từ điển: phải đoán
+    "DỰ ÁN": "projects", "DỰ ÁN CÁ NHÂN": "projects", "Dự án tiêu biểu": "projects",
+    "PROJECTS": "projects", "PERSONAL PROJECTS": "projects",
+    "HỌC VẤN": "education", "HỌC VẤN & BẰNG CẤP": "education", "Học vấn": "education",
+    "EDUCATION": "education",
+    "KỸ NĂNG": "skills", "III. KỸ NĂNG": "skills", "Kỹ năng chuyên môn": "skills",
+    "SKILLS": "skills", "TECHNICAL SKILLS": "skills",
+    "CHỨNG CHỈ": "certifications", "IV. CHỨNG CHỈ": "certifications",
+    "CERTIFICATIONS": "certifications",
+    "NGOẠI NGỮ": "languages", "LANGUAGES": "languages",
+    "ACTIVITIES & AWARDS": "activities", "V. SỞ THÍCH": "other",
+}  # fmt: skip
+
+
+def section_gold(p: dict) -> dict:
+    """sections: heading theo thứ tự xuất hiện + section đúng; section_of: dòng → section."""
+    heads = [h for h, _ in p.get("left", [])] + [h for h, _ in p["sections"]]
+    section_of: dict[str, str] = {}
+    if not p.get("left"):  # CV 1 cột: tên, chức danh, liên hệ nằm ở phần đầu
+        for line in [p["name"], p["title"], *p.get("contact", [])]:
+            section_of[line] = "header"
+    for heading, lines in [*p.get("left", []), *p["sections"]]:
+        for line in lines:
+            section_of[line.lstrip("-# ").strip()] = SECTION_GOLD[heading]
+    return {
+        "sections": [{"heading": h, "name": SECTION_GOLD[h]} for h in heads],
+        "section_of": section_of,
     }
 
 

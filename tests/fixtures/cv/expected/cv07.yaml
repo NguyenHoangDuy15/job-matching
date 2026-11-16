@@ -42,5 +42,31 @@ contiguous:
 - - Thiết kế ứng dụng đặt tour du lịch trên Figma
   - Thực hiện kiểm thử người dùng với 20 khách hàng
 min_tables: 0
+sections:
+- heading: LIÊN HỆ
+  name: header
+- heading: KỸ NĂNG
+  name: skills
+- heading: GIỚI THIỆU
+  name: summary
+- heading: KINH NGHIỆM
+  name: experience
+- heading: HỌC VẤN
+  name: education
+section_of:
+  bao.trinh@example.vn: header
+  0912 000 107: header
+  Huế: header
+  Figma: skills
+  Adobe XD: skills
+  Photoshop: skills
+  Illustrator: skills
+  Prototyping: skills
+  Nhà thiết kế UI/UX yêu thích sản phẩm số đơn giản, dễ dùng.: summary
+  Công ty TNHH Sáng tạo Cố Đô | 01/2022 – nay: experience
+  UI/UX Designer: experience
+  Thiết kế ứng dụng đặt tour du lịch trên Figma: experience
+  Thực hiện kiểm thử người dùng với 20 khách hàng: experience
+  Đại học Nghệ thuật Huế | Thiết kế đồ họa | 2017 – 2021: education
 file: cv07.pdf
 manual: true

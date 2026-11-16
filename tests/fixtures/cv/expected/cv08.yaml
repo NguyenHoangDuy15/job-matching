@@ -14,20 +14,58 @@ landmarks:
 - 09/2020 – 03/2022
 - Lập trình viên Android
 - Bảo trì ứng dụng ví điện tử viết bằng Kotlin
+- Dự án tiêu biểu
+- Ứng dụng đặt lịch khám
+- '2023'
+- Thiết kế kiến trúc BLoC cho ứng dụng Flutter
+- Tích hợp thanh toán qua cổng giả lập
 - Học vấn
 - Học viện Công nghệ Bưu chính Viễn thông
 - 2016 – 2020
-- Kỹ năng
+- Kỹ năng chuyên môn
 - Flutter, Dart, Kotlin, Firebase, REST API, Git
 - 'English: good reading and writing'
 order:
 - - Mục tiêu nghề nghiệp
   - Kinh nghiệm làm việc
+  - Dự án tiêu biểu
   - Học vấn
-  - Kỹ năng
+  - Kỹ năng chuyên môn
 contiguous:
 - - Phát triển ứng dụng đặt lịch khám bằng Flutter và Firebase
   - Viết unit test, đạt độ phủ 80%
+- - Thiết kế kiến trúc BLoC cho ứng dụng Flutter
+  - Tích hợp thanh toán qua cổng giả lập
 min_tables: 0
+sections:
+- heading: Mục tiêu nghề nghiệp
+  name: summary
+- heading: Kinh nghiệm làm việc
+  name: experience
+- heading: Dự án tiêu biểu
+  name: projects
+- heading: Học vấn
+  name: education
+- heading: Kỹ năng chuyên môn
+  name: skills
+section_of:
+  Đỗ Thanh Tùng: header
+  Lập trình viên Mobile: header
+  'Email: tung.do@example.vn': header
+  'Điện thoại: 0912 000 108': header
+  Xây dựng ứng dụng di động mượt, ổn định cho hàng triệu người dùng.: summary
+  Công ty Cổ phần Ứng dụng Mây Hồng | 04/2022 – nay: experience
+  Lập trình viên Flutter: experience
+  Phát triển ứng dụng đặt lịch khám bằng Flutter và Firebase: experience
+  Viết unit test, đạt độ phủ 80%: experience
+  Công ty TNHH Di động Hải Âu | 09/2020 – 03/2022: experience
+  Lập trình viên Android: experience
+  Bảo trì ứng dụng ví điện tử viết bằng Kotlin: experience
+  Ứng dụng đặt lịch khám | 2023: projects
+  Thiết kế kiến trúc BLoC cho ứng dụng Flutter: projects
+  Tích hợp thanh toán qua cổng giả lập: projects
+  Học viện Công nghệ Bưu chính Viễn thông | 2016 – 2020: education
+  Flutter, Dart, Kotlin, Firebase, REST API, Git: skills
+  'English: good reading and writing': skills
 file: cv08.docx
 manual: false
