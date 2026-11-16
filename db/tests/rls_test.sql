@@ -73,9 +73,14 @@ insert into core.job_skills (job_id, skill_id, level) values
   (3, (select id from ref.skills where slug = 'python'),  'required'),
   (4, (select id from ref.skills where slug = 'sql'),     'required');
 
-insert into app.cvs (owner_user_id, uploaded_by, storage_path, file_sha256, mime, size_bytes) values
-  ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf', '\x01', 'application/pdf', 1000),
-  ('00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-00000000000f', 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf', '\x03', 'application/pdf', 1000);
+-- Phiên bản điều khoản đã hết hiệu lực (cv-2026-11 đang hiệu lực do migration 0008 tạo)
+insert into ref.cv_terms (version, published_at, retired_at, url) values
+  ('cv-2026-01', date '2026-01-01', now() - interval '1 day', '/dieu-khoan/cv-2026-01')
+on conflict (version) do nothing;
+
+insert into app.cvs (owner_user_id, uploaded_by, storage_path, file_sha256, mime, size_bytes, consent_version) values
+  ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'u/00000000-0000-0000-0000-00000000000a/cv1.pdf', '\x01', 'application/pdf', 1000, 'cv-2026-11'),
+  ('00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-00000000000f', 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf', '\x03', 'application/pdf', 1000, 'cv-2026-11');
 -- Kỹ năng trích từ CV của seeker A (để kiểm tra seeker B không đọc được app.cv_skills của A)
 insert into app.cv_skills (cv_id, skill_id, evidence_level, evidence)
 select c.id, (select id from ref.skills where slug = 'python'), 'strong', 'Dự án ETL bằng Python'
@@ -244,6 +249,130 @@ insert into results select 'A cv + file + skills intact after B attempts',
   (select count(*) from storage.objects where name like 'u/00000000-0000-0000-0000-00000000000a/%')::text || '/' ||
   (select count(*) from app.cv_skills s join app.cvs c on c.id = s.cv_id where c.owner_user_id = '00000000-0000-0000-0000-00000000000a')::text,
   '1/1/1';
+
+-- Test nhóm 3c (S3-T02, US-11): Consent khi tải CV, xóa CV = xóa file + mọi dữ liệu liên quan
+-- CV mới của seeker B: id b2…01, file u/{B}/b2…01.pdf, sha256 = 'ab' x 32
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into storage.objects (bucket_id, name) values
+  ('cvs', 'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000001.pdf');
+select api.register_cv('b2000000-0000-0000-0000-000000000001',
+                       'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000001.pdf',
+                       repeat('ab', 32), 'application/pdf', 2000, 'cv-2026-11');
+insert into results select 'register_cv stores consent version + DB time',
+  (consent_version = 'cv-2026-11' and consent_at between now() - interval '1 minute' and now() + interval '1 minute')::text,
+  'true'
+  from api.v_my_cvs where id = 'b2000000-0000-0000-0000-000000000001';
+insert into results select 'anyone can read current terms', string_agg(version, ','), 'cv-2026-11' from api.v_cv_terms_current;
+
+do $$
+declare
+  v_ok boolean;
+begin
+  -- Thiếu consent / điều khoản hết hạn / phiên bản lạ / đường dẫn vào thư mục người khác
+  begin
+    perform api.register_cv('b2000000-0000-0000-0000-000000000002', 'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000002.pdf',
+                            repeat('c2', 32), 'application/pdf', 1000, null);
+    insert into results values ('register_cv rejects missing consent', 'accepted', 'rejected');
+  exception when check_violation then
+    insert into results values ('register_cv rejects missing consent', 'rejected', 'rejected');
+  end;
+  begin
+    perform api.register_cv('b2000000-0000-0000-0000-000000000003', 'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000003.pdf',
+                            repeat('c3', 32), 'application/pdf', 1000, 'cv-2026-01');
+    insert into results values ('register_cv rejects retired terms version', 'accepted', 'rejected');
+  exception when check_violation then
+    insert into results values ('register_cv rejects retired terms version', 'rejected', 'rejected');
+  end;
+  begin
+    perform api.register_cv('b2000000-0000-0000-0000-000000000004', 'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000004.pdf',
+                            repeat('c4', 32), 'application/pdf', 1000, 'cv-9999');
+    insert into results values ('register_cv rejects unknown terms version', 'accepted', 'rejected');
+  exception when check_violation then
+    insert into results values ('register_cv rejects unknown terms version', 'rejected', 'rejected');
+  end;
+  begin
+    perform api.register_cv('b2000000-0000-0000-0000-000000000005', 'u/00000000-0000-0000-0000-00000000000a/b2000000-0000-0000-0000-000000000005.pdf',
+                            repeat('c5', 32), 'application/pdf', 1000, 'cv-2026-11');
+    insert into results values ('register_cv rejects path in another user folder', 'accepted', 'rejected');
+  exception when invalid_parameter_value then
+    insert into results values ('register_cv rejects path in another user folder', 'rejected', 'rejected');
+  end;
+  -- Ghi thẳng vào app.cvs (bỏ qua RPC) mà không có consent → constraint chặn
+  begin
+    insert into app.cvs (owner_user_id, uploaded_by, storage_path, file_sha256, mime, size_bytes)
+    values (auth.uid(), auth.uid(), 'u/00000000-0000-0000-0000-00000000000f/raw.pdf', '\xc6', 'application/pdf', 1000);
+    insert into results values ('direct insert without consent rejected', 'accepted', 'rejected');
+  exception when check_violation then
+    insert into results values ('direct insert without consent rejected', 'rejected', 'rejected');
+  end;
+
+  -- Consent không sửa được sau khi tạo (kể cả chủ CV)
+  update app.cvs set consent_at = timestamptz '2020-01-01', consent_version = null
+   where id = 'b2000000-0000-0000-0000-000000000001';
+  select (consent_version = 'cv-2026-11' and consent_at > timestamptz '2026-01-01') into v_ok
+    from app.cvs where id = 'b2000000-0000-0000-0000-000000000001';
+  insert into results values ('consent is immutable after upload', v_ok::text, 'true');
+end $$;
+reset role;
+
+-- Dữ liệu sinh ra từ CV b2…01 (worker chạy bằng service_role nên seed bằng superuser)
+insert into app.cv_skills (cv_id, skill_id, evidence_level)
+  values ('b2000000-0000-0000-0000-000000000001', (select id from ref.skills where slug = 'sql'), 'strong');
+insert into app.cv_chunks (cv_id, section, chunk_no, content, embedding, model)
+  values ('b2000000-0000-0000-0000-000000000001', 'experience', 0, 'đoạn đã che PII',
+          ('[' || array_to_string(array_fill(0, array[1024]), ',') || ']')::extensions.halfvec, 'test');
+insert into app.match_requests (kind, requester_id, cv_id, weights, engine_version)
+  values ('seeker_topn', '00000000-0000-0000-0000-00000000000f', 'b2000000-0000-0000-0000-000000000001', '{}', 'test');
+insert into app.explanations (cv_hash, jd_hash, model, body) values
+  (decode(repeat('ab', 32), 'hex'), '\x01', 'test', 'giải thích cho CV b2…01'),
+  ('\x01', '\x01', 'test', 'giải thích cho CV của A');      -- của CV khác, phải còn lại
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+do $$
+declare
+  v_deleted boolean;
+  v_rows    int;
+begin
+  -- Xóa dòng trước khi xóa file → từ chối (không được để file mồ côi)
+  begin
+    perform api.delete_cv('b2000000-0000-0000-0000-000000000001');
+    insert into results values ('delete_cv refuses while file still in Storage', 'deleted', 'refused');
+  exception when object_not_in_prerequisite_state then
+    insert into results values ('delete_cv refuses while file still in Storage', 'refused', 'refused');
+  end;
+
+  -- B không xóa được CV của A dù biết id
+  insert into results values ('seekerB delete_cv on A cv returns false',
+                              api.delete_cv(current_setting('test.cv_a')::uuid)::text, 'false');
+
+  -- Luồng đúng: web xóa file qua Storage API rồi gọi api.delete_cv
+  delete from storage.objects
+   where bucket_id = 'cvs' and name = 'u/00000000-0000-0000-0000-00000000000f/b2000000-0000-0000-0000-000000000001.pdf';
+  get diagnostics v_rows = row_count;
+  v_deleted := api.delete_cv('b2000000-0000-0000-0000-000000000001');
+  insert into results values ('seekerB deletes own file then cv', v_rows::text || '/' || v_deleted::text, '1/true');
+end $$;
+reset role;
+
+-- Kiểm tra bằng superuser: không còn dòng nào gắn với CV đã xóa
+insert into results select 'deleted cv leaves no rows or file',
+  concat_ws('/',
+    (select count(*) from app.cvs           where id    = 'b2000000-0000-0000-0000-000000000001'),
+    (select count(*) from app.cv_skills     where cv_id = 'b2000000-0000-0000-0000-000000000001'),
+    (select count(*) from app.cv_chunks     where cv_id = 'b2000000-0000-0000-0000-000000000001'),
+    (select count(*) from app.match_requests where cv_id = 'b2000000-0000-0000-0000-000000000001'),
+    (select count(*) from app.explanations  where cv_hash = decode(repeat('ab', 32), 'hex')),
+    (select count(*) from storage.objects   where name like '%b2000000-0000-0000-0000-000000000001%')),
+  '0/0/0/0/0/0';
+insert into results select 'delete keeps cache of other cvs', count(*)::text, '1' from app.explanations where cv_hash = '\x01';
+insert into results select 'audit cv_deleted: actor B, id only, no file path',
+  (select (count(*) = 1 and bool_and(actor_id = '00000000-0000-0000-0000-00000000000f' and actor_role = 'seeker' and detail is null))::text
+     from app.audit_log where action = 'cv_deleted' and entity = 'cv' and entity_id = 'b2000000-0000-0000-0000-000000000001')
+  || '/' ||
+  (select count(*) from app.audit_log where entity_id like 'u/%b2000000-0000-0000-0000-000000000001%')::text,
+  'true/0';
 
 -- Test nhóm 4: HR Công ty A & HR Công ty B (Cô lập dữ liệu đa tổ chức)
 set role authenticated;
