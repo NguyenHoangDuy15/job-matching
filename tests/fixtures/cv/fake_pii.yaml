@@ -1,0 +1,14 @@
+# PII GIẢ dùng trong bộ CV mẫu. test_cv_batch_privacy.py chặn mọi email/SĐT ngoài danh sách này,
+# để không ai lỡ commit CV có thông tin thật.
+email_domains: [example.com, example.vn]
+phones:
+  - "0912 000 101"
+  - "0912 000 102"
+  - "0912 000 103"
+  - "0912 000 104"
+  - "0912 000 105"
+  - "0912 000 106"
+  - "0912 000 107"
+  - "0912 000 108"
+  - "0912 000 109"
+  - "0912 000 110"

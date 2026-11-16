@@ -1,0 +1,136 @@
+lang: en
+landmarks:
+- Hoang Quoc Viet
+- DevOps Engineer
+- PROFILE
+- DevOps engineer focused on reliable delivery pipelines and observability for cloud-native systems.
+- EXPERIENCE
+- Blue Lotus Cloud
+- Senior DevOps Engineer
+- 03/2021 – Present
+- Migrated service 1 to Kubernetes with Helm and Argo CD
+- Migrated service 2 to Kubernetes with Helm and Argo CD
+- Migrated service 3 to Kubernetes with Helm and Argo CD
+- Migrated service 4 to Kubernetes with Helm and Argo CD
+- Migrated service 5 to Kubernetes with Helm and Argo CD
+- Migrated service 6 to Kubernetes with Helm and Argo CD
+- Migrated service 7 to Kubernetes with Helm and Argo CD
+- Migrated service 8 to Kubernetes with Helm and Argo CD
+- Migrated service 9 to Kubernetes with Helm and Argo CD
+- Migrated service 10 to Kubernetes with Helm and Argo CD
+- Migrated service 11 to Kubernetes with Helm and Argo CD
+- Migrated service 12 to Kubernetes with Helm and Argo CD
+- Migrated service 13 to Kubernetes with Helm and Argo CD
+- Migrated service 14 to Kubernetes with Helm and Argo CD
+- Migrated service 15 to Kubernetes with Helm and Argo CD
+- Migrated service 16 to Kubernetes with Helm and Argo CD
+- Migrated service 17 to Kubernetes with Helm and Argo CD
+- Migrated service 18 to Kubernetes with Helm and Argo CD
+- Migrated service 19 to Kubernetes with Helm and Argo CD
+- Migrated service 20 to Kubernetes with Helm and Argo CD
+- Migrated service 21 to Kubernetes with Helm and Argo CD
+- Migrated service 22 to Kubernetes with Helm and Argo CD
+- Migrated service 23 to Kubernetes with Helm and Argo CD
+- Migrated service 24 to Kubernetes with Helm and Argo CD
+- Migrated service 25 to Kubernetes with Helm and Argo CD
+- Migrated service 26 to Kubernetes with Helm and Argo CD
+- Migrated service 27 to Kubernetes with Helm and Argo CD
+- Migrated service 28 to Kubernetes with Helm and Argo CD
+- Migrated service 29 to Kubernetes with Helm and Argo CD
+- Migrated service 30 to Kubernetes with Helm and Argo CD
+- Silver Peak Software
+- 01/2019 – 02/2021
+- Maintained Terraform module 1 for AWS networking
+- Maintained Terraform module 2 for AWS networking
+- Maintained Terraform module 3 for AWS networking
+- Maintained Terraform module 4 for AWS networking
+- Maintained Terraform module 5 for AWS networking
+- Maintained Terraform module 6 for AWS networking
+- Maintained Terraform module 7 for AWS networking
+- Maintained Terraform module 8 for AWS networking
+- Maintained Terraform module 9 for AWS networking
+- Maintained Terraform module 10 for AWS networking
+- Maintained Terraform module 11 for AWS networking
+- Maintained Terraform module 12 for AWS networking
+- Maintained Terraform module 13 for AWS networking
+- Maintained Terraform module 14 for AWS networking
+- Maintained Terraform module 15 for AWS networking
+- Maintained Terraform module 16 for AWS networking
+- Maintained Terraform module 17 for AWS networking
+- Maintained Terraform module 18 for AWS networking
+- Maintained Terraform module 19 for AWS networking
+- Maintained Terraform module 20 for AWS networking
+- Maintained Terraform module 21 for AWS networking
+- Maintained Terraform module 22 for AWS networking
+- Maintained Terraform module 23 for AWS networking
+- Maintained Terraform module 24 for AWS networking
+- Maintained Terraform module 25 for AWS networking
+- CERTIFICATIONS
+- AWS Certified Solutions Architect – Associate
+- Certified Kubernetes Administrator (CKA)
+- SKILLS
+- AWS, Terraform, Kubernetes, Helm, Argo CD, Prometheus, Grafana, GitLab CI, Linux, Bash
+order:
+- - PROFILE
+  - EXPERIENCE
+  - CERTIFICATIONS
+  - SKILLS
+contiguous:
+- - Migrated service 1 to Kubernetes with Helm and Argo CD
+  - Migrated service 2 to Kubernetes with Helm and Argo CD
+  - Migrated service 3 to Kubernetes with Helm and Argo CD
+  - Migrated service 4 to Kubernetes with Helm and Argo CD
+  - Migrated service 5 to Kubernetes with Helm and Argo CD
+  - Migrated service 6 to Kubernetes with Helm and Argo CD
+  - Migrated service 7 to Kubernetes with Helm and Argo CD
+  - Migrated service 8 to Kubernetes with Helm and Argo CD
+  - Migrated service 9 to Kubernetes with Helm and Argo CD
+  - Migrated service 10 to Kubernetes with Helm and Argo CD
+  - Migrated service 11 to Kubernetes with Helm and Argo CD
+  - Migrated service 12 to Kubernetes with Helm and Argo CD
+  - Migrated service 13 to Kubernetes with Helm and Argo CD
+  - Migrated service 14 to Kubernetes with Helm and Argo CD
+  - Migrated service 15 to Kubernetes with Helm and Argo CD
+  - Migrated service 16 to Kubernetes with Helm and Argo CD
+  - Migrated service 17 to Kubernetes with Helm and Argo CD
+  - Migrated service 18 to Kubernetes with Helm and Argo CD
+  - Migrated service 19 to Kubernetes with Helm and Argo CD
+  - Migrated service 20 to Kubernetes with Helm and Argo CD
+  - Migrated service 21 to Kubernetes with Helm and Argo CD
+  - Migrated service 22 to Kubernetes with Helm and Argo CD
+  - Migrated service 23 to Kubernetes with Helm and Argo CD
+  - Migrated service 24 to Kubernetes with Helm and Argo CD
+  - Migrated service 25 to Kubernetes with Helm and Argo CD
+  - Migrated service 26 to Kubernetes with Helm and Argo CD
+  - Migrated service 27 to Kubernetes with Helm and Argo CD
+  - Migrated service 28 to Kubernetes with Helm and Argo CD
+  - Migrated service 29 to Kubernetes with Helm and Argo CD
+  - Migrated service 30 to Kubernetes with Helm and Argo CD
+- - Maintained Terraform module 1 for AWS networking
+  - Maintained Terraform module 2 for AWS networking
+  - Maintained Terraform module 3 for AWS networking
+  - Maintained Terraform module 4 for AWS networking
+  - Maintained Terraform module 5 for AWS networking
+  - Maintained Terraform module 6 for AWS networking
+  - Maintained Terraform module 7 for AWS networking
+  - Maintained Terraform module 8 for AWS networking
+  - Maintained Terraform module 9 for AWS networking
+  - Maintained Terraform module 10 for AWS networking
+  - Maintained Terraform module 11 for AWS networking
+  - Maintained Terraform module 12 for AWS networking
+  - Maintained Terraform module 13 for AWS networking
+  - Maintained Terraform module 14 for AWS networking
+  - Maintained Terraform module 15 for AWS networking
+  - Maintained Terraform module 16 for AWS networking
+  - Maintained Terraform module 17 for AWS networking
+  - Maintained Terraform module 18 for AWS networking
+  - Maintained Terraform module 19 for AWS networking
+  - Maintained Terraform module 20 for AWS networking
+  - Maintained Terraform module 21 for AWS networking
+  - Maintained Terraform module 22 for AWS networking
+  - Maintained Terraform module 23 for AWS networking
+  - Maintained Terraform module 24 for AWS networking
+  - Maintained Terraform module 25 for AWS networking
+min_tables: 0
+file: cv05.pdf
+manual: false

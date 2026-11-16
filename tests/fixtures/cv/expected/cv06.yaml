@@ -1,0 +1,28 @@
+lang: vi
+landmarks:
+- Bùi Ngọc Lan
+- Kỹ sư Dữ liệu
+- MỤC TIÊU NGHỀ NGHIỆP
+- Xây dựng nền tảng dữ liệu tin cậy cho doanh nghiệp.
+- KINH NGHIỆM LÀM VIỆC
+- Công ty Cổ phần Dữ liệu Bình Minh
+- 02/2022 – nay
+- Xây dựng pipeline ETL bằng Apache Airflow và dbt
+- Quản lý kho dữ liệu trên Google BigQuery
+- HỌC VẤN
+- Đại học Quốc gia TP.HCM
+- Khoa học dữ liệu
+- 2017 – 2021
+- KỸ NĂNG
+- Python, SQL, Apache Airflow, dbt, BigQuery, Spark, Docker
+order:
+- - MỤC TIÊU NGHỀ NGHIỆP
+  - KINH NGHIỆM LÀM VIỆC
+  - HỌC VẤN
+  - KỸ NĂNG
+contiguous:
+- - Xây dựng pipeline ETL bằng Apache Airflow và dbt
+  - Quản lý kho dữ liệu trên Google BigQuery
+min_tables: 0
+file: cv06.pdf
+manual: true

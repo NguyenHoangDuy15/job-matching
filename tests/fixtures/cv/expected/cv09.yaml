@@ -1,0 +1,50 @@
+lang: vi
+landmarks:
+- Vũ Hải Yến
+- Chuyên viên Phân tích nghiệp vụ
+- KỸ NĂNG
+- Phân tích nghiệp vụ
+- BPMN
+- SQL
+- Jira
+- Confluence
+- Figma
+- CHỨNG CHỈ
+- CBAP (2023)
+- Scrum Master PSM I
+- TÓM TẮT
+- Chuyên viên BA 4 năm trong lĩnh vực ngân hàng và bảo hiểm.
+- KINH NGHIỆM
+- Ngân hàng TMCP Phương Nam Giả Định
+- 06/2021 – nay
+- Chuyên viên BA
+- Thu thập yêu cầu cho hệ thống cho vay trực tuyến
+- Viết tài liệu đặc tả và vẽ quy trình BPMN
+- Công ty Bảo hiểm Hướng Dương
+- 07/2019 – 05/2021
+- Nhân viên BA
+- Chuẩn hóa quy trình bồi thường
+- HỌC VẤN
+- Đại học Cần Thơ
+- Hệ thống thông tin
+- 2015 – 2019
+order:
+- - KỸ NĂNG
+  - CHỨNG CHỈ
+- - TÓM TẮT
+  - KINH NGHIỆM
+  - HỌC VẤN
+contiguous:
+- - Phân tích nghiệp vụ
+  - BPMN
+  - SQL
+  - Jira
+  - Confluence
+  - Figma
+- - CBAP (2023)
+  - Scrum Master PSM I
+- - Thu thập yêu cầu cho hệ thống cho vay trực tuyến
+  - Viết tài liệu đặc tả và vẽ quy trình BPMN
+min_tables: 0
+file: cv09.docx
+manual: false

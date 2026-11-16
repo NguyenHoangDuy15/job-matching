@@ -1,0 +1,38 @@
+lang: vi
+landmarks:
+- Phạm Thu Trang
+- Kiểm thử phần mềm
+- MỤC TIÊU NGHỀ NGHIỆP
+- Phát triển thành kỹ sư kiểm thử tự động.
+- KINH NGHIỆM LÀM VIỆC
+- KỸ NĂNG
+- CHỨNG CHỈ
+- ISTQB Foundation Level (2022)
+- Thời gian
+- Công ty
+- Vị trí
+- Công việc chính
+- 02/2022 – nay
+- Công ty Cổ phần Phần mềm Ánh Dương
+- Tester
+- Kiểm thử API bằng Postman
+- 06/2020 – 01/2022
+- Công ty TNHH Dịch vụ Số Hoàng Gia
+- Viết test case
+- Kỹ năng
+- Mức độ
+- Selenium
+- Khá
+- Postman
+- Tốt
+- SQL
+- Jira
+order:
+- - MỤC TIÊU NGHỀ NGHIỆP
+  - KINH NGHIỆM LÀM VIỆC
+  - KỸ NĂNG
+  - CHỨNG CHỈ
+contiguous: []
+min_tables: 2
+file: cv04.pdf
+manual: false
