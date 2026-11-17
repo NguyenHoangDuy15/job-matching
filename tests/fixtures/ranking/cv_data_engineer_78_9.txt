@@ -1,0 +1,15 @@
+NGUYỄN VĂN A
+Data Engineer
+
+KINH NGHIỆM LÀM VIỆC
+Công ty Cổ phần Bán lẻ Sao Mai | Data Engineer | 01/2022 - 12/2025
+- Viết job PySpark xử lý 50 triệu dòng giao dịch mỗi ngày.
+- Lập lịch và giám sát các DAG bằng Airflow.
+- Viết truy vấn SQL tối ưu cho báo cáo doanh thu.
+
+Công ty TNHH Phần mềm Hoà Bình | Backend Developer | 01/2021 - 12/2021
+- Phát triển dịch vụ nội bộ bằng Python.
+
+KỸ NĂNG
+- Ngôn ngữ: Python, SQL
+- Công cụ: Airflow, Amazon S3

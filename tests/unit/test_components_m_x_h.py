@@ -1,9 +1,15 @@
 """S4-D03: M (bắt buộc ×2, ưu tiên ×1), X, gộp H và chia lại trọng số khi thiếu thành phần."""
 
+from datetime import date
+from pathlib import Path
+
 import pytest
 
+from cvparser.profile import build_profile
+from cvparser.redact import redact
+from cvparser.sections import split_sections
 from ranking.components import combine, load_ranker_config, m_score, x_score
-from skillkit.levels.pipeline import SKILLS_YAML
+from skillkit.levels.pipeline import SKILLS_YAML, SkillLabeler
 from skillkit.taxonomy import load_taxonomy
 
 
@@ -49,6 +55,56 @@ def test_proposal_example_h(tax, cfg):
     h = combine({"K": 0.90, "M": m, "E": 0.57, "X": x_score(2, 3)}, cfg)
     assert h.h == 67.6
     assert h.missing == [] and sum(h.weights_used.values()) == pytest.approx(1.0)
+
+
+# Ví dụ 78,9 điểm (Done của S4-D03): cùng JD Data Engineer (Middle, 3 năm) với ví dụ proposal, CV
+# mạnh hơn. JD và CV là văn bản thật, chạy qua bộ gắn nhãn kỹ năng JD và bộ đọc hồ sơ CV.
+FIX = Path(__file__).resolve().parents[1] / "fixtures" / "ranking"
+EXAMPLE_JD_YEARS = 3  # years_exp_min của tin (trường có cấu trúc từ nguồn)
+EXAMPLE_K, EXAMPLE_E = 0.83, 0.59  # phân vị toàn kho, phụ thuộc kho tin nên cho sẵn như proposal
+
+
+def _example_inputs():
+    jd_text = (FIX / "jd_data_engineer_middle.txt").read_text(encoding="utf-8")
+    labeler = SkillLabeler.default(with_model=False)
+    jd = [(s.skill_id, s.level) for s in labeler.label_text("jd", jd_text)]
+    red = redact((FIX / "cv_data_engineer_78_9.txt").read_text(encoding="utf-8"))
+    profile = build_profile(red.text, split_sections(red.text), as_of=date(2026, 11, 17))
+    return jd, profile
+
+
+def test_example_78_9_extracted_inputs():
+    """JD ra đúng bộ kỹ năng của ví dụ proposal; CV 5 năm, bằng chứng đúng như thiết kế."""
+    jd, profile = _example_inputs()
+    assert dict(jd) == {**dict(PROPOSAL_JD), "data_warehouse": "mentioned"}
+    cv = {s.skill_id: s.evidence_level for s in profile.skills}
+    assert {k: cv.get(k) for k in ("python", "sql", "airflow", "pyspark", "aws_s3", "kafka")} == {
+        "python": "strong",
+        "sql": "strong",
+        "airflow": "strong",
+        "pyspark": "strong",
+        "aws_s3": "listed",
+        "kafka": None,
+    }
+    assert profile.years_exp == 5.0
+
+
+def test_example_78_9(tax, cfg):
+    """M: Python, SQL, Airflow đúng kỹ năng (strong) 2+2+2; Spark qua kỹ năng con PySpark (strong)
+    2; Kafka không có 0; AWS qua kỹ năng con S3 (listed) 0,7 → M = 8,7 / 10 = 0,87.
+    X = min(1, 5 / 3) = 1. H = 100 × (0,25·0,83 + 0,35·0,87 + 0,30·0,59 + 0,10·1) = 78,9."""
+    jd, profile = _example_inputs()
+    cv = {s.skill_id: s.evidence_level for s in profile.skills}
+    m = m_score(jd, cv, tax, cfg)
+    assert m.score == pytest.approx(0.87)
+    by_id = {r.skill_id: r for r in m.rows}
+    assert (by_id["spark"].cv_skill, by_id["spark"].relation) == ("pyspark", "child")
+    assert (by_id["aws"].cv_skill, by_id["aws"].credit) == ("aws_s3", pytest.approx(0.7))
+    assert [r.skill_id for r in m.missing] == ["kafka"]
+    x = x_score(profile.years_exp, EXAMPLE_JD_YEARS)
+    assert x == 1.0
+    h = combine({"K": EXAMPLE_K, "M": m.score, "E": EXAMPLE_E, "X": x}, cfg)
+    assert h.h == 78.9 and h.missing == []
 
 
 def test_required_counts_twice_preferred(tax, cfg):

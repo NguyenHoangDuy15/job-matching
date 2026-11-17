@@ -1,0 +1,15 @@
+Data Engineer (Middle)
+
+Mô tả công việc
+- Thu thập dữ liệu bán hàng từ nhiều nguồn về kho dữ liệu tập trung.
+- Phối hợp với nhóm phân tích để xây dựng báo cáo hằng ngày.
+
+Yêu cầu
+- Tối thiểu 3 năm kinh nghiệm ở vị trí tương đương.
+- Thành thạo Python và SQL.
+- Có kinh nghiệm lập lịch tác vụ với Apache Airflow.
+- Có kinh nghiệm viết job xử lý dữ liệu với Spark.
+
+Ưu tiên
+- Có kinh nghiệm với Kafka.
+- Đã làm việc với AWS.
