@@ -3,11 +3,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   addUserSkill,
+  cleanTitle,
   confirmErrorMessage,
   confirmPayload,
+  formatYears,
   hasChanges,
   normalize,
   parseErrorMessage,
+  parseYears,
   searchSkills,
   sortSkills,
   splitEvidence,
@@ -97,4 +100,26 @@ test("dịch lỗi lưu hồ sơ và lỗi API đọc CV", () => {
   assert.match(parseErrorMessage(504, { error: "timeout" }), /quá phức tạp/);
   assert.match(parseErrorMessage(502, { error: "worker_unavailable" }), /lỗi hệ thống/);
   assert.match(parseErrorMessage(0, null), /Không kết nối/);
+});
+
+test("đọc số năm kinh nghiệm: dấu phẩy, làm tròn, giới hạn 0–60, ô trống", () => {
+  assert.deepEqual(parseYears("1,5", true), { ok: true, value: 1.5 });
+  assert.deepEqual(parseYears(" 3.25 ", true), { ok: true, value: 3.3 });
+  assert.deepEqual(parseYears("0", true), { ok: true, value: 0 });
+  assert.deepEqual(parseYears("60", true), { ok: true, value: 60 });
+  assert.equal(parseYears("61", true).ok, false);
+  assert.equal(parseYears("-1", true).ok, false);
+  assert.equal(parseYears("hai", true).ok, false);
+  assert.equal(parseYears("1,5,2", true).ok, false);
+  assert.deepEqual(parseYears("", false), { ok: true, value: null });
+  assert.match((parseYears("", true) as { error: string }).error, /từ 0 đến 60/);
+});
+
+test("hiện số năm và làm sạch chức danh", () => {
+  assert.equal(formatYears(1.5), "1,5");
+  assert.equal(formatYears(4), "4");
+  assert.equal(formatYears(null), "");
+  assert.equal(cleanTitle("  Backend   Developer  "), "Backend Developer");
+  assert.equal(cleanTitle("   "), "");
+  assert.equal(cleanTitle("a".repeat(250)).length, 200);
 });

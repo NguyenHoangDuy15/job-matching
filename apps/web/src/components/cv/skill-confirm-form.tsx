@@ -9,10 +9,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   addUserSkill,
+  cleanTitle,
   confirmErrorMessage,
   confirmPayload,
+  formatYears,
   hasChanges,
   LEVEL_INFO,
+  MAX_TITLE,
+  parseYears,
   searchSkills,
   sortSkills,
   splitEvidence,
@@ -23,9 +27,9 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-// S3-H02 · US-12 · docs/ui/wireframe_cv.png (màn 3). Xác nhận kỹ năng theo mức bằng chứng:
-// xem câu trích, xóa kỹ năng sai, thêm kỹ năng từ từ điển (nhãn "Tự thêm"), lưu bằng
-// api.confirm_cv_profile (migration 0010). Số năm kinh nghiệm + chức danh mong muốn: S3-H03.
+// S3-H02, S3-H03 · US-12 · docs/ui/wireframe_cv.png (màn 3). Xác nhận hồ sơ CV: chức danh mong
+// muốn + tổng số năm kinh nghiệm (sửa được), kỹ năng theo mức bằng chứng (xem câu trích, xóa kỹ
+// năng sai, thêm từ từ điển với nhãn "Tự thêm"). Lưu tất cả một lần bằng api.confirm_cv_profile (0010).
 
 const STRONG_PREVIEW = 5;
 const LEAVE_PROMPT = "Bỏ các thay đổi chưa lưu?";
@@ -34,12 +38,25 @@ export function SkillConfirmForm({
   cvId,
   initialSkills,
   taxonomy,
+  initialYears,
+  initialTitle,
+  confirmedLabel,
 }: {
   cvId: string;
   initialSkills: CvSkill[];
   taxonomy: TaxonomySkill[];
+  initialYears: number | null;
+  initialTitle: string | null;
+  /** Lần lưu gần nhất (profile_confirmed_at, đã định dạng ở server); null = chưa xác nhận. */
+  confirmedLabel: string | null;
 }) {
   const router = useRouter();
+  const fieldId = useId();
+  const [savedYears, setSavedYears] = useState(initialYears);
+  const [savedTitle, setSavedTitle] = useState(initialTitle ?? "");
+  const [yearsText, setYearsText] = useState(() => formatYears(initialYears));
+  const [titleText, setTitleText] = useState(initialTitle ?? "");
+  const [lastSaved, setLastSaved] = useState(confirmedLabel);
   const [saved, setSaved] = useState(() => sortSkills(initialSkills));
   const [skills, setSkills] = useState(saved);
   const [removed, setRemoved] = useState<CvSkill[]>([]);
@@ -48,7 +65,10 @@ export function SkillConfirmForm({
   const [error, setError] = useState<string | null>(null);
   const [savedOk, setSavedOk] = useState(false);
 
-  const dirty = hasChanges(saved, skills);
+  const years = parseYears(yearsText, savedYears != null);
+  // So theo giá trị, không theo chữ: gõ "1.5" khi đã lưu 1,5 không tính là thay đổi.
+  const profileDirty = !years.ok || years.value !== savedYears || cleanTitle(titleText) !== savedTitle;
+  const dirty = hasChanges(saved, skills) || profileDirty;
   const aliasesById = useMemo(() => new Map(taxonomy.map((t) => [t.id, t.aliases])), [taxonomy]);
 
   // Rời trang (đóng tab, tải lại) khi chưa lưu: trình duyệt hỏi lại.
@@ -80,6 +100,8 @@ export function SkillConfirmForm({
   }
 
   async function save() {
+    if (!years.ok) return;
+    const title = cleanTitle(titleText);
     setSaving(true);
     setError(null);
     setSavedOk(false);
@@ -87,8 +109,8 @@ export function SkillConfirmForm({
       .schema("api")
       .rpc("confirm_cv_profile", {
         p_cv_id: cvId,
-        p_years_exp: null, // null = giữ nguyên; S3-H03 thêm ô sửa số năm và chức danh
-        p_target_title: null,
+        p_years_exp: years.value, // null = giữ nguyên (chỉ khi CV chưa có số năm)
+        p_target_title: title, // chuỗi rỗng = xóa chức danh
         p_skills: confirmPayload(skills),
       });
     if (rpcError) {
@@ -100,6 +122,12 @@ export function SkillConfirmForm({
     setSaved(confirmed);
     setSkills(confirmed);
     setRemoved([]);
+    const newYears = years.value ?? savedYears;
+    setSavedYears(newYears);
+    setYearsText(formatYears(newYears));
+    setSavedTitle(title);
+    setTitleText(title);
+    setLastSaved("vừa xong");
     setSaving(false);
     setSavedOk(true);
     router.refresh();
@@ -111,10 +139,68 @@ export function SkillConfirmForm({
   const userAdded = byLevel("user_added");
   const strongShown = showAllStrong ? strong : strong.slice(0, STRONG_PREVIEW);
   const strongHidden = strong.slice(STRONG_PREVIEW);
-  const allConfirmed = skills.length > 0 && skills.every((s) => s.confirmed);
+  const confirmed = lastSaved != null;
+  const savedSummary = [
+    savedTitle || null,
+    savedYears != null ? `${formatYears(savedYears)} năm kinh nghiệm` : null,
+    `${skills.length} kỹ năng`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="grid gap-4">
+      <section aria-label="Thông tin chung" className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
+        <div className="grid content-start gap-1.5">
+          <label htmlFor={`${fieldId}-title`} className="text-sm font-medium">
+            Chức danh mong muốn
+          </label>
+          <Input
+            id={`${fieldId}-title`}
+            value={titleText}
+            maxLength={MAX_TITLE}
+            placeholder="Ví dụ: Backend Developer"
+            onChange={(e) => {
+              setTitleText(e.target.value);
+              setSavedOk(false);
+            }}
+            aria-describedby={`${fieldId}-title-hint`}
+          />
+          <p id={`${fieldId}-title-hint`} className="text-xs text-muted-foreground">
+            {initialTitle
+              ? "Gợi ý từ vị trí gần nhất trong CV, sửa được."
+              : "CV chưa ghi rõ vị trí, hãy nhập vị trí bạn muốn ứng tuyển."}
+          </p>
+        </div>
+        <div className="grid content-start gap-1.5">
+          <label htmlFor={`${fieldId}-years`} className="text-sm font-medium">
+            Tổng số năm kinh nghiệm
+          </label>
+          <div className="flex items-center gap-2">
+            <Input
+              id={`${fieldId}-years`}
+              inputMode="decimal"
+              value={yearsText}
+              placeholder="Ví dụ: 1,5"
+              className="w-24"
+              onChange={(e) => {
+                setYearsText(e.target.value);
+                setSavedOk(false);
+              }}
+              aria-invalid={!years.ok || undefined}
+              aria-describedby={`${fieldId}-years-hint`}
+            />
+            <span className="text-sm">năm</span>
+          </div>
+          <p
+            id={`${fieldId}-years-hint`}
+            className={cn("text-xs", years.ok ? "text-muted-foreground" : "text-destructive")}
+          >
+            {years.ok ? "Tính từ các mốc thời gian trong CV. Nhập 0 nếu chưa đi làm." : years.error}
+          </p>
+        </div>
+      </section>
+
       {skills.length === 0 && removed.length === 0 && (
         <Alert>
           <AlertTitle>Chưa thấy kỹ năng nào trong CV</AlertTitle>
@@ -209,7 +295,7 @@ export function SkillConfirmForm({
         <Alert>
           <CheckCircle2 aria-hidden />
           <AlertTitle>Đã lưu hồ sơ</AlertTitle>
-          <AlertDescription>Đã xác nhận {skills.length} kỹ năng. Tải lại trang vẫn thấy dữ liệu đã lưu.</AlertDescription>
+          <AlertDescription>{savedSummary}. Tải lại trang vẫn thấy dữ liệu đã lưu.</AlertDescription>
         </Alert>
       )}
 
@@ -224,9 +310,9 @@ export function SkillConfirmForm({
           ← Tải CV khác
         </Link>
         <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
-          {dirty ? "Chưa lưu thay đổi" : allConfirmed ? "Đã xác nhận" : ""}
+          {dirty ? "Chưa lưu thay đổi" : confirmed ? `Đã lưu ${lastSaved === "vừa xong" ? "vừa xong" : `lúc ${lastSaved}`}` : ""}
         </span>
-        <Button type="button" onClick={() => void save()} disabled={saving || (!dirty && allConfirmed)}>
+        <Button type="button" onClick={() => void save()} disabled={saving || !years.ok || (!dirty && confirmed)}>
           {saving && <LoaderCircle className="animate-spin" aria-hidden />}
           Lưu hồ sơ
         </Button>

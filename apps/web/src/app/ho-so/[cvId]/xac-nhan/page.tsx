@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Xác nhận hồ sơ CV" };
 
-// S3-H02 · US-12 · docs/ui/wireframe_cv.png (màn 3). Chỉ người tìm việc (proxy chặn vai trò khác).
+// S3-H02, S3-H03 · US-12 · docs/ui/wireframe_cv.png (màn 3). Chỉ người tìm việc (proxy chặn vai trò khác).
 // Đọc: api.v_my_cvs, api.v_my_cv_skills, api.v_skills; lưu: api.confirm_cv_profile (migration 0010).
 // RLS chỉ cho thấy CV của chính mình, nên cv_id của người khác ra 404.
 
@@ -27,6 +27,27 @@ type SkillRow = {
   confirmed: boolean;
 };
 type TaxonomyRow = { id: number; slug: string; name: string; aliases: string[] | null };
+type CvRow = {
+  id: string;
+  mime: string;
+  parse_status: string;
+  created_at: string;
+  original_name: string | null;
+  years_exp: number | string | null; // numeric của Postgres có thể về dạng chuỗi
+  target_title: string | null;
+  profile_confirmed_at: string | null;
+};
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
 
 export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]/xac-nhan">) {
   const { cvId } = await params;
@@ -37,16 +58,14 @@ export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]
   const api = (await createClient()).schema("api");
   const cv = await api
     .from("v_my_cvs")
-    .select("id, mime, parse_status, created_at, original_name")
+    .select("id, mime, parse_status, created_at, original_name, years_exp, target_title, profile_confirmed_at")
     .eq("id", cvId)
-    .maybeSingle<{ id: string; mime: string; parse_status: string; created_at: string; original_name: string | null }>();
+    .maybeSingle<CvRow>();
   if (cv.error) return <NotReady text="Chưa đọc được CV của bạn, hãy tải lại trang." />;
   if (!cv.data) notFound();
 
   const fileLabel = cv.data.original_name ?? `CV ${cv.data.mime.includes("pdf") ? "PDF" : "DOCX"}`;
-  const uploaded = `${fileLabel} · tải lúc ${new Date(
-    cv.data.created_at,
-  ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}`;
+  const uploaded = `${fileLabel} · tải lúc ${formatTime(cv.data.created_at)}`;
 
   if (cv.data.parse_status !== "parsed") {
     return (
@@ -100,7 +119,14 @@ export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]
     <PageShell title={TITLE}>
       <div className="grid max-w-3xl gap-4">
         <p className="text-sm text-muted-foreground">{uploaded}</p>
-        <SkillConfirmForm cvId={cvId} initialSkills={initialSkills} taxonomy={skillTaxonomy} />
+        <SkillConfirmForm
+          cvId={cvId}
+          initialSkills={initialSkills}
+          taxonomy={skillTaxonomy}
+          initialYears={cv.data.years_exp == null ? null : Number(cv.data.years_exp)}
+          initialTitle={cv.data.target_title}
+          confirmedLabel={cv.data.profile_confirmed_at ? formatTime(cv.data.profile_confirmed_at) : null}
+        />
       </div>
     </PageShell>
   );
