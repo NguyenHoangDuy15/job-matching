@@ -140,7 +140,8 @@ def load_file(path: Path, store, source: str, run_type: str = "backfill") -> Run
         store.finish_run(run_id, stats, status, error)
     print(
         f"KẾT QUẢ: {status} · mới {stats.items_new} · cập nhật {stats.items_updated}"
-        f" · không đổi {stats.items_seen - stats.items_new - stats.items_updated}"
+        f" · trùng tin có sẵn {stats.items_duplicate}"
+        f" · không đổi {stats.unchanged}"
         f" · bỏ qua {sum(stats.skipped.values())}"
     )
     return stats

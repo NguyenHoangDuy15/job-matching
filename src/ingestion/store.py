@@ -3,6 +3,8 @@
 Một tin = một transaction:
   raw.job_snapshots (bản gốc, không ghi đè) → core.companies → core.jobs
   → core.job_sources (nguồn gốc) → core.job_locations (tỉnh chuẩn, dùng location.py của S2-D01).
+Khử trùng chính xác (S3-T03, ingestion.dedup): tin nguồn trùng URL chuẩn hóa hoặc dedup hash
+với một tin chuẩn đang mở thì chỉ thêm dòng core.job_sources trỏ về tin đó, không tạo tin mới.
 Lương dùng salary.py của S2-D02; các cột salary_* mới chỉ ghi khi DB đã chạy
 db/migrations/0002_fx_rates.sql.
 """
@@ -16,6 +18,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
+from ingestion.dedup import canonical_url, dedup_hash
 from ingestion.fx import FxRate, FxSyncResult, load_latest_pg, sync_rates_pg
 from ingestion.location import ProvinceIndex, build_index, normalize_key, normalize_location
 from ingestion.models import JobPostingRaw
@@ -28,7 +31,8 @@ try:  # S2-D03 (PR #618): tách JD thành 4 section. Chưa có thì ghi toàn v�
 except ImportError:  # pragma: no cover - chỉ xảy ra trước khi #618 được merge
     split_text = None
 
-SaveResult = Literal["new", "updated", "unchanged"]
+# duplicate: tin nguồn mới nhưng trùng chính xác một tin chuẩn đang mở → chỉ gắn nguồn (S3-T03)
+SaveResult = Literal["new", "updated", "unchanged", "duplicate"]
 
 DATA_RAW = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -109,6 +113,9 @@ class JobRow:
     province_codes: tuple[int, ...]
     address_raw: str
     unmatched_locations: tuple[str, ...] = ()
+    # content_hash của riêng nguồn này (core.job_sources.last_content_hash): biết tin đổi chưa.
+    # columns["content_hash"] là dedup hash, so giữa các nguồn (ingestion.dedup).
+    source_hash: bytes = b""
 
 
 def build_job_row(
@@ -158,7 +165,12 @@ def build_job_row(
         "apply_url": posting.url,
         "status": "expired" if expired else "open",
         "close_reason": "expired" if expired else None,  # migration 0004
-        "content_hash": content_hash(posting),
+        "content_hash": dedup_hash(
+            posting.title,
+            company_name_norm(posting.company_name) if posting.company_name else None,
+            loc.province_codes,
+            posting.description_text,
+        ),
     }
     return JobRow(
         columns=columns,
@@ -166,6 +178,7 @@ def build_job_row(
         province_codes=loc.province_codes,
         address_raw=posting.location_text(),
         unmatched_locations=loc.unmatched,
+        source_hash=content_hash(posting),
     )
 
 
@@ -187,9 +200,14 @@ class RunStats:
     items_seen: int = 0
     items_new: int = 0
     items_updated: int = 0
+    items_duplicate: int = 0  # tin nguồn mới gắn vào tin chuẩn có sẵn (S3-T03)
     http_errors: int = 0
     items_closed: int = 0  # tin chuyển sang closed/expired trong lượt (S2-T06)
     skipped: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def unchanged(self) -> int:
+        return self.items_seen - self.items_new - self.items_updated - self.items_duplicate
 
     def skip(self, reason: str) -> None:
         self.skipped[reason] = self.skipped.get(reason, 0) + 1
@@ -200,6 +218,8 @@ class RunStats:
             self.items_new += 1
         elif result == "updated":
             self.items_updated += 1
+        elif result == "duplicate":
+            self.items_duplicate += 1
 
 
 class LocalStore:
@@ -266,6 +286,8 @@ class PgStore:
         self.salary_v2 = not missing
         # Migration 0004 (S2-T06): thiếu thì crawler vẫn chạy, chỉ không tự đóng tin.
         self.can_close = "close_reason" in self.columns and self._has_close_functions()
+        # Migration 0011 (S3-T03): thiếu thì vẫn ghi như cũ, chỉ không gộp tin trùng giữa nguồn.
+        self.can_dedup = "duplicate_of" in self.columns and self._has_url_norm()
         self.index = self._province_index()
         self.fx_rates = self._fx_rates() if self.salary_v2 else {}
         # Tin mới / đổi nội dung trong lượt này: bước ③ gắn kỹ năng sau crawl (S2-D06).
@@ -279,6 +301,14 @@ class PgStore:
         ).fetchall()
         self.conn.commit()
         return {r[0] for r in rows}
+
+    def _has_url_norm(self) -> bool:
+        found = self.conn.execute(
+            "select exists (select 1 from information_schema.columns where table_schema = 'core'"
+            " and table_name = 'job_sources' and column_name = 'url_norm')"
+        ).fetchone()[0]
+        self.conn.commit()
+        return found
 
     def _has_close_functions(self) -> bool:
         found = self.conn.execute(
@@ -373,7 +403,8 @@ class PgStore:
         from psycopg.types.json import Jsonb
 
         row = build_job_row(posting, self.index, self.fx_rates, posting.fetched_at.date())
-        digest = row.columns["content_hash"]
+        digest = row.source_hash
+        url_norm = canonical_url(posting.url)
         with self.conn.transaction():
             snapshot_id = self.conn.execute(
                 """insert into raw.job_snapshots
@@ -398,8 +429,22 @@ class PgStore:
                     where source_id = %s and source_job_id = %s""",
                 (self._source_id, posting.source_job_id),
             ).fetchone()
+            duplicate_of = None
+            if existing is None and self.can_dedup:
+                existing = self._match_url(url_norm)
+                if existing is None:
+                    duplicate_of = self._match_content(row.columns["content_hash"])
 
-            if existing and bytes(existing[1] or b"") == digest:
+            if duplicate_of is not None:
+                # Cùng tin đã có ở nguồn khác (hoặc mã tin khác): giữ nội dung tin chuẩn,
+                # chỉ ghi nhận còn thấy tin và gắn thêm nguồn.
+                job_id, result = duplicate_of, "duplicate"
+                self.conn.execute(
+                    """update core.jobs set last_seen_at = now(), missed_runs = 0
+                        where id = %s""",
+                    (job_id,),
+                )
+            elif existing and bytes(existing[1] or b"") == digest:
                 job_id, result = existing[0], "unchanged"
                 self.conn.execute(
                     """update core.jobs set last_seen_at = now(), missed_runs = 0
@@ -456,15 +501,48 @@ class PgStore:
                          last_content_hash = excluded.last_content_hash""",
                 (self._source_id, posting.source_job_id, job_id, posting.url, snapshot_id, digest),
             )
+            if self.can_dedup:
+                self.conn.execute(
+                    """update core.job_sources set url_norm = %s
+                        where source_id = %s and source_job_id = %s
+                          and url_norm is distinct from %s""",
+                    (url_norm, self._source_id, posting.source_job_id, url_norm),
+                )
             if self.can_close:
                 self.conn.execute(
                     """update core.job_sources set missed_runs = 0
                         where source_id = %s and source_job_id = %s and missed_runs <> 0""",
                     (self._source_id, posting.source_job_id),
                 )
-        if result != "unchanged":
+        if result in ("new", "updated"):
             self.changed_job_ids.append(job_id)
         return result
+
+    def _match_url(self, url_norm: str) -> tuple[int, bytes | None] | None:
+        """Tin nguồn khác mã nhưng cùng URL chuẩn hóa: coi là cùng một tin đăng."""
+        return self.conn.execute(
+            """select s.job_id, s.last_content_hash
+                 from core.job_sources s join core.jobs j on j.id = s.job_id
+                where s.url_norm = %s and j.duplicate_of is null
+                order by s.is_active desc, s.last_seen_at desc
+                limit 1""",
+            (url_norm,),
+        ).fetchone()
+
+    def _match_content(self, digest: bytes | None) -> int | None:
+        """Tin chuẩn ĐANG MỞ có cùng dedup hash. Tin đã đóng không gộp: đăng lại sau khi
+        đóng là một đợt tuyển mới."""
+        if digest is None:
+            return None
+        row = self.conn.execute(
+            """select id from core.jobs
+                where content_hash = %s and origin = 'crawled' and status = 'open'
+                  and duplicate_of is null
+                order by id
+                limit 1""",
+            (digest,),
+        ).fetchone()
+        return row[0] if row else None
 
     # ---- đóng tin hết hạn / bị gỡ (S2-T06, migration 0004) ------------------------
     def unseen_postings(self, run_id: int, limit: int) -> list[tuple[str, str]]:

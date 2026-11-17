@@ -177,6 +177,7 @@ def crawl_source(
         fetcher.close()
     _log(
         f"  KẾT QUẢ {cfg.name}: {status} · mới {stats.items_new} · cập nhật {stats.items_updated}"
+        f" · trùng tin có sẵn {stats.items_duplicate}"
         f" · đã đọc {stats.items_seen} · đóng {stats.items_closed}"
         f" · bỏ qua {stats.skipped or 0} · request {fetcher.requests}"
     )

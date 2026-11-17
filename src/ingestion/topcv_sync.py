@@ -94,10 +94,11 @@ def sync_pending(
     finally:
         store.finish_run(run_id, stats, status, error)
 
-    unchanged = stats.items_seen - stats.items_new - stats.items_updated
+    unchanged = stats.unchanged
     print(
         f"[SYNC] success · đã xét {stats.items_seen} · mới {stats.items_new} "
-        f"· cập nhật {stats.items_updated} · không đổi {unchanged}"
+        f"· cập nhật {stats.items_updated} · trùng tin có sẵn {stats.items_duplicate} "
+        f"· không đổi {unchanged}"
     )
     return stats
 
