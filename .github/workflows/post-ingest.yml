@@ -1,0 +1,60 @@
+# Lưới an toàn sau khi tin vào DB: ③ gắn kỹ năng + mức, ④ vector hóa cho MỌI tin đang mở còn
+# thiếu, không phụ thuộc tin đến từ nguồn / đường nạp nào (crawl.py, TopCV trên máy self-hosted,
+# nạp JSONL, sửa tay…). Các đường nạp đã tự chạy hai bước này; workflow này bắt phần sót, ví dụ
+# khi một lượt nạp lỗi giữa chừng hoặc từ điển / luật đổi phiên bản sau khi merge.
+# Chạy lại không tốn gì nếu không có việc: chỉ làm tin chưa gắn / gắn bằng bản cũ / thiếu vector.
+name: post-ingest
+
+on:
+  schedule:
+    # Mỗi 3 giờ, phút 40 (TopCV đồng bộ theo giờ trên máy self-hosted).
+    - cron: "40 */3 * * *"
+  push:
+    # Từ điển / luật / cách cắt đoạn đổi → gắn lại ngay sau merge, không chờ lịch.
+    branches: [main]
+    paths:
+      - config/skills.yaml
+      - src/skillkit/**
+      - src/embedding/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: post-ingest
+  cancel-in-progress: false
+
+jobs:
+  post-ingest:
+    if: github.repository == 'NguyenHoangDuy15/job-matching'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Cài thư viện (không cài nhóm dev)
+        run: uv sync --locked --no-dev
+
+      - name: Cache tokenizer bge-m3 (đếm token khi cắt đoạn, S3-D07)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-bge-m3-tokenizer
+
+      - name: Gắn kỹ năng + vector hóa tin đang mở còn thiếu
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Thiếu secret DATABASE_URL."
+            exit 1
+          fi
+          uv run --no-dev python scripts/postprocess.py
+          uv run --no-dev python scripts/label_skills.py --report

@@ -117,7 +117,9 @@ uv run python src\ingestion\topcv.py `
   --db C:\topcv-automation\state\topcv_jobs.db --report-only
 ```
 
-Chỉ sync Supabase, không vào TopCV:
+Chỉ sync Supabase, không vào TopCV. Sau khi sync, lệnh tự gắn kỹ năng + mức và vector hóa tin
+mới (giống `crawl.py`); thêm `--skip-skills` / `--skip-embed` để bỏ. Cần `CF_ACCOUNT_ID`,
+`CF_API_TOKEN` trong `.env` cho bước vector hóa, thiếu thì bước này tự bỏ qua:
 
 ```powershell
 uv run python scripts\sync_topcv_supabase.py `

@@ -92,8 +92,13 @@ uv run python scripts/crawl.py run --source itviec --max-jobs 50
 uv run python scripts/crawl.py run --source itviec --dry-run       # không ghi DB, ghi data/raw/crawl
 uv run python scripts/crawl.py probe --source vietnamworks         # kiểm cấu hình nguồn
 
-# Nạp file JSONL có sẵn
+# Nạp file JSONL có sẵn (cũng tự chạy ③ gắn kỹ năng + ④ vector hóa như crawl)
 uv run python scripts/load_jsonl.py <file.jsonl> --source topcv
+
+# ③ + ④ cho MỌI tin đang mở còn thiếu, bất kể tin vào từ nguồn nào (crawl, TopCV sync, JSONL…).
+# Từ điển config/skills.yaml đổi mà ref.skills chưa theo kịp thì tự nạp lại seed trước.
+# Workflow post-ingest chạy lệnh này mỗi 3 giờ và ngay sau khi merge thay đổi từ điển.
+uv run python scripts/postprocess.py [--skip-embed]
 
 # Bảo trì
 uv run python scripts/update_fx.py [--dry-run]       # cập nhật tỷ giá + tính lại lương tin ngoại tệ
