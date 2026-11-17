@@ -30,3 +30,16 @@ keyword:
     vao, ra, len, viec, cong, ty, the, and, or, of, to, in, for, with, on, at, by, an, is, are,
     be, as, from, our, your, you, we, will, can, etc
   ]
+
+# H = 100 × Σ wᵢ·điểmᵢ / Σ wᵢ, chỉ trên các thành phần XÁC ĐỊNH (S4-D03): JD không có kỹ năng → bỏ
+# M; JD không ghi số năm → bỏ X; trọng số còn lại chia lại cho đủ 1, không phạt JD viết sơ sài.
+weights: {K: 0.25, M: 0.35, E: 0.30, X: 0.10}
+
+# M · khớp kỹ năng (S4-D03): M = Σ r_s · f_s · b_s / Σ r_s trên kỹ năng bắt buộc / ưu tiên của JD.
+skill:
+  req_weight: {required: 2.0, preferred: 1.0}  # kỹ năng "chỉ nhắc" (mentioned) không tính
+  evidence: {strong: 1.0, listed: 0.7, user_added: 0.7}  # b_s theo bằng chứng trong CV
+  # f_s theo cây kỹ năng: CV có đúng kỹ năng = 1. Có kỹ năng con (JD Java, CV Spring Boot) = 1.
+  # Chỉ có kỹ năng cha (JD Spring Boot, CV Java) = 0,5. Kỹ năng anh em cùng cha cấp 2
+  # (JD Spring Boot, CV Spring MVC) = 0,3. Cùng nhóm cấp 1 (Java với Python) KHÔNG tính.
+  tree: {exact: 1.0, child: 1.0, parent_only: 0.5, sibling: 0.3}
