@@ -489,6 +489,138 @@ insert into results select 'failed parse records error code', parse_status || '|
   from app.cvs where id = current_setting('test.cv_a')::uuid;
 reset role;
 
+-- Test nhóm 5b (S3-H02, S3-H03, migration 0010): xác nhận kỹ năng, sửa số năm / chức danh
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+do $$
+declare v_state text;
+begin
+  perform api.confirm_cv_profile(current_setting('test.cv_a')::uuid, 1, 'x', '[]');
+  insert into results values ('confirm refused while cv is parsing', 'saved', '55000');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('confirm refused while cv is parsing', v_state, '55000');
+end $$;
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer',
+  '[{"skill_id":"python","evidence_level":"strong","evidence":"ETL bằng Python","years":2},
+    {"skill_id":"sql","evidence_level":"listed","evidence":"SQL"}]', 'test');
+insert into results select 'v_my_cv_skills lists own cv skills with names',
+  string_agg(slug || ':' || name || ':' || evidence_level || ':' || confirmed, ',' order by slug),
+  'docker:Docker:user_added:true,python:Python:strong:false,sql:SQL:listed:false'
+  from api.v_my_cv_skills where cv_id = current_setting('test.cv_a')::uuid;
+-- Giữ python + docker, tự thêm java, bỏ sql; số năm làm tròn 1 chữ số, chức danh bỏ khoảng trắng
+insert into results select 'confirm returns skill count',
+  api.confirm_cv_profile(current_setting('test.cv_a')::uuid, 3.25, '  Data Engineer  ',
+    jsonb_build_array(
+      jsonb_build_object('skill_id', (select id from ref.skills where slug = 'python')),
+      jsonb_build_object('skill_id', (select id from ref.skills where slug = 'docker')),
+      jsonb_build_object('skill_id', (select id from ref.skills where slug = 'java')),
+      jsonb_build_object('skill_id', (select id from ref.skills where slug = 'java'))))::text,
+  '3';
+insert into results select 'confirm keeps, adds user_added, removes dropped',
+  string_agg(slug || ':' || evidence_level || ':' || confirmed, ',' order by slug),
+  'docker:user_added:true,java:user_added:true,python:strong:true'
+  from api.v_my_cv_skills where cv_id = current_setting('test.cv_a')::uuid;
+insert into results select 'confirm saves years, title, confirmed time',
+  years_exp::text || '|' || target_title || '|' || (profile_confirmed_at is not null)::text, '3.3|Data Engineer|true'
+  from api.v_my_cvs where id = current_setting('test.cv_a')::uuid;
+-- null = giữ nguyên số năm và chức danh
+select api.confirm_cv_profile(current_setting('test.cv_a')::uuid, null, null,
+  (select jsonb_agg(jsonb_build_object('skill_id', skill_id)) from api.v_my_cv_skills
+    where cv_id = current_setting('test.cv_a')::uuid));
+insert into results select 'confirm with null years/title keeps them', years_exp::text || '|' || target_title, '3.3|Data Engineer'
+  from api.v_my_cvs where id = current_setting('test.cv_a')::uuid;
+-- Đọc lại CV: dòng đã xác nhận giữ nguyên, kỹ năng đã bỏ (sql) được máy gợi ý lại
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer',
+  '[{"skill_id":"python","evidence_level":"listed","evidence":"Python"},
+    {"skill_id":"sql","evidence_level":"listed","evidence":"SQL"}]', 'test');
+insert into results select 're-parse keeps confirmed skills',
+  string_agg(slug || ':' || evidence_level || ':' || confirmed, ',' order by slug),
+  'docker:user_added:true,java:user_added:true,python:strong:true,sql:listed:false'
+  from api.v_my_cv_skills where cv_id = current_setting('test.cv_a')::uuid;
+insert into results select 're-parse keeps confirmed years/title', years_exp::text || '|' || target_title, '3.3|Data Engineer'
+  from api.v_my_cvs where id = current_setting('test.cv_a')::uuid;
+do $$
+declare
+  v_state text;
+  v_case  record;
+begin
+  for v_case in
+    select * from (values
+      ('confirm rejects years > 60',      70::numeric, '[]'::jsonb),
+      ('confirm rejects non-array skills', 1::numeric, '{"skill_id": 1}'::jsonb),
+      ('confirm rejects slug as skill_id', 1::numeric, '[{"skill_id": "python"}]'::jsonb),
+      ('confirm rejects missing skill_id', 1::numeric, '[{"id": 1}]'::jsonb),
+      ('confirm rejects unknown skill',    1::numeric, '[{"skill_id": 999999999}]'::jsonb)
+    ) t(name, years, skills)
+  loop
+    begin
+      perform api.confirm_cv_profile(current_setting('test.cv_a')::uuid, v_case.years, null, v_case.skills);
+      insert into results values (v_case.name, 'saved', '22023');
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, '22023');
+    end;
+  end loop;
+end $$;
+insert into results select 'rejected confirm changes nothing', count(*)::text || '|' || max(years_exp)::text, '4|3.3'
+  from api.v_my_cv_skills s join api.v_my_cvs c on c.id = s.cv_id
+ where s.cv_id = current_setting('test.cv_a')::uuid;
+-- Từ điển cho ô gợi ý: gõ alias "reactjs" ra React; chỉ kỹ năng đang dùng
+insert into results select 'v_skills finds React by alias reactjs', string_agg(name, ','), 'React'
+  from api.v_skills where 'reactjs' = any (aliases);
+insert into results select 'v_skills only active skills',
+  ((select count(*) from api.v_skills) = (select count(*) from ref.skills where is_active))::text, 'true';
+reset role;
+
+-- Seeker B không xem / xác nhận được kỹ năng CV của A
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'seekerB cannot read A cv skills via view', count(*)::text, '0'
+  from api.v_my_cv_skills where cv_id = current_setting('test.cv_a')::uuid;
+do $$
+declare v_state text;
+begin
+  perform api.confirm_cv_profile(current_setting('test.cv_a')::uuid, 1, 'x', '[]');
+  insert into results values ('seekerB cannot confirm A cv', 'saved', 'P0002');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('seekerB cannot confirm A cv', v_state, 'P0002');
+end $$;
+reset role;
+insert into results select 'A skills intact after B confirm attempt', count(*)::text, '4'
+  from app.cv_skills where cv_id = current_setting('test.cv_a')::uuid;
+
+-- Tối đa 5 CV / người tìm việc; register_cv lưu tên tệp gốc (chỉ phần tên, bỏ thư mục)
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000010', 'seeker3@x.vn', '{"full_name":"Vũ Ứng Viên C"}'::jsonb);
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000010","user_role":"seeker","account_status":"active"}';
+select api.register_cv('c3000000-0000-0000-0000-000000000001',
+                       'u/00000000-0000-0000-0000-000000000010/c3000000-0000-0000-0000-000000000001.pdf',
+                       repeat('d1', 32), 'application/pdf', 1000, 'cv-2026-11', E'C:\\Users\\vu\\CV Vũ C\t.pdf');
+insert into results select 'register_cv stores original file name only', original_name, 'CV Vũ C.pdf'
+  from api.v_my_cvs where id = 'c3000000-0000-0000-0000-000000000001';
+select api.register_cv(('c3000000-0000-0000-0000-00000000000' || i)::uuid,
+                       'u/00000000-0000-0000-0000-000000000010/c3000000-0000-0000-0000-00000000000' || i || '.pdf',
+                       repeat('d' || i, 32), 'application/pdf', 1000, 'cv-2026-11')
+  from generate_series(2, 5) i;
+do $$
+declare v_state text;
+begin
+  perform api.register_cv('c3000000-0000-0000-0000-000000000006',
+                          'u/00000000-0000-0000-0000-000000000010/c3000000-0000-0000-0000-000000000006.pdf',
+                          repeat('d6', 32), 'application/pdf', 1000, 'cv-2026-11');
+  insert into results values ('register_cv rejects 6th cv', 'accepted', '53400');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('register_cv rejects 6th cv', v_state, '53400');
+end $$;
+insert into results select 'seeker keeps 5 cvs', count(*)::text, '5' from api.v_my_cvs;
+reset role;
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
