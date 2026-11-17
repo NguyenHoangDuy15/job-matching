@@ -5,7 +5,7 @@ gán kỹ năng + mức bằng chứng, ghi `app.cvs` / `app.cv_skills` → tr�
 (S3-H02).
 
 ```
-Trình duyệt ──(JWT người dùng)──► API (Hugging Face Space, Docker)
+Trình duyệt ──(JWT người dùng)──► API (Render, Docker image từ GHCR)
                                     ├─ xác thực JWT ES256 qua JWKS của Supabase
                                     ├─ api.claim_cv_parse      ┐
                                     ├─ tải file từ Storage      │ đều bằng JWT người dùng:
@@ -16,12 +16,18 @@ Trình duyệt ──(JWT người dùng)──► API (Hugging Face Space, Dock
 **API không giữ khóa bí mật nào**: không có `service_role`, không có mật khẩu DB. Biến môi trường
 chỉ gồm thông tin công khai.
 
-## Vì sao Hugging Face Spaces, không phải Cloud Run
+## Chạy ở đâu: Render (miễn phí)
 
-Backlog ghi Cloud Run, nhưng Cloud Run bắt buộc project GCP gắn thẻ thanh toán (lý do pipeline
-crawl đã chuyển sang GitHub Actions, xem `crawl-job.md`). GitHub Actions không chạy được dịch vụ
-web thường trực. Hugging Face Spaces (Docker) miễn phí, không cần thẻ, 2 vCPU / 16 GB RAM, chỉ ngủ
-sau 48 giờ không có request (workflow `cv-api-keepwarm` ping 12 giờ một lần).
+| Nơi | Vì sao không / có |
+|---|---|
+| Cloud Run (backlog) | Bắt buộc project GCP gắn thẻ thanh toán (lý do pipeline crawl chuyển sang GitHub Actions, xem `crawl-job.md`) |
+| Hugging Face Spaces | Từ 7/2026 tài khoản miễn phí **không tạo được Docker Space** nữa (chỉ còn Static) |
+| GitHub Actions | Không chạy được dịch vụ web thường trực |
+| **Render, gói Free** | Chạy thẳng image GHCR có sẵn, 512 MB RAM / 0,1 CPU, 750 giờ/tháng (đủ chạy liên tục 1 dịch vụ), ngủ sau 15 phút không có request |
+
+Đo trên máy dev (11/2026): API sau khi nạp mô hình dùng ~260 MB RAM; một CV mẫu tốn tối đa 0,35 giây
+CPU → ở 0,1 CPU cỡ 3–4 giây, dưới mức 15 giây của US-12. Khởi động lạnh (nạp spaCy/Presidio) ở 0,1 CPU
+mất vài phút, nên workflow `cv-api-keepwarm` ping `/health` 10 phút một lần để dịch vụ không ngủ.
 
 Image giữ **tương thích Cloud Run** (cổng lấy từ `$PORT`, không ghi đĩa). Khi có thẻ:
 
@@ -31,22 +37,28 @@ gcloud run deploy cv-api --image ghcr.io/nguyenhoangduy15/job-matching-api:lates
   --set-env-vars SUPABASE_URL=...,SUPABASE_PUBLISHABLE_KEY=...,CORS_ORIGINS=...
 ```
 
+Render có khi đòi thêm thẻ để "xác minh tài khoản" dù chọn gói Free; gói Free không bị trừ tiền.
+Không ai có thẻ thì: chạy image trên máy trong nhóm + Cloudflare Tunnel để demo (URL đổi mỗi lần
+chạy lại). Koyeb (đã về Mistral từ 2/2026) và Fly.io đều bắt buộc thẻ; Back4App Free chỉ 256 MB RAM,
+không đủ cho API (~260 MB khi rảnh).
+
 ## Cài đặt (một lần)
 
 | # | Việc | Ai |
 |---|---|---|
-| 1 | Áp `db/migrations/0009_cv_parse.sql` lên Supabase (SQL Editor, hoặc `psql "$DATABASE_URL" -f ...`) | Tùng |
+| 1 | Áp `db/migrations/0009_cv_parse.sql` rồi `0010_cv_profile_confirm.sql` lên Supabase (SQL Editor). Chạy lại 0010 nếu lỡ chạy 0009 sau nó | Tùng |
 | 2 | Merge PR lên `main` → workflow `cv-api-image` build image `ghcr.io/nguyenhoangduy15/job-matching-api` | tự động |
-| 3 | GitHub → trang cá nhân → Packages → `job-matching-api` → Package settings → **Change visibility: Public** (để Space kéo được image) | Duy (chủ repo) |
-| 4 | Tạo tài khoản Hugging Face → **New Space** → SDK **Docker** → Blank → **Public**. Đặt tên `jobmatch-cv-api` | Tùng |
-| 5 | Đưa 2 file trong `deploy/hf-space/` (`Dockerfile`, `README.md`) vào repo của Space (Files → Add file → Upload) | Tùng |
-| 6 | Space → Settings → **Variables** (không phải Secrets, đều là giá trị công khai): `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` = domain web + `http://localhost:3000`, cách nhau dấu phẩy | Tùng |
-| 7 | Space build xong: mở `https://<tài-khoản>-jobmatch-cv-api.hf.space/health`, phải thấy `{"status":"ok","warm":true}` | Tùng |
-| 8 | GitHub repo → Settings → Secrets and variables → Actions: secret `HF_TOKEN` (HF → Settings → Access Tokens, quyền **Write**); variables `HF_SPACE` = `<tài-khoản>/jobmatch-cv-api`, `CV_API_URL` = URL ở bước 7 | Tùng / Duy |
-| 9 | Web: biến `NEXT_PUBLIC_CV_API_URL` = URL ở bước 7 (Cloudflare + `.env.local`) | Thịnh |
+| 3 | GitHub → trang cá nhân → Packages → `job-matching-api` → Package settings → **Change visibility: Public** (để Render kéo được image không cần đăng nhập) | Duy (chủ repo) |
+| 4 | render.com → đăng nhập bằng GitHub → **New → Web Service → Existing Image** → `ghcr.io/nguyenhoangduy15/job-matching-api:latest` | Tùng |
+| 5 | Name `jobmatch-cv-api`, Region **Singapore**, Instance type **Free**. Environment Variables (đều là giá trị công khai): `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` = domain web + `http://localhost:3000`, cách nhau dấu phẩy. Advanced → Health Check Path `/health` | Tùng |
+| 6 | Deploy xong: mở `https://jobmatch-cv-api.onrender.com/health` (tên có thể thêm hậu tố nếu trùng), phải thấy `{"status":"ok","warm":true}` (lần đầu đợi vài phút) | Tùng |
+| 7 | Render → service → Settings → **Deploy Hook** → copy URL | Tùng |
+| 8 | GitHub repo → Settings → Secrets and variables → Actions: secret `RENDER_DEPLOY_HOOK` = URL bước 7; variable `CV_API_URL` = URL bước 6 (không có `/health`) | Tùng / Duy |
+| 9 | Web: biến `NEXT_PUBLIC_CV_API_URL` = URL ở bước 6 (Cloudflare + `.env.local`) | Thịnh |
 
-Biến môi trường khác (mặc định đã ổn): `PARSE_WORKERS` (1), `PARSE_TIMEOUT_S` (10),
-`RATE_LIMIT_PER_MINUTE` (10).
+Render tự đặt `$PORT`; image đọc biến này nên không cần cấu hình cổng. Biến môi trường khác (mặc
+định đã ổn): `PARSE_WORKERS` (1), `PARSE_TIMEOUT_S` (10), `RATE_LIMIT_PER_MINUTE` (10).
+Không đặt `PARSE_WORKERS` > 1 trên gói Free: mỗi tiến trình đọc tốn ~190 MB RAM.
 
 ## Gọi từ web (S3-H01 / S3-H02)
 
@@ -95,7 +107,7 @@ Phản hồi thành công:
 ## Kiểm tra sau khi triển khai
 
 ```bash
-API_URL=https://<tài-khoản>-jobmatch-cv-api.hf.space CV_TOKEN=<JWT tài khoản thử> \
+API_URL=https://jobmatch-cv-api.onrender.com CV_TOKEN=<JWT tài khoản thử> \
   uv run python scripts/bench_cv_api.py url <cv_id_1> <cv_id_2> ...
 ```
 

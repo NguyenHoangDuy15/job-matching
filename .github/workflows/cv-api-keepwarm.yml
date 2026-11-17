@@ -1,16 +1,19 @@
-# Hugging Face Space miễn phí ngủ sau 48 giờ không có request; dậy mất 1–2 phút (vượt 15 giây của
-# US-12). Ping /health mỗi ngày để API luôn thức. Cần biến CV_API_URL (Settings → Variables).
+# Render miễn phí cho dịch vụ ngủ sau 15 phút không có request; dậy lại mất cỡ 1 phút, vượt 15 giây
+# của US-12. Ping /health mỗi 10 phút để API luôn thức (750 giờ miễn phí/tháng đủ chạy liên tục).
+# Lịch của GitHub Actions có thể trễ vài phút; cần chắc hơn thì đặt thêm cron-job.org ping cùng URL.
+# Cần biến CV_API_URL (Settings → Variables). Hướng dẫn: docs/deploy/cv-api.md.
 name: cv-api-keepwarm
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
   ping:
     if: ${{ vars.CV_API_URL != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Ping /health
-        run: curl -fsS --retry 5 --retry-delay 30 --max-time 180 "${{ vars.CV_API_URL }}/health"
+        run: curl -fsS --retry 5 --retry-delay 20 --max-time 120 "${{ vars.CV_API_URL }}/health"
