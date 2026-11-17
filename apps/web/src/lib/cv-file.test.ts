@@ -66,6 +66,7 @@ test("dịch lỗi api.register_cv và Storage", () => {
     "Chưa lưu được CV, hãy thử lại.",
   );
   assert.match(registerErrorMessage({ code: "42501" }), /hết hạn/);
+  assert.match(registerErrorMessage({ code: "53400" }), /đã có 5 CV/);
   assert.equal(uploadErrorMessage(413), "Tệp quá lớn (tối đa 5 MB).");
   assert.match(uploadErrorMessage(0), /Mất kết nối/);
 });

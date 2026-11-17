@@ -32,12 +32,15 @@ src/
     viec-lam/            tìm việc + bộ lọc trên URL, 20 tin/trang, skeleton (US-03, US-05)
     viec-lam/[id]/       chi tiết tin: kỹ năng, mô tả/yêu cầu/quyền lợi (US-06, api.v_job_detail)
     ho-so/tai-cv/        tải CV: kéo thả, kiểm định dạng/dung lượng, đồng ý, tiến trình (US-11)
+    ho-so/[cvId]/xac-nhan/  xác nhận kỹ năng theo mức bằng chứng, thêm/xóa kỹ năng (US-12)
     actions/auth.ts      Server Action: đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu, đăng xuất
   components/jobs/       ô tìm kiếm, cột bộ lọc, thẻ việc, phân trang
-  components/cv/         form tải CV (Storage cvs + rpc api.register_cv của S3-T02)
+  components/cv/         form tải CV (Storage cvs + rpc api.register_cv của S3-T02), form xác nhận kỹ năng
   lib/
     cv-file.ts           kiểm tệp CV trước khi tải (đuôi, 5 MB, byte đầu tệp; unit test: npm test)
     cv-upload.ts         tải CV thẳng lên Storage có % tiến trình
+    cv-parse.ts          gọi API đọc CV POST /cv/parse (NEXT_PUBLIC_CV_API_URL)
+    cv-profile.ts        hồ sơ kỹ năng: gợi ý từ từ điển, in đậm câu trích, lỗi (unit test)
     jobs/                đọc/ghi bộ lọc URL, gọi rpc api.search_jobs, định dạng lương/ngày/nguồn
     auth-rules.ts        bảng route × vai trò, đọc claim JWT (user_role, account_status, org_id)
     auth.ts              getSession(), requireAccess() — kiểm quyền lần 2 trong trang
