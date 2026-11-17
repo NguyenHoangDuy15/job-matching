@@ -163,3 +163,30 @@ def test_e_for_2000_jobs_within_500ms():
     per_call_ms = (time.perf_counter() - t) * 1000 / 10
     assert len(r.e) == 2000
     assert per_call_ms <= 500, per_call_ms
+
+
+def test_register_halfvec_falls_back_to_extensions_schema(monkeypatch):
+    """matcher_ro (0012) không có schema `extensions` trong search_path: tìm tên đầy đủ."""
+    import pgvector.psycopg.halfvec as hv
+    from psycopg.types import TypeInfo
+
+    from ranking import semantic
+
+    asked, registered = [], []
+
+    class Conn:
+        def rollback(self):
+            pass
+
+    def fetch(conn, name):
+        asked.append(name)
+        return "info" if name == "extensions.halfvec" else None
+
+    monkeypatch.setattr(TypeInfo, "fetch", staticmethod(fetch))
+    monkeypatch.setattr(hv, "register_halfvec_info", lambda conn, info: registered.append(info))
+    semantic.register_halfvec(Conn())
+    assert asked == ["halfvec", "extensions.halfvec"] and registered == ["info"]
+
+    monkeypatch.setattr(TypeInfo, "fetch", staticmethod(lambda conn, name: None))
+    with pytest.raises(RuntimeError):
+        semantic.register_halfvec(Conn())
