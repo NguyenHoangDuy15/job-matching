@@ -8,6 +8,8 @@ Luồng: trang danh sách → link tin → trang chi tiết → JSON-LD JobPosti
     uv run python scripts/crawl.py run --source itviec --source vietnamworks --max-jobs 150
     uv run python scripts/crawl.py parse duong/dan/trang.html --source itviec
 
+Sau crawl (S3-T04): gộp tin gần trùng giữa các nguồn, cặp chưa chắc vào hàng chờ admin
+                  (bỏ bằng --skip-dedup).
 Sau crawl (S2-D06): ③ gắn kỹ năng + mức cho tin mới/đổi (bỏ bằng --skip-skills).
                   ④ (S3-D07) vector hóa tin mới/đổi + tin đang mở còn thiếu (bỏ bằng --skip-embed;
                   tự bỏ qua khi chưa cấu hình EMBEDDER / CF_API_TOKEN).
@@ -182,6 +184,32 @@ def crawl_source(
         f" · bỏ qua {stats.skipped or 0} · request {fetcher.requests}"
     )
     return stats, status
+
+
+def near_dedup_after_crawl(store: PgStore) -> bool:
+    """Sau crawl, trước gắn kỹ năng (S3-T04): gộp tin gần trùng ≥ 0,85 (đủ chắc), đưa cặp
+    0,70–0,85 vào core.dedup_candidates. Chạy trước bước ③ để không gắn kỹ năng cho tin vừa bị gộp.
+    Lỗi ở bước này không làm mất dữ liệu đã crawl.
+    """
+    from ingestion.dedup_pg import run_near_dedup
+
+    if not store.can_dedup:
+        _log("! DB chưa chạy 0011_exact_dedup.sql: bỏ qua bước gộp tin gần trùng.")
+        return True
+    conn = store.conn
+    try:
+        with conn.transaction():
+            report = run_near_dedup(conn)
+    except Exception as exc:  # không để bước phụ làm hỏng lượt crawl
+        conn.rollback()
+        _log(f"  ✗ gộp tin gần trùng lỗi: {exc!r}")
+        return False
+    _log(
+        f"== gần trùng ==\n"
+        f"  so {report.compared} tin mở · gộp {report.merged} · vào hàng chờ {report.queued} · "
+        f"admin đã bác {report.skipped_distinct} · dọn {report.stale_removed} cặp chờ đã đóng"
+    )
+    return True
 
 
 def label_skills_after_crawl(store: PgStore) -> bool:
@@ -365,6 +393,9 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument(
         "--skip-fx", action="store_true", help="không cập nhật tỷ giá trước khi crawl"
     )
+    p_run.add_argument(
+        "--skip-dedup", action="store_true", help="không gộp tin gần trùng sau khi crawl"
+    )
     p_run.add_argument("--skip-skills", action="store_true", help="không gắn kỹ năng sau khi crawl")
     p_run.add_argument("--skip-embed", action="store_true", help="không vector hóa sau khi crawl")
 
@@ -423,6 +454,8 @@ def main(argv: list[str] | None = None) -> int:
                 status = "failed"
             if status == "failed":
                 exit_code = 1
+        if isinstance(store, PgStore) and not args.skip_dedup and not near_dedup_after_crawl(store):
+            exit_code = 1
         skills_ok = (
             not isinstance(store, PgStore) or args.skip_skills or label_skills_after_crawl(store)
         )
