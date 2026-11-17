@@ -4,7 +4,7 @@
     uv run python scripts/dedup_near.py --apply    # ghi thật
 
 Chỉ so tin đang mở cùng công ty, có chung tỉnh. Độ giống = Jaccard cụm 3 từ của chức danh + mô tả:
-  ≥ 0,85 và chức danh gần như trùng, mô tả đủ dài → gộp (core.merge_jobs, giữ tin id nhỏ)
+  ≥ 0,85 và chức danh trùng hẳn, mô tả đủ dài    → gộp (core.merge_jobs, giữ tin id nhỏ)
   0,70–0,85 hoặc chưa đủ chắc                     → core.dedup_candidates chờ admin duyệt
 Crawl hằng ngày đã tự chạy bước này (scripts/crawl.py run, bỏ bằng --skip-dedup).
 Nên chạy scripts/dedup_exact.py --apply trước một lần cho dữ liệu cũ.

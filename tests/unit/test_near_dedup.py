@@ -47,6 +47,7 @@ def test_decide_thresholds():
     assert decide(0.69, 1.0, 100) is None
     # giống ≥ 0,85 nhưng khác chức danh hoặc quá ngắn: chưa đủ chắc → hàng chờ
     assert decide(0.95, 0.5, 100) == "review"
+    assert decide(0.95, 0.89, 100) == "review"
     assert decide(0.95, 1.0, 10) == "review"
 
 
@@ -75,6 +76,18 @@ def test_tiny_edit_is_merged():
 def test_same_template_other_level_is_not_auto_merged():
     pairs = find_near_duplicates([_doc(1), _doc(2, title="Senior Data Engineer Team Lead")])
     assert [p.decision for p in pairs] == ["review"]
+
+
+def test_one_word_title_difference_is_not_auto_merged():
+    # Dữ liệu thật (TopCV): khác đúng một từ nhưng là hai vị trí khác nhau
+    pairs = find_near_duplicates(
+        [
+            _doc(1, title="Kỹ Thuật Thiết Kế Cơ Khí- Có Kinh Nghiệm"),
+            _doc(2, title="Kỹ Thuật Thiết Kế Cơ Khí - Không Kinh Nghiệm"),
+        ]
+    )
+    assert [p.decision for p in pairs] == ["review"]
+    assert 0.8 < pairs[0].title_similarity < 1.0
 
 
 def test_other_company_or_province_never_compared():

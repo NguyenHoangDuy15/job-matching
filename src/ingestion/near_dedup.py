@@ -7,12 +7,15 @@ thành cụm 3 từ liên tiếp (shingle).
   1. MinHash + LSH (datasketch) tìm nhanh các cặp có thể giống nhau ≥ 0,70
   2. Tính độ giống CHÍNH XÁC = Jaccard của hai tập shingle (MinHash chỉ là ước lượng)
   3. Quyết định:
-     ≥ 0,85 và chức danh gần như trùng và đủ dài   → gộp tự động (core.merge_jobs)
+     ≥ 0,85 và chức danh trùng hẳn và đủ dài        → gộp tự động (core.merge_jobs)
      0,70–0,85, hoặc ≥ 0,85 nhưng chưa đủ chắc     → hàng chờ core.dedup_candidates cho admin
      < 0,70                                         → bỏ qua
 
 Hai tin cùng mẫu mô tả của một công ty nhưng khác cấp bậc ("Java Developer" và "Senior Java
-Developer") có thể giống nhau > 0,85; vì vậy gộp tự động còn đòi chức danh giống nhau.
+Developer") có thể giống nhau > 0,85; vì vậy gộp tự động còn đòi chức danh TRÙNG HẲN sau chuẩn
+hóa. Không dùng ngưỡng "gần giống" cho chức danh: một từ có thể đổi nghĩa cả tin, và sau khi bỏ
+dấu "Có" với "Cơ" còn trùng nhau ("Cơ Khí - Có Kinh Nghiệm" / "Cơ Khí - Không Kinh Nghiệm" giống
+nhau 0,89 theo từ). Chức danh khác nhau dù ít thì vào hàng chờ cho admin.
 """
 
 from collections.abc import Iterable, Sequence
@@ -26,7 +29,7 @@ from ingestion.location import normalize_key
 
 MERGE_THRESHOLD = 0.85
 REVIEW_THRESHOLD = 0.70
-TITLE_MERGE_THRESHOLD = 0.8  # Jaccard theo từ của chức danh, để gộp tự động
+TITLE_MERGE_THRESHOLD = 1.0  # chức danh phải trùng hẳn (sau chuẩn hóa) mới gộp tự động
 MIN_TOKENS_TO_MERGE = 30  # văn bản ngắn hơn: giống nhau là chuyện thường, chỉ đưa vào hàng chờ
 SHINGLE_WORDS = 3
 NUM_PERM = 128
