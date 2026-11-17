@@ -71,10 +71,11 @@ export function formatBytes(bytes: number): string {
 /**
  * Lỗi của api.register_cv (migration 0008, S3-T02) sang câu cho người dùng.
  * 23505: trùng tệp (unique cvs_dedup_file_idx). 23514: thiếu consent hoặc điều khoản đã đổi
- * (thông báo tiếng Việt từ DB). 42501: hết phiên.
+ * (thông báo tiếng Việt từ DB). 42501: hết phiên. 53400: đã đủ 5 CV (trigger của migration 0010).
  */
 export function registerErrorMessage(err: { code?: string; message?: string }): string {
   if (err.code === "23505") return "CV này bạn đã tải trước đó.";
+  if (err.code === "53400") return "Bạn đã có 5 CV. Hãy xóa bớt một CV rồi tải lại.";
   if (err.code === "42501") return "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử lại.";
   if (err.code === "23514" && err.message && /điều khoản/i.test(err.message)) return err.message;
   return "Chưa lưu được CV, hãy thử lại.";

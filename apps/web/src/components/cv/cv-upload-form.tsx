@@ -2,10 +2,12 @@
 
 import { CheckCircle2, Circle, FileText, LoaderCircle, UploadCloud, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { CV_BUCKET, cvStoragePath, sha256Hex } from "@/lib/cv";
+import { isCvApiConfigured, parseCv } from "@/lib/cv-parse";
 import { checkCvFile, CV_ACCEPT, formatBytes, MAX_CVS, registerErrorMessage, type CvKind } from "@/lib/cv-file";
 import { fileHead, uploadToStorage, UploadError } from "@/lib/cv-upload";
 import { createClient } from "@/lib/supabase/client";
@@ -13,19 +15,21 @@ import { cn } from "@/lib/utils";
 
 // S3-H01 · US-11 · docs/ui/wireframe_cv.png (màn 1, 2).
 // Thứ tự: kiểm tệp trên trình duyệt → tải lên Storage (có %) → api.register_cv của S3-T02
-// (ghi app.cvs + consent theo phiên bản điều khoản). Lưu lỗi thì gỡ tệp vừa tải lên.
+// (ghi app.cvs + consent theo phiên bản điều khoản) → POST /cv/parse của S3-D05 → màn xác nhận
+// /ho-so/{cv_id}/xac-nhan (S3-H02). Lưu lỗi thì gỡ tệp vừa tải lên; đọc lỗi thì CV vẫn được giữ.
 
 export type CvTerms = { version: string; summary: string | null };
 
 type Picked = { file: File; kind: CvKind; mime: string };
-type Phase = "idle" | "hashing" | "uploading" | "saving" | "done";
+type Phase = "idle" | "hashing" | "uploading" | "saving" | "parsing" | "done";
 
 const STEPS: { phase: Exclude<Phase, "idle" | "done">; label: string }[] = [
   { phase: "hashing", label: "Kiểm tra tệp" },
   { phase: "uploading", label: "Tải lên" },
   { phase: "saving", label: "Lưu CV" },
+  { phase: "parsing", label: "Phân tích kỹ năng" },
 ];
-const ORDER: Phase[] = ["idle", "hashing", "uploading", "saving", "done"];
+const ORDER: Phase[] = ["idle", "hashing", "uploading", "saving", "parsing", "done"];
 
 export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCount: number; terms: CvTerms }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,9 +41,12 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [count, setCount] = useState(cvCount);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const router = useRouter();
 
   const full = count >= MAX_CVS;
-  const busy = phase === "hashing" || phase === "uploading" || phase === "saving";
+  const busy = phase === "hashing" || phase === "uploading" || phase === "saving" || phase === "parsing";
   const canSubmit = !!picked && consent && !busy && !full && phase !== "done";
 
   async function pick(file: File | undefined) {
@@ -62,6 +69,8 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
     setPicked(null);
     setFileError(null);
     setError(null);
+    setSavedId(null);
+    setParseError(null);
     setPhase("idle");
     setProgress(0);
     if (inputRef.current) inputRef.current.value = "";
@@ -96,11 +105,17 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
         p_mime: picked.mime,
         p_size_bytes: picked.file.size,
         p_consent_version: terms.version,
+        p_original_name: picked.file.name,
       });
       if (rpcError) throw new UploadError(registerErrorMessage(rpcError));
 
       setCount((c) => c + 1);
-      setPhase("done");
+      setSavedId(cvId);
+      if (!isCvApiConfigured) {
+        setPhase("done");
+        return;
+      }
+      await runParse(cvId, token);
     } catch (err) {
       // Lưu hồ sơ lỗi thì gỡ tệp vừa tải lên để Storage không giữ tệp mồ côi.
       if (uploaded) await supabase.storage.from(CV_BUCKET).remove([path]);
@@ -110,18 +125,51 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
     }
   }
 
-  if (phase === "done" && picked) {
+  /** Đọc CV vừa lưu; xong thì sang màn xác nhận. Lỗi thì CV vẫn nằm trong hồ sơ, cho đọc lại. */
+  async function runParse(cvId: string, token?: string) {
+    setParseError(null);
+    setPhase("parsing");
+    const accessToken = token ?? (await createClient().auth.getSession()).data.session?.access_token;
+    const result = accessToken
+      ? await parseCv(cvId, accessToken)
+      : { ok: false as const, message: "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử lại." };
+    if (result.ok) {
+      router.push(`/ho-so/${cvId}/xac-nhan`);
+      return;
+    }
+    setParseError(result.message);
+    setPhase("done");
+  }
+
+  if ((phase === "done" || phase === "parsing") && picked && savedId) {
+    if (phase === "parsing") {
+      return <Steps phase="parsing" progress={100} parseEnabled />;
+    }
     return (
       <div className="grid gap-4">
         <Alert>
           <CheckCircle2 aria-hidden />
           <AlertTitle>Đã lưu CV {picked.file.name}</AlertTitle>
           <AlertDescription>
-            Bước phân tích kỹ năng sẽ tự chạy khi dịch vụ đọc CV sẵn sàng (Sprint 3). Bạn đang có {count}/{MAX_CVS} CV.
+            {isCvApiConfigured
+              ? "CV đã nằm trong hồ sơ của bạn, nhưng bước phân tích kỹ năng chưa xong."
+              : "Bước phân tích kỹ năng sẽ tự chạy khi dịch vụ đọc CV sẵn sàng."}{" "}
+            Bạn đang có {count}/{MAX_CVS} CV.
           </AlertDescription>
         </Alert>
-        <Steps phase="done" progress={100} />
+        {parseError && (
+          <Alert variant="destructive">
+            <XCircle aria-hidden />
+            <AlertTitle>Chưa phân tích được CV</AlertTitle>
+            <AlertDescription>{parseError}</AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-wrap gap-2">
+          {parseError && (
+            <Button type="button" onClick={() => void runParse(savedId)}>
+              Phân tích lại
+            </Button>
+          )}
           {count < MAX_CVS && (
             <Button type="button" variant="outline" onClick={reset}>
               Tải CV khác
@@ -228,7 +276,7 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
         </Alert>
       )}
 
-      {busy && <Steps phase={phase} progress={progress} />}
+      {busy && <Steps phase={phase} progress={progress} parseEnabled={isCvApiConfigured} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={!canSubmit}>
@@ -248,12 +296,13 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
   );
 }
 
-function Steps({ phase, progress }: { phase: Phase; progress: number }) {
+function Steps({ phase, progress, parseEnabled }: { phase: Phase; progress: number; parseEnabled: boolean }) {
   const at = ORDER.indexOf(phase);
+  const steps = parseEnabled ? STEPS : STEPS.filter((s) => s.phase !== "parsing");
   return (
     <div className="grid gap-3 rounded-lg border p-4" aria-live="polite">
       <ol className="grid gap-2 sm:grid-cols-4">
-        {STEPS.map((s) => {
+        {steps.map((s) => {
           const i = ORDER.indexOf(s.phase);
           const state = at > i ? "done" : at === i ? "now" : "todo";
           return (
@@ -278,11 +327,19 @@ function Steps({ phase, progress }: { phase: Phase; progress: number }) {
             </li>
           );
         })}
-        <li className="flex items-center gap-2 rounded-md border border-dashed px-2 py-1.5 text-sm text-muted-foreground">
-          <Circle className="size-4" aria-hidden /> Phân tích kỹ năng
-          <span className="text-xs">(sắp có)</span>
-        </li>
+        {!parseEnabled && (
+          <li className="flex items-center gap-2 rounded-md border border-dashed px-2 py-1.5 text-sm text-muted-foreground">
+            <Circle className="size-4" aria-hidden /> Phân tích kỹ năng
+            <span className="text-xs">(sắp có)</span>
+          </li>
+        )}
       </ol>
+      {phase === "parsing" && (
+        <span className="text-xs text-muted-foreground">
+          Đang đọc CV, che thông tin cá nhân và tìm kỹ năng. Thường mất dưới 15 giây; xong sẽ tự chuyển sang màn
+          xác nhận.
+        </span>
+      )}
       {phase === "uploading" && (
         <div className="grid gap-1">
           <div
