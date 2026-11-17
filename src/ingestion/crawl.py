@@ -19,6 +19,7 @@ import sys
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from ingestion import postprocess
 from ingestion.fetch import Blocked, CrawlError, NotAllowed, PoliteFetcher
 from ingestion.jsonld import find_job_posting, parse_job_posting
 from ingestion.location import default_index
@@ -184,73 +185,13 @@ def crawl_source(
 
 
 def label_skills_after_crawl(store: PgStore) -> bool:
-    """Bước ③ (S2-D06): gắn kỹ năng + mức cho tin mới / đổi nội dung trong lượt này, cùng các tin
-    đang mở gắn bằng từ điển / luật cũ. Lỗi ở bước này không làm mất dữ liệu đã crawl.
-
-    Trả False nếu lỗi (Cloud Run Job báo thất bại để có cảnh báo).
-    """
-    from skillkit.levels.db import has_levels_schema, label_and_write, select_jobs
-    from skillkit.levels.pipeline import SkillLabeler
-
-    conn = store.conn
-    try:
-        if not has_levels_schema(conn):
-            conn.rollback()
-            _log("! DB chưa chạy 0005_job_skill_levels.sql: bỏ qua bước gắn kỹ năng.")
-            return True
-        labeler = SkillLabeler.default()
-        version = labeler.model_version
-        rows = {
-            r[0]: r for r in select_jobs(conn, model_version=version, only_open=True, stale=True)
-        }
-        if store.changed_job_ids:
-            changed = select_jobs(conn, model_version=version, ids=store.changed_job_ids)
-            rows.update({r[0]: r for r in changed})
-        stats = label_and_write(conn, labeler, list(rows.values()))
-        conn.commit()
-    except Exception as exc:  # không để bước phụ làm hỏng lượt crawl
-        conn.rollback()
-        _log(f"  ✗ gắn kỹ năng lỗi: {exc!r}")
-        return False
-    tier2 = "có Tầng 2" if labeler.clf else "chỉ luật (không có file model)"
-    _log(
-        f"== kỹ năng ({version}, {tier2}) ==\n"
-        f"  tin đổi trong lượt: {len(store.changed_job_ids)} · đã gắn: {stats.get('tin', 0)} tin · "
-        f"bắt buộc {stats.get('required', 0)} · ưu tiên {stats.get('preferred', 0)} · "
-        f"chỉ nhắc {stats.get('mentioned', 0)}"
-    )
-    return True
+    """Bước ③ (S2-D06), dùng chung với mọi đường nạp tin: xem ingestion.postprocess."""
+    return postprocess.label_skills(store)
 
 
 def embed_after_crawl(store: PgStore) -> bool:
-    """Bước ④ (S3-D07): vector hóa theo đoạn cho tin mới / đổi nội dung / thẻ kỹ năng đổi, cùng mọi
-    tin đang mở còn thiếu vector (bảo đảm 100% tin mở có vector), rồi dọn tin đóng quá 30 ngày.
-    Chưa cấu hình model thì bỏ qua. Hết quota / lỗi mạng: dừng gọn, lượt sau làm tiếp.
-    """
-    from embedding.embedder import from_env
-    from embedding.store import coverage_report, embed_jobs, prune_closed
-
-    conn = store.conn
-    try:
-        embedder = from_env()
-        if embedder is None:
-            _log("== vector: chưa cấu hình EMBEDDER / CF_API_TOKEN, bỏ qua ==")
-            return True
-        stats = embed_jobs(conn, embedder)
-        pruned = prune_closed(conn)
-        report = coverage_report(conn, embedder.model)
-    except Exception as exc:  # không để bước phụ làm hỏng lượt crawl (cả EmbedderError)
-        conn.rollback()
-        _log(f"  ✗ vector hóa lỗi: {exc!r}")
-        return False
-    _log(
-        f"== vector ({embedder.model}) ==\n"
-        f"  cần làm {stats.get('can_lam', 0)} tin · đã ghi {stats.get('da_ghi_tin', 0)} tin "
-        f"({stats.get('da_ghi_doan', 0)} đoạn) · dọn {pruned} đoạn tin đóng · "
-        f"độ phủ {report['pct']}% ({report['with_vectors']}/{report['open_jobs']})"
-        + (" · DỪNG GIỮA CHỪNG (lượt sau làm tiếp)" if stats.get("dung_vi") else "")
-    )
-    return not stats.get("dung_vi")
+    """Bước ④ (S3-D07), dùng chung với mọi đường nạp tin: xem ingestion.postprocess."""
+    return postprocess.embed(store)
 
 
 # ---- CLI -------------------------------------------------------------------------

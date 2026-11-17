@@ -147,7 +147,8 @@ def load_file(path: Path, store, source: str, run_type: str = "backfill") -> Run
 
 
 def main(argv: list[str] | None = None) -> int:
-    from ingestion.crawl import _database_url
+    from ingestion.crawl import _database_url, load_env_file
+    from ingestion.postprocess import run_post_steps
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -155,22 +156,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("path", type=Path)
     parser.add_argument("--source", required=True, help="mã nguồn trong ops.sources.code")
     parser.add_argument("--dry-run", action="store_true", help="không ghi DB")
+    parser.add_argument("--skip-skills", action="store_true", help="không gắn kỹ năng sau khi nạp")
+    parser.add_argument("--skip-embed", action="store_true", help="không vector hóa sau khi nạp")
     args = parser.parse_args(argv)
 
     if args.dry_run:
         store = LocalStore(default_index())
     else:
+        load_env_file()
         dsn = _database_url()
         if not dsn:
             parser.error("thiếu DATABASE_URL (biến môi trường hoặc file .env)")
         store = PgStore(dsn)
         if not store.salary_v2:
             print("! DB chưa chạy 0002_fx_rates.sql: chỉ ghi các cột lương của schema v2.0.")
+    ok = True
     try:
         stats = load_file(args.path, store, args.source)
+        if isinstance(store, PgStore):  # ③ gắn kỹ năng + ④ vector hóa, như crawl.py
+            ok = run_post_steps(store, skills=not args.skip_skills, vectors=not args.skip_embed)
     finally:
         store.close()
-    return 0 if stats.items_seen else 1
+    return 0 if stats.items_seen and ok else 1
 
 
 if __name__ == "__main__":

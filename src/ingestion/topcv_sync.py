@@ -103,7 +103,8 @@ def sync_pending(
 
 
 def main(argv: list[str] | None = None) -> int:
-    from ingestion.crawl import _database_url
+    from ingestion.crawl import _database_url, load_env_file
+    from ingestion.postprocess import run_post_steps
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -113,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--source", default="topcv")
     parser.add_argument("--run-type", choices=VALID_RUN_TYPES, default="manual")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--skip-skills", action="store_true", help="không gắn kỹ năng sau sync")
+    parser.add_argument("--skip-embed", action="store_true", help="không vector hóa sau sync")
     args = parser.parse_args(argv)
 
     if not args.db.is_file():
@@ -125,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             print("[SYNC] Không có JD TopCV mới cần đồng bộ.")
             return 0
 
+    load_env_file()
     dsn = _database_url()
     if not dsn:
         parser.error("Thiếu DATABASE_URL trong environment hoặc .env")
@@ -139,9 +143,11 @@ def main(argv: list[str] | None = None) -> int:
                 run_type=args.run_type,
                 verbose=args.verbose,
             )
+        # Như crawl.py: ③ gắn kỹ năng + mức, ④ vector hóa. Thiếu bước này tin TopCV không có thẻ.
+        ok = run_post_steps(store, skills=not args.skip_skills, vectors=not args.skip_embed)
     finally:
         store.close()
-    return 0
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
