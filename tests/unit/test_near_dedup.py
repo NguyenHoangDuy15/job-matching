@@ -40,15 +40,18 @@ def test_shingles_and_jaccard():
 
 
 def test_decide_thresholds():
+    # Chức danh trùng hẳn và đủ dài: gộp từ MERGE_THRESHOLD (0,45, S3-T05)
     assert decide(0.95, 1.0, 100) == "merge"
     assert decide(MERGE_THRESHOLD, 1.0, 100) == "merge"
-    assert decide(0.84, 1.0, 100) == "review"
-    assert decide(REVIEW_THRESHOLD, 1.0, 100) == "review"
-    assert decide(0.69, 1.0, 100) is None
-    # giống ≥ 0,85 nhưng khác chức danh hoặc quá ngắn: chưa đủ chắc → hàng chờ
+    assert decide(0.50, 1.0, 100) == "merge"
+    assert decide(0.44, 1.0, 100) is None
+    # Khác chức danh hoặc quá ngắn: chưa đủ chắc → hàng chờ từ REVIEW_THRESHOLD
     assert decide(0.95, 0.5, 100) == "review"
     assert decide(0.95, 0.89, 100) == "review"
+    assert decide(REVIEW_THRESHOLD, 0.5, 100) == "review"
+    assert decide(0.69, 0.5, 100) is None
     assert decide(0.95, 1.0, 10) == "review"
+    assert decide(0.60, 1.0, 10) is None
 
 
 def test_identical_text_other_formatting_is_merged():
@@ -58,12 +61,44 @@ def test_identical_text_other_formatting_is_merged():
     assert pairs[0].similarity == 1.0
 
 
-def test_slightly_edited_text_goes_to_review_queue():
+def test_slightly_edited_copy_same_title_is_merged():
     edited = BASE + EXTRA  # một nguồn thêm đoạn giới thiệu môi trường làm việc
     pairs = find_near_duplicates([_doc(1), _doc(2, text=edited)])
+    assert [p.decision for p in pairs] == ["merge"]
+    assert REVIEW_THRESHOLD <= pairs[0].similarity < 0.85
+
+
+def test_slightly_edited_copy_other_title_goes_to_review_queue():
+    edited = BASE + EXTRA
+    pairs = find_near_duplicates([_doc(1), _doc(2, title="Data Engineer (ETL)", text=edited)])
     assert len(pairs) == 1
-    assert REVIEW_THRESHOLD <= pairs[0].similarity < MERGE_THRESHOLD
+    assert REVIEW_THRESHOLD <= pairs[0].similarity < 0.85
     assert pairs[0].decision == "review"
+
+
+def test_same_title_other_source_below_lsh_threshold_is_found_and_merged():
+    # Dữ liệu thật (S3-T05): cùng tin ở VietnamWorks ~ TopCV chỉ giống 0,50–0,63 vì mỗi nguồn
+    # thêm đoạn giới thiệu công ty; LSH ở ngưỡng 0,70 không thấy cặp này.
+    intro = (
+        " Về chúng tôi: tập đoàn công nghệ hàng đầu với hơn ba mươi nghìn nhân viên tại tám mươi"
+        " tám văn phòng trên toàn cầu, cung cấp dịch vụ chuyển đổi số cho khách hàng ở nhiều thị"
+        " trường,"
+        " môi trường quốc tế, lộ trình nghề nghiệp rõ ràng và nhiều chương trình đào tạo nội bộ"
+        " cùng các hoạt động gắn kết nhân viên định kỳ hằng quý và hằng năm tại công ty."
+    )
+    pairs = find_near_duplicates([_doc(1), _doc(2, title="DATA ENGINEER", text=BASE + intro)])
+    assert len(pairs) == 1
+    assert MERGE_THRESHOLD <= pairs[0].similarity < REVIEW_THRESHOLD
+    assert pairs[0].decision == "merge"
+
+
+def test_same_title_unrelated_text_is_not_merged():
+    other = (
+        "Thiết kế và vận hành kho dữ liệu cho ngân hàng bán lẻ, viết báo cáo rủi ro tín dụng, "
+        "làm việc với đội quản trị rủi ro, yêu cầu ba năm kinh nghiệm SAS hoặc R, hiểu Basel II, "
+        "ưu tiên ứng viên có chứng chỉ FRM, làm việc tại hội sở, nghỉ thứ bảy và chủ nhật."
+    )
+    assert find_near_duplicates([_doc(1), _doc(2, text=other)]) == []
 
 
 def test_tiny_edit_is_merged():

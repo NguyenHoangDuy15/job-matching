@@ -4,12 +4,19 @@ Chỉ so các tin chuẩn đang mở CÙNG CÔNG TY và CÓ CHUNG TỈNH (hoặc
 Nội dung so là chức danh + mô tả đã chuẩn hóa (ingestion.dedup.normalize_description), cắt
 thành cụm 3 từ liên tiếp (shingle).
 
-  1. MinHash + LSH (datasketch) tìm nhanh các cặp có thể giống nhau ≥ 0,70
+  1. Tìm cặp ứng viên: MinHash + LSH (datasketch) cho cặp có thể giống nhau ≥ 0,70, cộng mọi
+     cặp TRÙNG HẲN chức danh (LSH ở ngưỡng 0,70 không thấy cặp 0,45–0,70)
   2. Tính độ giống CHÍNH XÁC = Jaccard của hai tập shingle (MinHash chỉ là ước lượng)
   3. Quyết định:
-     ≥ 0,85 và chức danh trùng hẳn và đủ dài        → gộp tự động (core.merge_jobs)
-     0,70–0,85, hoặc ≥ 0,85 nhưng chưa đủ chắc     → hàng chờ core.dedup_candidates cho admin
-     < 0,70                                         → bỏ qua
+     chức danh trùng hẳn, đủ dài và giống ≥ 0,45   → gộp tự động (core.merge_jobs)
+     còn lại mà giống ≥ 0,70                        → hàng chờ core.dedup_candidates cho admin
+     còn lại                                        → bỏ qua
+
+Ngưỡng gộp 0,45 chọn ở S3-T05 (reports/s3_t05_khu_trung.md) sau khi gán tay 100 cặp: cùng một
+tin đăng ở hai nguồn (VietnamWorks ~ TopCV) chỉ giống 0,50–0,63 vì mỗi nguồn thêm đoạn giới
+thiệu công ty và trình bày khác; trong toàn kho, mọi cặp cùng công ty, cùng tỉnh, trùng hẳn chức
+danh mà giống ≥ 0,45 đều là trùng thật, còn cặp trùng chức danh nhưng là hai tin khác nhau chỉ
+giống < 0,10. Trước đó ngưỡng gộp là 0,85 (S3-T04).
 
 Hai tin cùng mẫu mô tả của một công ty nhưng khác cấp bậc ("Java Developer" và "Senior Java
 Developer") có thể giống nhau > 0,85; vì vậy gộp tự động còn đòi chức danh TRÙNG HẲN sau chuẩn
@@ -27,7 +34,7 @@ from datasketch import MinHash, MinHashLSH
 from ingestion.dedup import normalize_description
 from ingestion.location import normalize_key
 
-MERGE_THRESHOLD = 0.85
+MERGE_THRESHOLD = 0.45  # chỉ áp dụng khi chức danh trùng hẳn và đủ dài (S3-T05, trước là 0,85)
 REVIEW_THRESHOLD = 0.70
 TITLE_MERGE_THRESHOLD = 1.0  # chức danh phải trùng hẳn (sau chuẩn hóa) mới gộp tự động
 MIN_TOKENS_TO_MERGE = 30  # văn bản ngắn hơn: giống nhau là chuyện thường, chỉ đưa vào hàng chờ
@@ -76,10 +83,10 @@ def _same_place(a: JobDoc, b: JobDoc) -> bool:
 
 
 def decide(similarity: float, title_similarity: float, min_tokens: int) -> Decision | None:
-    if similarity < REVIEW_THRESHOLD:
-        return None
     sure = title_similarity >= TITLE_MERGE_THRESHOLD and min_tokens >= MIN_TOKENS_TO_MERGE
-    return "merge" if similarity >= MERGE_THRESHOLD and sure else "review"
+    if sure and similarity >= MERGE_THRESHOLD:
+        return "merge"
+    return "review" if similarity >= REVIEW_THRESHOLD else None
 
 
 def find_near_duplicates(docs: Iterable[JobDoc]) -> list[NearPair]:
@@ -109,9 +116,14 @@ def find_near_duplicates(docs: Iterable[JobDoc]) -> list[NearPair]:
             mh.update_batch(s.encode() for s in prepared[job_id][1])
             hashes[job_id] = mh
             lsh.insert(job_id, mh)
+        # Cặp trùng hẳn chức danh luôn được so (ngưỡng gộp của chúng thấp hơn ngưỡng LSH)
+        same_title: dict[frozenset[str], list[int]] = {}
+        for job_id in ids:
+            same_title.setdefault(prepared[job_id][2], []).append(job_id)
         for a in sorted(ids):
             doc_a, sh_a, title_a, n_a = prepared[a]
-            for b in lsh.query(hashes[a]):
+            candidates = set(lsh.query(hashes[a])) | set(same_title[title_a])
+            for b in sorted(candidates):
                 if b <= a:
                     continue
                 doc_b, sh_b, title_b, n_b = prepared[b]

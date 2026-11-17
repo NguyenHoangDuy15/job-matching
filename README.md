@@ -106,7 +106,8 @@ uv run python scripts/split_sections.py [--apply]    # tách lại 4 section t�
 uv run python scripts/label_skills.py [--apply] [--stale]   # gắn kỹ năng + mức, ghi core.job_skills
 uv run python scripts/label_skills.py --report       # % tin mở có thẻ kỹ năng (mục tiêu ≥ 90%)
 uv run python scripts/dedup_exact.py [--apply]       # gộp tin trùng chính xác giữa các nguồn (S3-T03)
-uv run python scripts/dedup_near.py [--apply]        # gần trùng MinHash: ≥ 0,85 gộp, 0,70–0,85 chờ admin (S3-T04)
+uv run python scripts/dedup_near.py [--apply]        # gần trùng: trùng chức danh + ≥ 0,45 gộp, khác chức danh ≥ 0,70 chờ admin (S3-T04, S3-T05)
+uv run python scripts/eval_dedup.py sample|score     # lấy mẫu cặp, đo precision/recall, thử ngưỡng (S3-T05)
 uv run python scripts/check_job_skills.py [--score]  # lấy 20 tin để kiểm tay / chấm
 uv run python scripts/check_job_skills.py --merge <file_người_1.csv> <file_người_2.csv> --score   # gộp phần từng người rồi chấm
 ```

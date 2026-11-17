@@ -170,8 +170,8 @@ def load_open_docs(conn) -> list[JobDoc]:
 
 
 def run_near_dedup(conn) -> NearReport:
-    """Tìm cặp gần trùng giữa các tin đang mở; gộp cặp ≥ 0,85 đủ chắc, đưa cặp còn lại vào
-    core.dedup_candidates (status pending). Chạy trong transaction hiện tại của conn."""
+    """Tìm cặp gần trùng giữa các tin đang mở; gộp cặp đủ chắc (near_dedup.decide), đưa cặp
+    còn lại vào core.dedup_candidates (status pending). Chạy trong transaction hiện tại của conn."""
     report = NearReport()
     docs = load_open_docs(conn)
     report.compared = len(docs)

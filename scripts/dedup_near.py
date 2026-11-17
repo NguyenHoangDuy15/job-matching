@@ -4,8 +4,8 @@
     uv run python scripts/dedup_near.py --apply    # ghi thật
 
 Chỉ so tin đang mở cùng công ty, có chung tỉnh. Độ giống = Jaccard cụm 3 từ của chức danh + mô tả:
-  ≥ 0,85 và chức danh trùng hẳn, mô tả đủ dài    → gộp (core.merge_jobs, giữ tin id nhỏ)
-  0,70–0,85 hoặc chưa đủ chắc                     → core.dedup_candidates chờ admin duyệt
+  chức danh trùng hẳn, mô tả đủ dài, ≥ 0,45   → gộp (core.merge_jobs, giữ tin id nhỏ; S3-T05)
+  còn lại mà ≥ 0,70                           → core.dedup_candidates chờ admin duyệt
 Crawl hằng ngày đã tự chạy bước này (scripts/crawl.py run, bỏ bằng --skip-dedup).
 Nên chạy scripts/dedup_exact.py --apply trước một lần cho dữ liệu cũ.
 """
@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = "ĐÃ GHI" if args.apply else "CHẠY THỬ (không ghi)"
     print(f"[dedup-near] {mode}")
     print(f"  tin mở đã so          : {report.compared}")
-    print(f"  gộp tự động (≥ 0,85)  : {report.merged}")
+    print(f"  gộp tự động           : {report.merged}")
     print(f"  vào hàng chờ admin    : {report.queued}")
     print(f"  admin đã bác trước đó : {report.skipped_distinct}")
     print(f"  cặp chờ đã đóng, dọn  : {report.stale_removed}")

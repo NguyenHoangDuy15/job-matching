@@ -43,7 +43,7 @@ def store():
     s.close()
 
 
-def _save(store, source: str, tag: str, text: str) -> int:
+def _save(store, source: str, tag: str, text: str, title: str = "Data Engineer") -> int:
     item = find_job_posting((FIXTURES / "itviec_job.html").read_text(encoding="utf-8"))
     job_id = f"{source[:3]}{uuid.uuid4().hex[:10]}"
     posting = parse_job_posting(
@@ -54,7 +54,7 @@ def _save(store, source: str, tag: str, text: str) -> int:
         fetched_at=datetime.now(UTC),
     ).model_copy(
         update={
-            "title": "Data Engineer",
+            "title": title,
             "company_name": f"Công ty T04 {tag}",  # công ty riêng cho mỗi test
             "description_text": text,
             "valid_through": None,
@@ -96,7 +96,8 @@ def test_merge_close_copy_and_queue_edited_copy(store):
     tag = uuid.uuid4().hex[:8]
     a = _save(store, "itviec", tag, BASE)
     b = _save(store, "vietnamworks", tag, BASE.replace("quận 1", "Quận 1, TP.HCM"))
-    c = _save(store, "careerviet", tag, BASE + EXTRA)
+    # c: sửa vài câu VÀ đổi chức danh → chưa đủ chắc để gộp, vào hàng chờ
+    c = _save(store, "careerviet", tag, BASE + EXTRA, title="Data Engineer (ETL)")
     assert len({a, b, c}) == 3  # khác vài chữ: trùng chính xác (S3-T03) không bắt được
 
     report = _run(store)
@@ -117,7 +118,7 @@ def test_merge_close_copy_and_queue_edited_copy(store):
 def test_admin_distinct_is_not_requeued_and_closed_pairs_are_cleaned(store):
     tag = uuid.uuid4().hex[:8]
     a = _save(store, "itviec", tag, BASE)
-    c = _save(store, "careerviet", tag, BASE + EXTRA)
+    c = _save(store, "careerviet", tag, BASE + EXTRA, title="Data Engineer (ETL)")
     _run(store)
     assert _candidate(store, a, c)[0] == "pending"
 
@@ -135,7 +136,7 @@ def test_admin_distinct_is_not_requeued_and_closed_pairs_are_cleaned(store):
     # Cặp đang chờ mà một tin đã đóng thì được dọn
     tag2 = uuid.uuid4().hex[:8]
     x = _save(store, "itviec", tag2, BASE)
-    y = _save(store, "careerviet", tag2, BASE + EXTRA)
+    y = _save(store, "careerviet", tag2, BASE + EXTRA, title="Data Engineer (ETL)")
     _run(store)
     assert _candidate(store, x, y)[0] == "pending"
     store.conn.execute(
