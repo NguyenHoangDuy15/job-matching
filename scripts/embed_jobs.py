@@ -2,8 +2,10 @@
 
     uv run python scripts/embed_jobs.py --report                  # độ phủ hiện tại (AC: 100%)
     uv run python scripts/embed_jobs.py                           # chạy thử: đếm tin / đoạn cần làm
-    EMBEDDER=workers_ai CF_ACCOUNT_ID=... CF_API_TOKEN=... \\
-        uv run python scripts/embed_jobs.py --apply --prune       # lấp đầy toàn kho + dọn tin đóng
+    uv run python scripts/embed_jobs.py --apply --prune           # lấp đầy toàn kho + dọn tin đóng
+
+Khóa Workers AI: trên máy để CF_ACCOUNT_ID, CF_API_TOKEN trong .env (đã gitignore); trên GitHub
+Actions là secret cùng tên. Biến môi trường luôn được ưu tiên hơn .env.
     uv run python scripts/embed_jobs.py --knn "xây dựng pipeline dữ liệu"   # thử truy vấn top-10
 
 Tin mới crawl được làm tự động ở bước ④ sau crawl (ingestion.crawl). Chạy lại nhiều lần được:
@@ -21,7 +23,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from embedding.embedder import EmbedderError, FakeEmbedder, from_env  # noqa: E402
 from embedding.store import coverage_report, embed_jobs, prune_closed  # noqa: E402
-from ingestion.crawl import _database_url  # noqa: E402
+from ingestion.crawl import _database_url, load_env_file  # noqa: E402
 
 
 def knn(conn, embedder, query: str, k: int = 10) -> tuple[list[tuple], float]:
@@ -57,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", action="store_true", help="chỉ in độ phủ")
     parser.add_argument("--knn", help="thử truy vấn top-10 bằng câu này")
     args = parser.parse_args(argv)
+    load_env_file()  # trên máy: đọc CF_ACCOUNT_ID / CF_API_TOKEN từ .env (gitignore)
     dsn = _database_url()
     if not dsn:
         parser.error("thiếu DATABASE_URL")

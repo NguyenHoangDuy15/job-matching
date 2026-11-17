@@ -2,9 +2,8 @@
 
 Ngày 20/11/2026 · Duy · Issue #484 (EN-03 #407) · Model: ADR-004 (bge-m3, Workers AI)
 
-> **Trạng thái:** code, test, bước ④ sau crawl và spike chọn model xong. **Chưa ghi vector lên
-> production**: chờ token Cloudflare Workers AI. Khi có token chạy
-> `scripts/embed_jobs.py --apply --prune` rồi cập nhật mục 3 (độ phủ 100%, truy vấn ≤ 200 ms).
+> **Trạng thái:** xong. Đã ghi vector lên production ngày 17/11/2026: 1.441/1.441 tin đang mở
+> (100%), 6.130 đoạn, model `cf/baai/bge-m3`. Truy vấn top-10 mất 118 ms (p50).
 
 ## 1. Cách làm
 
@@ -29,13 +28,34 @@ Ngày 20/11/2026 · Duy · Issue #484 (EN-03 #407) · Model: ADR-004 (bge-m3, Wo
 
 Spike chọn model: bge-m3 xếp đúng 9/10 cặp truy vấn Việt ↔ đoạn Anh cùng ý (ADR-004).
 
-## 3. Kiểm tra "xong" (điền sau khi chạy production)
+## 3. Kiểm tra "xong" (production, 17/11/2026)
 
 | AC | Cách đo | Kết quả |
 |---|---|---|
-| 100% tin đang mở có vector (#484) | `embed_jobs.py --report` | *chờ token* |
-| Tin mới có vector ngay lượt chạy kế tiếp (EN-03 AC2) | log bước ④ của `crawl-daily` | *chờ token* |
-| Top-10 theo vector ≤ 200 ms (EN-03 AC3) | `embed_jobs.py --knn "…"` (p50 của 5 lần) | *chờ token* |
+| 100% tin đang mở có vector (#484) | `embed_jobs.py --report` | **1.441/1.441 (100%)** · 6.130 đoạn · bảng 36,9 MB ✓ |
+| Tin mới có vector ngay lượt chạy kế tiếp (EN-03 AC2) | bước ④ của `crawl-daily` (secret `CF_ACCOUNT_ID`, `CF_API_TOKEN` đã thêm) + chạy lại không có gì cần làm (`can_lam: 0`) | ✓ (theo dõi log lượt crawl đầu sau merge) |
+| Top-10 theo vector ≤ 200 ms (EN-03 AC3) | `embed_jobs.py --knn "…"` (p50 của 5 lần, máy Duy → Supabase Singapore) | **118–119 ms** ✓ |
+
+Lần ghi đầu: 1.438 tin, mất 8 phút 40 giây, phần lớn là thời gian chờ mạng.
+
+Kết quả top-10 thật (trích):
+
+| Truy vấn | Kết quả đầu (cosine) | Nhận xét |
+|---|---|---|
+| xây dựng pipeline dữ liệu | Data Engineer (Data Pipeline/ Big Data) 0,693 · Senior Data Engineer 0,671 · Data Engineer 0,660 | 9/10 là Data Engineer / Data; 1 tin DevOps |
+| kiểm thử tự động | Kỹ Sư Auto Test 0,643 · Trưởng Nhóm Kiểm Thử Tự Động 0,635 · Automation Tester Leader 0,633 | 10/10 là kiểm thử tự động, cả tiêu đề tiếng Anh |
+| lập trình backend Java | Backend Developer (Java) 0,711 · Nhân Viên Backend 0,695 · Tech Lead Backend (Java) 0,695 | 10/10 là backend Java |
+
+## Nơi lưu khóa Workers AI
+
+| Nơi chạy | Lưu ở đâu |
+|---|---|
+| Máy dev | `.env` ở gốc repo (đã gitignore): `CF_ACCOUNT_ID=…`, `CF_API_TOKEN=…`. `scripts/embed_jobs.py` và `ingestion.crawl` tự đọc qua `load_env_file()` |
+| GitHub Actions (`crawl-daily`) | Repository secret `CF_ACCOUNT_ID`, `CF_API_TOKEN` |
+| API CV trên HF Space (S6-D03) | Space → Settings → Variables and secrets, cùng tên |
+
+Biến môi trường luôn được ưu tiên hơn `.env`. Token chỉ có quyền Workers AI; muốn thu hồi thì xóa ở
+Cloudflare → My Profile → API Tokens.
 
 ## 4. Kiểm thử
 

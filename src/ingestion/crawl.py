@@ -254,6 +254,21 @@ def embed_after_crawl(store: PgStore) -> bool:
 
 
 # ---- CLI -------------------------------------------------------------------------
+SECRET_KEYS = ("EMBEDDER", "CF_ACCOUNT_ID", "CF_API_TOKEN")
+
+
+def load_env_file(keys: tuple[str, ...] = SECRET_KEYS) -> None:
+    """Chạy trên máy: lấy các khóa này từ .env (đã gitignore) nếu biến môi trường chưa có.
+    Trên GitHub Actions / server, biến môi trường (secret) luôn được ưu tiên."""
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key.strip() in keys:
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 def _database_url() -> str | None:
     if os.environ.get("DATABASE_URL"):
         return os.environ["DATABASE_URL"]
@@ -326,6 +341,7 @@ def cmd_parse(path: Path, cfg: SourceConfig) -> int:
 def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
+    load_env_file()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", default=str(ROOT / "config" / "sources.yaml"))
     sub = parser.add_subparsers(dest="cmd", required=True)

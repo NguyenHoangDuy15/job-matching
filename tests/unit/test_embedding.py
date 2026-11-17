@@ -2,6 +2,7 @@
 
 import json
 import math
+import os
 
 import httpx
 import pytest
@@ -125,3 +126,18 @@ def test_from_env(monkeypatch):
     monkeypatch.setenv("CF_ACCOUNT_ID", "a")
     monkeypatch.setenv("CF_API_TOKEN", "t")
     assert isinstance(from_env(), WorkersAIEmbedder)
+
+
+def test_load_env_file_fills_missing_only(tmp_path, monkeypatch):
+    import ingestion.crawl as crawl
+
+    (tmp_path / ".env").write_text('CF_ACCOUNT_ID=acc\nCF_API_TOKEN="tok"\nDB_PASSWORD=x\n')
+    monkeypatch.setattr(crawl, "ROOT", tmp_path)
+    monkeypatch.delenv("CF_ACCOUNT_ID", raising=False)
+    monkeypatch.setenv("CF_API_TOKEN", "from-secret")
+    monkeypatch.delenv("DB_PASSWORD", raising=False)
+    crawl.load_env_file()
+    assert os.environ["CF_ACCOUNT_ID"] == "acc"
+    assert os.environ["CF_API_TOKEN"] == "from-secret"  # secret thật được ưu tiên
+    assert "DB_PASSWORD" not in os.environ  # chỉ nạp khóa embedding
+    monkeypatch.delenv("CF_ACCOUNT_ID")

@@ -1,6 +1,6 @@
 # ADR-004: Model embedding cho JD và CV
 
-- Trạng thái: đã chấp nhận (chờ token Cloudflare để chạy production)
+- Trạng thái: đã chấp nhận, đang chạy production từ 17/11/2026
 - Ngày: 20/11/2026
 - Người viết / người duyệt: Duy / nhóm 5
 - Thay cho spike S1-D10 (#435), làm thu nhỏ trong S3-D07 (#484)
