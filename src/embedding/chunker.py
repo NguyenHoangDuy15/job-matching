@@ -142,3 +142,55 @@ def job_chunks(
         for i, content in enumerate(_pack(units, prefix, max_tokens, count)):
             out.append(Chunk(section, i, content))
     return out
+
+
+# ---- CV (S4-D02) -------------------------------------------------------------------
+# Chỉ các mục nghề nghiệp. Bỏ header (tên, liên hệ), học vấn, ngoại ngữ, hoạt động, khác: chúng
+# giống nhau ở mọi tin nên chỉ kéo điểm Ngữ nghĩa (E) của mọi tin lại gần nhau.
+CV_SECTIONS = ("summary", "experience", "projects", "skills", "certifications")
+CV_SECTION_VI = {
+    "summary": "Giới thiệu",
+    "experience": "Kinh nghiệm",
+    "projects": "Dự án",
+    "skills": "Kỹ năng",
+    "certifications": "Chứng chỉ",
+}
+
+
+def cv_summary_text(target_title: str | None, skill_names: list[str] | tuple[str, ...]) -> str:
+    """Đoạn tóm tắt CV, đối xứng với đoạn summary của tin: chức danh mong muốn + kỹ năng."""
+    parts = []
+    if target_title:
+        parts.append(f"Chức danh mong muốn: {target_title}")
+    if skill_names:
+        parts.append("Kỹ năng: " + ", ".join(skill_names))
+    return " · ".join(parts)
+
+
+def cv_chunks(
+    sections: dict[str, list[str] | str],
+    target_title: str | None = None,
+    skill_names: list[str] | tuple[str, ...] = (),
+    count: TokenCounter | None = None,
+    max_tokens: int = MAX_TOKENS,
+) -> list[Chunk]:
+    """CV đã che PII (sections như `CvSections.to_jsonb()` / `parse_cv()["sections"]`) → đoạn
+    ≤ max_tokens, tiền tố "CV — Mục:", chồng lấn 1 dòng như tin."""
+    count = count or bge_m3_counter()
+    out: list[Chunk] = []
+    summary = cv_summary_text(target_title, skill_names)
+    if summary:
+        out += [
+            Chunk("summary", i, c) for i, c in enumerate(_pack([summary], "", max_tokens, count))
+        ]
+    for section in CV_SECTIONS:
+        raw = sections.get(section) or []
+        text = "\n".join(raw) if isinstance(raw, list) else raw
+        units = _units(text)
+        if not units:
+            continue
+        name = "summary_text" if section == "summary" else section
+        prefix = f"CV — {CV_SECTION_VI[section]}: "
+        for i, content in enumerate(_pack(units, prefix, max_tokens, count)):
+            out.append(Chunk(name, i, content))
+    return out

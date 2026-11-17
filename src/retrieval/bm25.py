@@ -12,14 +12,15 @@ Tin không khớp từ nào (s_j = 0) có K = 0, không nhận "phân vị giữ
 
 from __future__ import annotations
 
-import threading
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 import bm25s
 import numpy as np
 
+from ranking.percentile import percentile_rank
+from ranking.refresh import RefreshingIndex  # noqa: F401 (dùng lại ở API)
 from retrieval.text import Analyzer, KeywordConfig, skill_token
 
 
@@ -65,16 +66,8 @@ def query_from_profile(profile, analyzer: Analyzer | None = None) -> list[str]:
 
 
 def percentile_k(scores: np.ndarray) -> np.ndarray:
-    """Phân vị (0–1) của từng điểm trong chính mảng đó; điểm ≤ 0 → 0."""
-    n = len(scores)
-    if n == 0:
-        return np.zeros(0, dtype=np.float64)
-    ordered = np.sort(scores)
-    below = np.searchsorted(ordered, scores, side="left")
-    at_or_below = np.searchsorted(ordered, scores, side="right")
-    k = (below + 0.5 * (at_or_below - below)) / n
-    k[scores <= 0] = 0.0
-    return k
+    """Phân vị (0–1) trên toàn kho; điểm ≤ 0 → 0."""
+    return percentile_rank(scores, zero_is_zero=True)
 
 
 @dataclass(frozen=True)
@@ -139,55 +132,6 @@ class KeywordIndex:
             idx = idx[np.argpartition(-result.scores[idx], k - 1)[:k]]
         idx = idx[np.lexsort((self.ids[idx], -result.scores[idx]))]
         return [(int(self.ids[i]), float(result.scores[i])) for i in idx]
-
-
-class RefreshingIndex:
-    """Giữ index trong RAM của API, dựng lại ở luồng nền khi quá `refresh_seconds`; request
-    luôn dùng bản đang có (đổi con trỏ khi bản mới xong), không chờ dựng lại."""
-
-    def __init__(
-        self,
-        build: Callable[[], KeywordIndex],
-        refresh_seconds: int,
-        clock: Callable[[], float] = time.monotonic,
-    ):
-        self._build = build
-        self._every = refresh_seconds
-        self._clock = clock
-        self._lock = threading.Lock()
-        self._index: KeywordIndex | None = None
-        self._at = 0.0
-        self._building = False
-
-    def get(self) -> KeywordIndex:
-        if self._index is None:
-            with self._lock:
-                if self._index is None:
-                    self._index, self._at = self._build(), self._clock()
-            return self._index
-        if self._clock() - self._at >= self._every:
-            self._refresh_in_background()
-        return self._index
-
-    def _refresh_in_background(self) -> None:
-        with self._lock:
-            if self._building:
-                return
-            self._building = True
-
-        def run():
-            try:
-                index = self._build()
-                with self._lock:
-                    self._index, self._at = index, self._clock()
-            except Exception:  # giữ bản cũ, lần get sau thử lại
-                with self._lock:
-                    self._at = self._clock()
-            finally:
-                with self._lock:
-                    self._building = False
-
-        threading.Thread(target=run, daemon=True).start()
 
 
 _OPEN_JOBS_SQL = """
