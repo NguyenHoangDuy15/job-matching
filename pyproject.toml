@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "beautifulsoup4>=4.15.0",
+    "bm25s>=0.3.16,<0.4",  # BM25 trong bộ nhớ cho điểm Từ khóa K (S4-D01)
     "datasketch>=2.0.0",
     "en-core-web-sm",
     "fastapi>=0.162.0",
