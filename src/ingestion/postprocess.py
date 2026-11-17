@@ -17,6 +17,7 @@ Lỗi ở bước phụ không làm mất dữ liệu đã nạp: rollback, báo
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -53,6 +54,13 @@ def sync_skill_seed(conn, seed_path: Path = SKILLS_SEED, yaml_path: Path = SKILL
     return diff
 
 
+def tier2_enabled() -> bool:
+    """Tầng 2 (model ML) chỉ bật khi đặt SKILL_TIER2=1. File model không có trong git, nên nếu
+    bật theo "có file thì dùng", máy có file và GitHub Actions ra hai model_version khác nhau
+    và lần lượt gắn lại (rồi vector hóa lại) toàn kho mỗi lượt. Mặc định: chỉ luật."""
+    return os.environ.get("SKILL_TIER2") == "1"
+
+
 def label_skills(store) -> bool:
     """Bước ③. Trả False nếu lỗi."""
     from skillkit.levels.db import has_levels_schema, label_and_write, select_jobs
@@ -66,7 +74,7 @@ def label_skills(store) -> bool:
             _log("! DB chưa chạy 0005_job_skill_levels.sql: bỏ qua bước gắn kỹ năng.")
             return True
         sync_skill_seed(conn)
-        labeler = SkillLabeler.default()
+        labeler = SkillLabeler.default(with_model=tier2_enabled())
         version = labeler.model_version
         rows = {
             r[0]: r for r in select_jobs(conn, model_version=version, only_open=True, stale=True)

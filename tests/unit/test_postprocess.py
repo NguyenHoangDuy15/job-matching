@@ -151,3 +151,11 @@ def test_jsonl_dry_run_does_not_touch_db(tmp_path, monkeypatch):
     monkeypatch.setattr(jsonl_import, "load_file", lambda *a, **k: stats)
     monkeypatch.setattr(postprocess, "run_post_steps", lambda *a, **k: pytest.fail("không gọi"))
     assert jsonl_import.main([str(tmp_path / "a.jsonl"), "--source", "topcv", "--dry-run"]) == 0
+
+
+def test_tier2_off_unless_explicitly_enabled(monkeypatch):
+    """Cùng model_version ở mọi máy: không để file model cục bộ làm gắn lại toàn kho."""
+    monkeypatch.delenv("SKILL_TIER2", raising=False)
+    assert postprocess.tier2_enabled() is False
+    monkeypatch.setenv("SKILL_TIER2", "1")
+    assert postprocess.tier2_enabled() is True
