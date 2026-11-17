@@ -25,7 +25,7 @@ _PASSWORD_ERROR = 4  # FPDF_ERR_PASSWORD
 
 class PdfExtractor:
     kind = "pdf"
-    version = "pdf-2"  # pdf-2: dựng lại khoảng trắng cho dòng chữ giãn cách
+    version = "pdf-3"  # pdf-2: dựng lại khoảng trắng chữ giãn cách; pdf-3: footer kèm số trang
 
     def extract(self, data: bytes, options: ExtractOptions) -> RawDocument:
         with _LOCK:
@@ -146,6 +146,8 @@ def _line_text(textpage, idx: list[int]) -> str:
 
 _EDGE_LINES = 3  # header/footer nằm trong vài dòng đầu/cuối của trang
 _PAGE_NO = re.compile(r"^(?:(?:page|trang)\s*)?#(?:\s*(?:/|of|trên)\s*#)?$", re.I)
+# Số trang ở CUỐI một dòng footer/header: "CV – Lan (Bilingual) Page 2 of 3", "… Trang 1/2".
+_PAGE_TAIL = re.compile(r"\s*[-–—|·]?\s*(?:page|trang)\s*\d+(?:\s*(?:/|of|trên)\s*\d+)?\s*$", re.I)
 
 
 def _blocks(pages: list[tuple[int, str]]) -> list[RawBlock]:
@@ -157,10 +159,10 @@ def _blocks(pages: list[tuple[int, str]]) -> list[RawBlock]:
     ]
 
     def key(line: str) -> str:
-        return " ".join(line.split()).lower()
+        return " ".join(_PAGE_TAIL.sub("", line).split()).lower()
 
     def page_no(line: str) -> bool:
-        return bool(_PAGE_NO.match(re.sub(r"\d+", "#", key(line))))
+        return bool(_PAGE_NO.match(re.sub(r"\d+", "#", " ".join(line.split()).lower())))
 
     multi = len(per_page) >= 2
     edges: list[set[str]] = []
@@ -181,12 +183,13 @@ def _blocks(pages: list[tuple[int, str]]) -> list[RawBlock]:
     for (page, lines), edge in zip(per_page, edges, strict=True):
         for line in lines:
             k = key(line)
-            if multi and k in edge and page_no(line):
+            if multi and page_no(line) and (k in edge or not k):
                 continue  # "Page 2", "Trang 1/3", "2"
             if k in repeated:
                 if k not in emitted:
                     emitted.add(k)
-                    header.append(RawBlock(text=line, page=page, source="header"))
+                    text = _PAGE_TAIL.sub("", line).rstrip()  # bỏ "Page 1 of 3" của lần đầu
+                    header.append(RawBlock(text=text, page=page, source="header"))
                 continue
             body.append(RawBlock(text=line, page=page))
     return header + body

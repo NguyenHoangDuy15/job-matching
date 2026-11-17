@@ -130,3 +130,14 @@ def test_relations_family_members(small_taxonomy):
 def test_unknown_id_raises_key_error(small_taxonomy, method):
     with pytest.raises(KeyError):
         getattr(small_taxonomy, method)("khong_co")
+
+
+def test_stop_phrases_swallow_inner_alias(tmp_path):
+    from skillkit.matcher import SkillMatcher
+
+    body = "skills:\n  - {id: g, level: 1}\n  - {id: ml, level: 2, parent: g, aliases: [học máy]}\n"
+    taxonomy = load_taxonomy(_write_yaml(tmp_path, body + "stop_phrases: [Khoa học máy tính]\n"))
+    m = SkillMatcher(taxonomy)
+    assert m.skills("Ngành Khoa học máy tính") == [] and m.skills("Biết học máy") == ["ml"]
+    with pytest.raises(TaxonomyError, match="stop_phrases"):
+        load_taxonomy(_write_yaml(tmp_path, body + "stop_phrases: [học máy]\n"))

@@ -176,3 +176,28 @@ def test_to_db_rows():
     assert cvs == {"years_exp": 5.4, "target_title": "Lập trình viên Backend"}
     assert {(r["skill_id"], r["evidence_level"]) for r in rows} == {(1, "strong"), (2, "listed")}
     assert all(r["confirmed"] is False and r["evidence"] for r in rows)
+
+
+def test_title_first_job_line_company_and_contact_labels():
+    """Mẫu CV tiếng Anh (S3-D06): "Chức danh — Công ty" rồi dòng "ngày | nơi làm"; "GitHub:"
+    là nhãn liên hệ; tên trường/ngành ở Học vấn không phải kỹ năng; chức danh bỏ phần ngoặc."""
+    p = _profile(
+        "PART I — ENGLISH VERSION\nNguyễn Văn A\nFull-Stack Software Engineer (Node.js / React)\n"
+        "GitHub: github.com/an | Email: a@example.com\nWORK EXPERIENCE\n"
+        "Backend Developer — FinTech Viet Technology JSC\nJune 2024 – Present | Hanoi, Vietnam\n"
+        "Built Spring Boot services.\nJunior Developer — Blue Lotus Cloud\n"
+        "January 2023 – May 2024 | Hanoi, Vietnam\nWrote SQL reports.\nEDUCATION\n"
+        "B.Eng. in Computer Science — Academy of Cryptography Techniques (2018 – 2022)\n"
+        "PHẦN II — PHIÊN BẢN TIẾNG VIỆT\nNguyễn Văn A\nGitHub: github.com/an\n"
+    )
+    assert (p.target_title, p.target_title_source) == ("Full-Stack Software Engineer", "header")
+    ids = {s.skill_id for s in p.skills}
+    assert {"spring_boot", "sql"} <= ids
+    assert not ids & {"fintech", "cloud_computing", "github", "cryptography"}
+    jobs = [(e.org, e.title) for e in p.entries]
+    assert jobs == [
+        ("FinTech Viet Technology JSC", "Backend Developer"),
+        ("Blue Lotus Cloud", "Junior Developer"),
+    ]
+    sb = next(s for s in p.skills if s.skill_id == "spring_boot")
+    assert sb.context == "FinTech Viet Technology JSC"

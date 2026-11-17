@@ -139,7 +139,7 @@ skills:
     ambiguous: true
     context: [java, boot, mvc, hibernate, jpa, backend, microservice, microservices, maven, gradle, kotlin]
     rule: {terms: [Spring], forms: [Spring]}
-  - {id: spring_boot, name: Spring Boot, level: 3, parent: java, category: 2, kind: framework, aliases: [springboot, java spring boot]}
+  - {id: spring_boot, name: Spring Boot, level: 3, parent: java, category: 2, kind: framework, aliases: [springboot, spring-boot, java spring boot]}
   - {id: spring_cloud, name: Spring Cloud, level: 3, parent: java, category: 2, kind: framework}
   - {id: spring_security, name: Spring Security, level: 3, parent: java, category: 2, kind: framework}
   - {id: hibernate, name: Hibernate, level: 3, parent: java, category: 2, kind: framework}
@@ -184,7 +184,7 @@ skills:
   # Kiến trúc & giao tiếp
   - {id: rest_api, name: REST API, level: 2, parent: group_backend, kind: hard, aliases: [restful api, restful apis, rest apis, restful, api restful, restful web services, web api]}
   - {id: api, name: API, level: 2, parent: group_backend, kind: hard, aliases: [apis, api integration, api development, tích hợp api, web service, web services]}
-  - {id: graphql, name: GraphQL, level: 2, parent: group_backend, kind: hard}
+  - {id: graphql, name: GraphQL, level: 2, parent: group_backend, kind: hard, aliases: [apollo client, apollo graphql, apollo server]}
   - {id: grpc, name: gRPC, level: 2, parent: group_backend, kind: hard}
   - {id: soap, name: SOAP, level: 2, parent: group_backend, kind: hard, aliases: [soap api, wsdl]}
   - {id: websocket, name: WebSocket, level: 2, parent: group_backend, kind: hard, aliases: [websockets, web socket, socket.io]}
@@ -269,7 +269,7 @@ skills:
   - {id: d3js, name: D3.js, level: 3, parent: javascript, category: 3, kind: framework, aliases: [d3, d3js]}
   - {id: electron, name: Electron, level: 3, parent: javascript, category: 3, kind: framework, aliases: [electronjs]}
   - {id: react_native, name: React Native, level: 3, parent: javascript, category: 3, kind: framework, aliases: [reactnative]}
-  - {id: flutter, name: Flutter, level: 3, parent: dart, category: 3, kind: framework}
+  - {id: flutter, name: Flutter, level: 3, parent: dart, category: 3, kind: framework, aliases: [flutter bloc, bloc, riverpod, getx]}
   - {id: android, name: Android, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [lập trình android, android sdk, android native]}
   - {id: android_studio, name: Android Studio, level: 3, parent: android, kind: tool}
   - {id: jetpack_compose, name: Jetpack Compose, level: 3, parent: android, kind: framework}
@@ -282,7 +282,7 @@ skills:
   - {id: responsive, name: Responsive Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [responsive web design, responsive]}
   - {id: pwa, name: PWA, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [progressive web app]}
   - {id: seo, name: SEO, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [search engine optimization]}
-  - {id: ui_ux, name: UI/UX Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [ui/ux, ui ux, ux/ui, ux design, ui design, thiết kế ui/ux, user experience, user interface, wireframe, wireframes, prototype, prototyping]}
+  - {id: ui_ux, name: UI/UX Design, level: 2, parent: group_frontend_mobile, kind: hard, aliases: [ui/ux, ui ux, ux/ui, ux design, ui design, thiết kế ui/ux, user experience, user interface, wireframe, wireframes, prototype, prototyping, user testing, usability testing, kiểm thử người dùng, kiểm thử khả dụng]}
   - {id: figma, name: Figma, level: 3, parent: ui_ux, kind: tool}
   - {id: adobe_xd, name: Adobe XD, level: 3, parent: ui_ux, kind: tool, aliases: []}
   - {id: sketch, name: Sketch, level: 3, parent: ui_ux, kind: tool,
@@ -357,9 +357,9 @@ skills:
   - {id: ocr, name: OCR, level: 2, parent: group_data_ai, kind: hard, aliases: [nhận dạng ký tự quang học]}
   - {id: speech, name: Speech Recognition, level: 2, parent: group_data_ai, kind: hard, aliases: [asr, speech-to-text, nhận dạng giọng nói, text-to-speech, tts]}
   - {id: statistics, name: Thống kê, level: 2, parent: group_data_ai, kind: hard, aliases: [statistics, statistical analysis, xác suất thống kê, probability]}
-  - {id: data_analysis, name: Phân tích dữ liệu, level: 2, parent: group_data_ai, kind: hard, aliases: [data analysis, data analytics, phân tích số liệu, analytics]}
+  - {id: data_analysis, name: Phân tích dữ liệu, level: 2, parent: group_data_ai, kind: hard, aliases: [data analysis, data analytics, phân tích số liệu, analytics, data analyst, chuyên viên phân tích dữ liệu]}
   - {id: data_visualization, name: Data Visualization, level: 2, parent: group_data_ai, kind: hard, aliases: [trực quan hóa dữ liệu, data visualisation, dashboard, dashboards]}
-  - {id: ab_testing, name: A/B Testing, level: 2, parent: group_data_ai, kind: hard, aliases: [a/b test, ab testing, ab test]}
+  - {id: ab_testing, name: A/B Testing, level: 2, parent: group_data_ai, kind: hard, aliases: [a/b test, a/b tests, ab testing, ab test, ab tests]}
   - {id: big_data, name: Big Data, level: 2, parent: group_data_ai, kind: hard, aliases: [dữ liệu lớn, bigdata]}
   - {id: etl, name: ETL, level: 2, parent: group_data_ai, kind: hard, aliases: [elt, etl/elt, data pipeline, data pipelines, pipeline dữ liệu]}
   - {id: data_warehouse, name: Data Warehouse, level: 2, parent: group_data_ai, kind: hard, aliases: [kho dữ liệu, data warehousing, dwh, data lake, lakehouse, data mart]}
@@ -392,7 +392,18 @@ skills:
     context: [data, dữ liệu, big data, hadoop, scala, etl, databricks, python, pyspark, kafka, hive]
     rule: {terms: [spark], forms: [Spark]}
   - {id: pyspark, name: PySpark, level: 3, parent: spark, kind: framework}
-  - {id: hadoop, name: Hadoop, level: 2, parent: group_data_ai, kind: framework, aliases: [apache hadoop, hdfs, mapreduce, hive, apache hive]}
+  - id: hadoop
+    name: Hadoop
+    level: 2
+    parent: group_data_ai
+    kind: framework
+    aliases: [apache hadoop, hdfs, mapreduce, hive, apache hive]
+    # "Hive" cũng là CSDL cục bộ của Flutter ("SQLite, Hive, Isar"): S3-D06, CV thật.
+    ambiguous: true
+    context: [hadoop, hdfs, spark, big data, dữ liệu lớn, mapreduce, hql, hbase, impala, presto,
+              sqoop, data warehouse, etl, emr]
+    rule: {terms: [hive], veto: [flutter, dart, isar, sqlite, riverpod, bloc, local storage,
+                                 local caching, offline, ngoại tuyến, hive box]}
   - {id: flink, name: Apache Flink, level: 2, parent: group_data_ai, kind: framework, aliases: [flink]}
   - {id: airflow, name: Apache Airflow, level: 2, parent: group_data_ai, kind: tool, aliases: [airflow]}
   - {id: dbt, name: dbt, level: 2, parent: group_data_ai, kind: tool, aliases: [data build tool]}
@@ -419,20 +430,29 @@ skills:
   - {id: group_devops_cloud, name: "DevOps, Cloud & Infra", level: 1, category: 6}
   - {id: aws, name: AWS, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [amazon web services, amazon aws]}
   - {id: aws_ec2, name: AWS EC2, level: 3, parent: aws, kind: cloud, aliases: [ec2]}
-  - {id: aws_s3, name: AWS S3, level: 3, parent: aws, kind: cloud, aliases: [amazon s3, s3 bucket]}
+  - {id: aws_s3, name: AWS S3, level: 3, parent: aws, kind: cloud, aliases: [amazon s3, s3 bucket, s3]}
   - {id: aws_lambda, name: AWS Lambda, level: 3, parent: aws, kind: cloud, aliases: [lambda function, lambda functions]}
-  - {id: aws_rds, name: AWS RDS, level: 3, parent: aws, kind: cloud, aliases: [amazon rds, aurora, amazon aurora]}
+  - {id: aws_rds, name: AWS RDS, level: 3, parent: aws, kind: cloud, aliases: [amazon rds, aurora, amazon aurora, rds]}
   - {id: aws_eks, name: AWS EKS, level: 3, parent: aws, kind: cloud, aliases: [eks, amazon eks]}
   - {id: aws_ecs, name: AWS ECS, level: 3, parent: aws, kind: cloud, aliases: [ecs, fargate]}
   - {id: cloudwatch, name: CloudWatch, level: 3, parent: aws, kind: cloud, aliases: [aws cloudwatch]}
-  - {id: aws_iam, name: AWS IAM, level: 3, parent: aws, kind: cloud}
+  - id: aws_iam
+    name: AWS IAM
+    level: 3
+    parent: aws
+    kind: cloud
+    aliases: [iam, aws iam, amazon iam]
+    # "IAM" chung (Azure/GCP/IAM doanh nghiệp) không phải AWS IAM: cần ngữ cảnh AWS (S3-D06).
+    ambiguous: true
+    context: [aws, amazon, ec2, s3, eks, ecs, lambda, rds, cloudwatch, guardduty, cloudtrail]
+    rule: {terms: [iam]}
   - {id: aws_sqs, name: AWS SQS, level: 3, parent: aws, kind: cloud, aliases: [sqs, aws sns]}
   - {id: cloudformation, name: CloudFormation, level: 3, parent: aws, kind: cloud, aliases: [aws cloudformation, aws cdk, cdk]}
   - {id: gcp, name: Google Cloud, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [gcp, google cloud platform]}
   - {id: gke, name: GKE, level: 3, parent: gcp, kind: cloud, aliases: [google kubernetes engine]}
   - {id: cloud_run, name: Cloud Run, level: 3, parent: gcp, kind: cloud, aliases: [cloud functions, google cloud run]}
   - {id: pubsub, name: Pub/Sub, level: 3, parent: gcp, kind: cloud, aliases: [google pub/sub, cloud pub/sub]}
-  - {id: firebase, name: Firebase, level: 3, parent: gcp, kind: cloud}
+  - {id: firebase, name: Firebase, level: 3, parent: gcp, kind: cloud, aliases: [firebase crashlytics, crashlytics, fcm, firebase cloud messaging]}
   - {id: azure, name: Azure, level: 2, parent: group_devops_cloud, kind: cloud, aliases: [microsoft azure]}
   - {id: aks, name: AKS, level: 3, parent: azure, kind: cloud, aliases: [azure kubernetes service]}
   - {id: azure_devops, name: Azure DevOps, level: 3, parent: azure, kind: tool, aliases: [azure pipelines, tfs]}
@@ -488,7 +508,7 @@ skills:
 
   # ===================================================================== 7. Testing, Security & Process
   - {id: group_qa_security_process, name: "Testing, Security & Process", level: 1, category: 7}
-  - {id: software_testing, name: Kiểm thử phần mềm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [software testing, kiểm thử, testing, qa/qc, quality assurance, kỹ thuật test, test design, test techniques]}
+  - {id: software_testing, name: Kiểm thử phần mềm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [software testing, kiểm thử, testing, qa/qc, quality assurance, kỹ thuật test, test design, test techniques, regression testing, regression test, kiểm thử hồi quy, smoke test, smoke testing]}
   - {id: manual_testing, name: Manual Testing, level: 3, parent: software_testing, kind: hard, aliases: [manual test, kiểm thử thủ công, test thủ công, black box testing, kiểm thử hộp đen]}
   - {id: automation_testing, name: Automation Testing, level: 3, parent: software_testing, kind: hard, aliases: [automation test, test automation, kiểm thử tự động, test tự động]}
   - {id: unit_testing, name: Unit Testing, level: 3, parent: software_testing, kind: hard, aliases: [unit test, unit tests, kiểm thử đơn vị]}
@@ -496,7 +516,8 @@ skills:
   - {id: api_testing, name: API Testing, level: 3, parent: software_testing, kind: hard, aliases: [api test, kiểm thử api, test api]}
   - {id: performance_testing, name: Performance Testing, level: 3, parent: software_testing, kind: hard, aliases: [performance test, load testing, load test, stress test, stress testing, kiểm thử hiệu năng, kiểm thử tải]}
   - {id: mobile_testing, name: Mobile Testing, level: 3, parent: software_testing, kind: hard, aliases: [mobile test, kiểm thử mobile, test mobile]}
-  - {id: test_case, name: Test Case Design, level: 3, parent: software_testing, kind: hard, aliases: [test case, test cases, testcase, viết test case, viết testcase, test plan, test scenario, test scenarios, kế hoạch kiểm thử]}
+  - {id: uat, name: UAT, level: 3, parent: software_testing, kind: hard, aliases: [user acceptance testing, user acceptance test, kiểm thử chấp nhận người dùng, nghiệm thu uat, kiểm thử uat]}
+  - {id: test_case, name: Test Case Design, level: 3, parent: software_testing, kind: hard, aliases: [test case, test cases, testcase, viết test case, viết testcase, test plan, test plans, test scenario, test scenarios, kế hoạch kiểm thử, lập kế hoạch kiểm thử, lập kế hoạch test]}
   - {id: selenium, name: Selenium, level: 3, parent: software_testing, kind: tool, aliases: [selenium webdriver]}
   - {id: cypress, name: Cypress, level: 3, parent: software_testing, kind: tool}
   - {id: playwright, name: Playwright, level: 3, parent: software_testing, kind: tool}
@@ -515,14 +536,14 @@ skills:
   - {id: tdd, name: TDD, level: 2, parent: group_qa_security_process, kind: hard, aliases: [test-driven development, test driven development, bdd, behavior-driven development]}
   - {id: security, name: Information Security, level: 2, parent: group_qa_security_process, kind: hard, aliases: [security, bảo mật, an toàn thông tin, an ninh mạng, cybersecurity, cyber security, information security, application security, network security, bảo mật hệ thống]}
   - {id: owasp, name: OWASP, level: 3, parent: security, kind: hard, aliases: [owasp top 10, xss, csrf, sql injection]}
-  - {id: pentest, name: Penetration Testing, level: 3, parent: security, kind: hard, aliases: [pentest, pen test, kiểm thử xâm nhập, ethical hacking, red team]}
+  - {id: pentest, name: Penetration Testing, level: 3, parent: security, kind: hard, aliases: [pentest, pen test, kiểm thử xâm nhập, ethical hacking, red team, oscp, ceh, certified ethical hacker]}
   - {id: siem, name: SIEM, level: 3, parent: security, kind: tool, aliases: [splunk, qradar, soc, security operations center, wazuh]}
   - {id: firewall, name: Firewall, level: 3, parent: security, kind: hard, aliases: [tường lửa, waf, fortigate, palo alto, checkpoint, ids/ips]}
   - {id: security_tools, name: Burp Suite, level: 3, parent: security, kind: tool, aliases: [burpsuite, metasploit, nmap, wireshark, kali linux]}
   - {id: iso27001, name: ISO 27001, level: 3, parent: security, kind: hard, aliases: [iso/iec 27001, pci dss, soc 2, gdpr]}
   - {id: cryptography, name: Cryptography, level: 3, parent: security, kind: hard, aliases: [mã hóa, encryption, pki, ssl/tls, tls/ssl, ssl, tls]}
   - {id: iam_sso, name: IAM & SSO, level: 3, parent: security, kind: hard, aliases: [identity and access management, single sign-on, sso, mfa, 2fa]}
-  - {id: agile, name: Agile, level: 2, parent: group_qa_security_process, kind: hard, aliases: [agile methodologies, agile methodology, phương pháp agile, agile/scrum]}
+  - {id: agile, name: Agile, level: 2, parent: group_qa_security_process, kind: hard, aliases: [agile methodologies, agile methodology, phương pháp agile]}
   - {id: scrum, name: Scrum, level: 3, parent: agile, kind: hard, aliases: [scrum master, sprint planning, psm]}
   - {id: kanban, name: Kanban, level: 3, parent: agile, kind: hard}
   - {id: waterfall, name: Waterfall, level: 2, parent: group_qa_security_process, kind: hard, aliases: [mô hình thác nước, v-model]}
@@ -533,14 +554,15 @@ skills:
   - {id: uml, name: UML, level: 2, parent: group_qa_security_process, kind: hard, aliases: [use case diagram, sequence diagram, class diagram, activity diagram, sơ đồ uml, draw.io, visio, bpmn, miro]}
   - {id: business_analysis, name: Phân tích nghiệp vụ, level: 2, parent: group_qa_security_process, kind: hard, aliases: [business analysis, phân tích yêu cầu, requirement analysis, requirements analysis, requirement gathering, thu thập yêu cầu, brd, srs, phân tích hệ thống]}
   - {id: user_story, name: User Story, level: 3, parent: business_analysis, kind: hard, aliases: [user stories, viết user story, use case, use cases, acceptance criteria]}
-  - {id: product_management, name: Quản lý sản phẩm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [product management, product owner, product roadmap, xây dựng roadmap sản phẩm, roadmap sản phẩm]}
+  - {id: product_management, name: Quản lý sản phẩm, level: 2, parent: group_qa_security_process, kind: hard, aliases: [product management, product owner, product roadmap, xây dựng roadmap sản phẩm, roadmap sản phẩm, product backlog, backlog grooming, backlog refinement]}
   - {id: project_management, name: Quản lý dự án, level: 2, parent: group_qa_security_process, kind: hard, aliases: [project management, quản trị dự án, quản lý dự án phần mềm, lập kế hoạch dự án, theo dõi tiến độ dự án, pmp]}
   - {id: erp, name: ERP, level: 2, parent: group_qa_security_process, kind: domain, aliases: [hệ thống erp, sap, sap erp, sap s/4hana, oracle erp, microsoft dynamics]}
   - {id: crm, name: CRM, level: 2, parent: group_qa_security_process, kind: domain, aliases: [salesforce, hubspot, hệ thống crm]}
   - {id: fintech, name: Fintech, level: 2, parent: group_qa_security_process, kind: domain, aliases: [banking domain, nghiệp vụ ngân hàng, core banking, payment gateway, cổng thanh toán, e-wallet, ví điện tử]}
   - {id: ecommerce, name: E-commerce, level: 2, parent: group_qa_security_process, kind: domain, aliases: [ecommerce, thương mại điện tử, e commerce]}
-  - {id: code_review, name: Code Review, level: 2, parent: group_qa_security_process, kind: hard, aliases: [review code, clean code]}
-  - {id: technical_writing, name: Technical Documentation, level: 2, parent: group_qa_security_process, kind: hard, aliases: [viết tài liệu kỹ thuật, tài liệu kỹ thuật, technical writing, technical documentation]}
+  - {id: saas, name: SaaS, level: 2, parent: group_qa_security_process, kind: domain, aliases: [software as a service, nền tảng saas, multi-tenant, multi tenant, multi-tenancy]}
+  - {id: code_review, name: Code Review, level: 2, parent: group_qa_security_process, kind: hard, aliases: [review code, clean code, code reviews, peer code review, peer code reviews]}
+  - {id: technical_writing, name: Technical Documentation, level: 2, parent: group_qa_security_process, kind: hard, aliases: [viết tài liệu kỹ thuật, soạn tài liệu kỹ thuật, viết tài liệu, technical writing, technical documentation]}
   - {id: office_skills, name: Tin học văn phòng, level: 2, parent: group_qa_security_process, kind: tool, aliases: [microsoft office, ms office, office 365, microsoft 365, powerpoint, google workspace, phần mềm văn phòng, thành thạo tin học văn phòng]}
   # Kỹ năng mềm và ngoại ngữ
   - {id: english, name: Tiếng Anh, level: 2, parent: group_qa_security_process, kind: soft, aliases: [english, tiếng anh giao tiếp, tiếng anh chuyên ngành, toeic, ielts, business english, tiếng anh cơ bản]}
@@ -560,3 +582,7 @@ skills:
   - {id: stakeholder_management, name: Stakeholder Management, level: 2, parent: group_qa_security_process, kind: soft, aliases: [quản lý các bên liên quan, làm việc với khách hàng, customer communication]}
   - {id: attention_to_detail, name: "Cẩn thận, chi tiết", level: 2, parent: group_qa_security_process, kind: soft, aliases: [attention to detail, tỉ mỉ, cẩn thận, detail-oriented]}
   - {id: adaptability, name: Thích nghi, level: 2, parent: group_qa_security_process, kind: soft, aliases: [adaptability, khả năng thích nghi, chịu áp lực, làm việc dưới áp lực, chịu được áp lực]}
+
+# Cụm KHÔNG phải kỹ năng nhưng chứa một alias: bộ khớp lấy cụm dài nhất nên cụm chặn nuốt alias
+# bên trong rồi bị bỏ. "Khoa học máy tính" (tên ngành, 95/1833 tin VietJobs) chứa "học máy".
+stop_phrases: [khoa học máy tính, ngành khoa học máy tính]

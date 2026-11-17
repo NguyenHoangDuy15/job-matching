@@ -58,6 +58,9 @@ class SkillMatcher:
                 key = _norm(term)
                 self._owner[key] = skill
                 self._processor.add_keyword(key, key)
+        self._stops = set(getattr(taxonomy, "stop_phrases", ()))
+        for key in self._stops:
+            self._processor.add_keyword(key, key)
 
     def find(self, text: str | None) -> list[SkillMatch]:
         """Mọi lần khớp được chấp nhận, theo thứ tự xuất hiện."""
@@ -67,6 +70,7 @@ class SkillMatcher:
         raw = [
             SkillMatch(self._owner[key].id, key, start, end, cased[start:end])
             for key, start, end in self._processor.extract_keywords(lower, span_info=True)
+            if key not in self._stops
         ]
         certain = [m for m in raw if not self._needs_check(m)]
         accepted = {(m.start, m.end) for m in certain}
@@ -99,6 +103,8 @@ class SkillMatcher:
         accepted = {(m.start, m.end) for m in self.find(cased)}
         result: list[list[str]] = [[] for _ in cleaned]
         for key, start, end in self._processor.extract_keywords(lower, span_info=True):
+            if key in self._stops:
+                continue
             m = SkillMatch(self._owner[key].id, key, start, end, cased[start:end])
             whole_item = (start, end) in spans and not self._rejected(m, lower)
             if (start, end) in accepted or whole_item:

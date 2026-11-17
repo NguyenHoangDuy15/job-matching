@@ -93,9 +93,16 @@ class _Config:
         weak = "|".join(re.escape(w) for w in sorted(data["address_weak"], key=len, reverse=True))
         self.address_weak = re.compile(rf"(?<![\w])(?:{weak})(?![\w])")
         self.not_name = _words(data["not_name_words"])
+        place = [unicodedata.normalize("NFC", w).lower() for w in data.get("place_words", [])]
+        self.place_accented = _words(place)  # khớp trên chữ thường CÓ dấu
+        self.place_folded = {fold_keep_length(w) for w in place}
         self.title_words = _words(data["title_words"])
         domains = "|".join(re.escape(d) for d in data["profile_domains"])
-        self.profile_url = rf"(?:https?://)?(?:www\.)?(?:{domains})/[^\s,;)\]]+"
+        hosts = "|".join(re.escape(d) for d in data.get("profile_hosts", []))
+        self.profile_url = (
+            rf"(?:https?://)?(?:www\.)?(?:{domains})/[^\s,;)\]]+"
+            rf"|(?:https?://)?[\w-]+\.(?:{hosts})(?:/[^\s,;)\]]*)?"
+        )
         self.provinces = load_index_from_seed()
 
 
@@ -114,6 +121,21 @@ def _lines(text: str):
 def _is_cap_word(w: str) -> bool:
     letters = [c for c in w if c.isalpha()]
     return bool(letters) and len(letters) == len(w) and (w[0].isupper()) and len(w) <= 8
+
+
+def _not_name(phrase: str, cfg: _Config) -> bool:
+    """Cụm có từ tổ chức/địa danh nên không phải tên người. Từ địa danh trùng tên khi bỏ dấu
+    ("Quận"/"Quân") so có dấu; cụm không dấu thì chỉ tính khi đứng đầu."""
+    folded = fold_keep_length(phrase)
+    if cfg.not_name.search(folded):
+        return True
+    lower = unicodedata.normalize("NFC", phrase).lower()
+    if cfg.place_accented.search(lower):
+        return True
+    if folded == lower:  # không dấu: "VO DUC QUAN" là tên, "QUAN 3" / "PHUONG 5" không phải
+        first = folded.split()[0] if folded.split() else ""
+        return first in cfg.place_folded
+    return False
 
 
 def _province_code(segment: str, cfg: _Config) -> int | None:
@@ -206,7 +228,7 @@ def _name_line(raw: str, cfg: _Config, *, surname_first_only: bool) -> tuple[int
     if not 2 <= len(words) <= 4 or not all(_is_cap_word(w) for w in words):
         return None
     folded = fold_keep_length(body)
-    if cfg.not_name.search(folded) or cfg.title_words.search(folded) or _is_place(body, cfg):
+    if _not_name(body, cfg) or cfg.title_words.search(folded) or _is_place(body, cfg):
         return None
     if match_heading(body):
         return None
@@ -235,7 +257,7 @@ def _first_line_name(text: str, cfg: _Config) -> tuple[int, int] | None:
             2 <= len(words) <= 5
             and all(_is_cap_word(w) for w in words)
             and not cfg.title_words.search(folded)
-            and not cfg.not_name.search(folded)
+            and not _not_name(body, cfg)
             and not match_heading(body)
             and not _is_place(body, cfg)
         ):
@@ -377,7 +399,7 @@ def redact(text: str, *, known_names: tuple[str, ...] | list[str] = ()) -> Redac
                 and (r.start <= header_end or region in ("header", "other"))
                 and 2 <= len(words) <= 4
                 and all(_is_cap_word(w) for w in words)
-                and not cfg.not_name.search(fold_keep_length(span_text))
+                and not _not_name(span_text, cfg)
                 and not cfg.title_words.search(fold_keep_length(span_text))
                 and not _is_place(span_text, cfg)
                 and not _overlaps((r.start, r.end), skill_spans)
@@ -407,6 +429,15 @@ def redact(text: str, *, known_names: tuple[str, ...] | list[str] = ()) -> Redac
         for s, e in _propagate_names(text, names)
         if all(w[0].isupper() for w in text[s:e].split())  # "Cổng thanh toán" không phải tên
     ]
+
+    # Link trang cá nhân tìm qua nhãn ("Portfolio: an.dev") → che mọi chỗ cùng link (CV song ngữ
+    # ghi lại ở dòng không có nhãn).
+    links = {text[s:e] for kind, s, e, _ in found if kind == "PROFILE_URL" and e - s >= 4}
+    for link in links:
+        found += [
+            ("PROFILE_URL", m.start(), m.end(), "propagate")
+            for m in re.finditer(rf"(?<![\w.-]){re.escape(link)}(?![\w-])", text)
+        ]
 
     # Địa chỉ: giữ phần tỉnh/thành ở cuối (không phải PII, cần cho gợi ý theo địa điểm).
     provinces: list[int] = []

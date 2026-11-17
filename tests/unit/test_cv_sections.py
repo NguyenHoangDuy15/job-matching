@@ -103,6 +103,9 @@ def test_sample_cv_sections(path):
         ("References", "other"),
         ("Thông tin cá nhân", "header"),
         ("CONTACT", "header"),
+        ("PART I — ENGLISH VERSION", "header"),  # CV song ngữ (S3-D06)
+        ("PHẦN II — PHIÊN BẢN TIẾNG VIỆT", "header"),
+        ("KEY ACHIEVEMENTS", "activities"),
     ],
 )
 def test_heading_variants(line, name):
@@ -198,3 +201,17 @@ def test_lexicon_has_no_duplicate_and_version():
     lex = load_lexicon()
     assert lex.version.startswith("cv-sections-")
     assert len({p for p, _ in lex.phrases}) == len(lex.phrases)
+
+
+def test_bilingual_cv_second_part_restarts_header():
+    """Tên + liên hệ của phần tiếng Việt không bị gộp vào mục Học vấn/Chứng chỉ phía trước;
+    nhãn che PII "[HỌ_TÊN]" (chữ HOA) không bị đoán là heading."""
+    text = (
+        "PART I — ENGLISH VERSION\n[HỌ_TÊN]\nBackend Developer\n"
+        "EDUCATION\nB.Sc. — HUST (2019 – 2023)\n"
+        "PHẦN II — PHIÊN BẢN TIẾNG VIỆT\n[HỌ_TÊN]\nGitHub: github.com/[LINK]\n"
+        "KINH NGHIỆM\nCông ty X"
+    )
+    secs = split_sections(text)
+    assert [s.name for s in secs.sections] == ["header", "education", "header", "experience"]
+    assert secs.section_at(text.index("GitHub")) == "header"

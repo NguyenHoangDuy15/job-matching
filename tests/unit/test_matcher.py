@@ -56,6 +56,15 @@ def matcher() -> SkillMatcher:
         ("Sử dụng thành thạo Excel, VBA", ["excel", "vba"]),
         ("We excel at problem solving", ["problem_solving"]),
         ("Docker, K8s, CI/CD trên AWS", ["docker", "kubernetes", "ci_cd", "aws"]),
+        # S3-D06 (CV thật): cụm chặn, "Hive" của Flutter, "IAM" chung, "Agile/Scrum"
+        ("Kỹ sư Khoa học Máy tính", []),
+        ("Kinh nghiệm học máy", ["machine_learning"]),
+        ("SQLite, Hive, Isar, Secure Storage", ["sqlite"]),
+        ("Hadoop, Hive, Spark", ["hadoop", "spark"]),
+        ("Baseline bảo mật cloud: IAM, VPC, Storage", ["security", "cloud_computing"]),
+        ("AWS (EC2, IAM, S3, RDS)", ["aws", "aws_ec2", "aws_iam", "aws_s3", "aws_rds"]),
+        ("Agile/Scrum sprints, peer code reviews", ["agile", "scrum", "code_review"]),
+        ("Lập kế hoạch kiểm thử", ["test_case"]),
     ],
 )
 def test_skills(matcher, text, expected):

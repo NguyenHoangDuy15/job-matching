@@ -84,6 +84,10 @@ class _Config:
         self.levels: dict[str, str] = data["evidence_level"]
         self.fallback_level: str = data.get("fallback_level", "listed")
         self.max_chars: int = int(data.get("snippet_max_chars", 200))
+        school = sorted(data.get("school_words", []), key=len, reverse=True)
+        self.school_line = re.compile(
+            rf"(?<![\w])(?:{'|'.join(map(re.escape, school)) or '(?!)'})(?![\w])"
+        )
         words = sorted(data["internship_words"], key=len, reverse=True)
         self.internship = re.compile(rf"(?<![\w])(?:{'|'.join(map(re.escape, words))})(?![\w])")
 
@@ -148,17 +152,21 @@ def _entries_from_text(
                 and (single_date or last_was_bullet)
             )  # fmt: skip
             if starts:
-                if current is not None:
-                    entries.append(Entry(**current, text_end=pos))
                 rng = found[0] if found else None
                 rest = raw[: rng.text_start] + raw[rng.text_end :] if rng else raw
                 rest = re.sub(r"(?<!\d)(?:19|20)\d{2}(?!\d)", "", rest) if single_date else rest
                 parts = [_clean(p) for p in _PARTS.split(rest) if _clean(p)]
+                parts = [p for p in parts if not _is_location(p)]  # "06/2024 – nay | Hà Nội"
+                start_at = pos
+                if not parts and prev_plain is not None:  # "Công ty X — Dev" ⏎ "03/2021 – nay"
+                    start_at = prev_plain[0]
+                    parts = [_clean(p) for p in _PARTS.split(prev_plain[1]) if _clean(p)]
+                if sec.name == "experience":
+                    parts = _org_first(parts)
                 org = parts[0] if parts else None
                 title = parts[1] if len(parts) > 1 and sec.name == "experience" else None
-                start_at = pos
-                if org is None and prev_plain is not None:  # "Công ty X" ⏎ "03/2021 – nay"
-                    start_at, org = prev_plain
+                if current is not None:
+                    entries.append(Entry(**current, text_end=start_at))
                 current = {
                     "section": sec.name, "org": org, "title": title, "text_start": start_at,
                     "start": rng.label()[0] if rng else None,
@@ -184,6 +192,40 @@ def _entries_from_text(
         if e.section == "experience" and rng is not None:
             (intern_months if intern else ranges).append(rng)
     return final, ranges, [r.months for r in intern_months]
+
+
+_PLACE_EXTRA = {"vietnam", "viet nam", "vn", "remote", "hybrid", "onsite", "on-site", "tu xa"}
+
+
+def _is_location(part: str) -> bool:
+    """Nơi làm việc ("Hanoi, Vietnam", "TP. Hồ Chí Minh", "Remote"), không phải công ty."""
+    from cvparser.redact import _is_place
+    from cvparser.redact import load_config as pii_config
+
+    pieces = [x.strip() for x in part.split(",") if x.strip()]
+    return bool(pieces) and all(
+        fold_keep_length(x) in _PLACE_EXTRA or _is_place(x, pii_config()) for x in pieces
+    )
+
+
+def _org_first(parts: list[str]) -> list[str]:
+    """Dòng việc làm viết "Chức danh — Công ty" (mẫu CV tiếng Anh) → [công ty, chức danh]."""
+    from cvparser.redact import load_config as pii_config
+
+    if len(parts) < 2:
+        return parts
+    cfg = pii_config()
+
+    def is_org(p: str) -> bool:
+        return bool(cfg.not_name.search(fold_keep_length(p)))
+
+    def is_title(p: str) -> bool:
+        return bool(cfg.title_words.search(fold_keep_length(p))) and not is_org(p)
+
+    a, b = parts[0], parts[1]
+    if (is_title(a) and not is_title(b)) or (is_org(b) and not is_org(a)):
+        return [b, a, *parts[2:]]
+    return parts
 
 
 def _entries_from_tables(tables, as_of: date) -> tuple[list[Entry], list[DateRange]]:
@@ -223,6 +265,33 @@ def _cell(row: list, i: int | None) -> str | None:
 # ----------------------------------------------------------------------------- kỹ năng
 
 
+_URL = re.compile(
+    r"(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)*\.(?:com|net|org|io|vn|me|dev|app|co|ai)(?:/\S*)?",
+    re.I,
+)
+
+
+_LINK_LABEL = re.compile(r"([^\s:|·•,;][^:|·•,;]{0,30}?)\s*[:：]\s*$")
+
+
+def _non_skill_spans(line: str, pos: int, entries: list[Entry]) -> list[tuple[int, int]]:
+    """Đoạn không lấy kỹ năng: đường dẫn URL ("github.com/[LINK]") cùng nhãn của nó ("GitHub:"),
+    và tên công ty ở dòng tiêu đề việc làm ("Blue Lotus Cloud | DevOps Engineer | 2021 – nay":
+    "Cloud" không phải kỹ năng)."""
+    spans = []
+    for m in [*_URL.finditer(line), *re.finditer(r"\[LINK\]", line)]:
+        spans.append(m.span())
+        label = _LINK_LABEL.search(line, 0, m.start())
+        if label:  # "GitHub: github.com/[LINK]": nhãn liên hệ, không phải kỹ năng GitHub
+            spans.append(label.span(1))
+    for e in entries:
+        if e.section == "experience" and e.text_start == pos and e.org:
+            i = line.find(e.org)
+            if i >= 0:
+                spans.append((i, i + len(e.org)))
+    return spans
+
+
 def _snippet(line: str, s: int, e: int, max_chars: int) -> tuple[str, tuple[int, int]]:
     body = _BULLET.sub("", line, count=1).strip()
     shift = line.find(body) if body else 0
@@ -257,8 +326,13 @@ def _skills(
             continue
         line = prepare(raw)[0]
         lead = len(raw) - len(raw.lstrip())
+        skip = _non_skill_spans(line, pos, entries)
         for m in matcher.find(line):
+            if any(a <= m.start and m.end <= b for a, b in skip):
+                continue
             section = secs.section_at(pos + lead + m.start)
+            if section == "education" and cfg.school_line.search(fold_keep_length(raw)):
+                continue  # tên trường / ngành học ("Khoa học Máy tính", "Học viện Mật mã")
             level = cfg.fallback_level if fallback else cfg.levels.get(section)
             if level is None:
                 continue
@@ -329,15 +403,15 @@ def _target_title(text: str, secs: CvSections, entries: list[Entry]):
     from cvparser.redact import _is_place
     from cvparser.redact import load_config as pii_config
 
-    header = next((s for s in secs.sections if s.name == "header"), None)
-    if header is not None:
+    for header in (s for s in secs.sections if s.name == "header"):
         for _, raw in _lines(text, header.start, header.end):
-            line = raw.strip()
+            # "Full-Stack Engineer (Node.js / React / AWS)": bỏ phần ngoặc liệt kê công nghệ
+            line = " ".join(re.sub(r"\([^()]*\)", " ", raw).split()).strip(" -–—|")
             words = line.split()
             if (
                 1 <= len(words) <= 7
-                and not re.search(r"[\[@:\d]", line)
-                and not match_heading(line)
+                and not re.search(r"[\[@:\d]", raw)
+                and not match_heading(raw)
                 and not _is_place(line, pii_config())
             ):
                 return line, "header"

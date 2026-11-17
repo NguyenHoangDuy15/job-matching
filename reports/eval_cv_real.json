@@ -1,0 +1,203 @@
+{
+  "cv": 10,
+  "doc_duoc": 10,
+  "ky_nang_may": 302,
+  "dung": 293,
+  "sai": 9,
+  "bo_sot": 83,
+  "precision": 0.97,
+  "recall": 0.779,
+  "f1": 0.864,
+  "dung_muc": 0.973,
+  "so_nam_mae": 0.0,
+  "so_nam_lech_le_0_5": 10,
+  "so_nam_cham": 10,
+  "chuc_danh_dung": "10/10",
+  "section_dung": 10,
+  "pii_lo": 0,
+  "sai_hay_gap": [
+    [
+      "software_testing",
+      3
+    ],
+    [
+      "data_analysis",
+      2
+    ],
+    [
+      "kanban",
+      1
+    ],
+    [
+      "data_visualization",
+      1
+    ],
+    [
+      "system_design",
+      1
+    ],
+    [
+      "ui_ux",
+      1
+    ]
+  ],
+  "alias_thieu": [
+    {
+      "skill_id": "unit_testing",
+      "cach_viet": "unit and integration testing",
+      "cv": "cvr01"
+    },
+    {
+      "skill_id": "aws_lambda",
+      "cach_viet": "lambda",
+      "cv": "cvr03"
+    },
+    {
+      "skill_id": "flutter",
+      "cach_viet": "provider",
+      "cv": "cvr04"
+    },
+    {
+      "skill_id": "aws",
+      "cach_viet": "vpc",
+      "cv": "cvr05"
+    },
+    {
+      "skill_id": "artificial_intelligence",
+      "cach_viet": "agentic",
+      "cv": "cvr07"
+    },
+    {
+      "skill_id": "software_testing",
+      "cach_viet": "cross-browser test execution",
+      "cv": "cvr08"
+    },
+    {
+      "skill_id": "security",
+      "cach_viet": "mobsf",
+      "cv": "cvr09"
+    }
+  ],
+  "ngoai_tu_dien": [
+    [
+      "Webhook",
+      2
+    ],
+    [
+      "Trivy",
+      2
+    ],
+    [
+      "Testcontainers",
+      1
+    ],
+    [
+      "RBAC",
+      1
+    ],
+    [
+      "Zustand",
+      1
+    ],
+    [
+      "React Query",
+      1
+    ],
+    [
+      "shadcn/ui",
+      1
+    ],
+    [
+      "Framer Motion",
+      1
+    ],
+    [
+      "Lighthouse",
+      1
+    ],
+    [
+      "Web Accessibility",
+      1
+    ],
+    [
+      "Server-Side Rendering",
+      1
+    ],
+    [
+      "Code Splitting",
+      1
+    ],
+    [
+      "Prisma",
+      1
+    ],
+    [
+      "TypeORM",
+      1
+    ],
+    [
+      "CloudFront",
+      1
+    ],
+    [
+      "Stripe",
+      1
+    ],
+    [
+      "Dependency Injection",
+      1
+    ],
+    [
+      "Hive DB",
+      1
+    ],
+    [
+      "Isar",
+      1
+    ],
+    [
+      "Fastlane",
+      1
+    ],
+    [
+      "Codemagic",
+      1
+    ],
+    [
+      "WebRTC",
+      1
+    ],
+    [
+      "App Store Connect",
+      1
+    ],
+    [
+      "Google Play Console",
+      1
+    ],
+    [
+      "Push Notification",
+      1
+    ],
+    [
+      "Offline-first",
+      1
+    ],
+    [
+      "Route 53",
+      1
+    ],
+    [
+      "Autoscaling",
+      1
+    ],
+    [
+      "FinOps",
+      1
+    ],
+    [
+      "CKA",
+      1
+    ]
+  ]
+}

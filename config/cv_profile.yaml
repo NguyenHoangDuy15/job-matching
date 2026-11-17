@@ -1,7 +1,7 @@
 # Hồ sơ CV (S3-D04, US-12): mức bằng chứng, câu trích, số năm kinh nghiệm, chức danh mong muốn.
 # Dùng bởi cvparser.dates và cvparser.profile. Đổi file này thì tăng `version`.
 
-version: cv-profile-1
+version: cv-profile-2
 
 # Mức bằng chứng theo section (cvparser.sections). Section không có ở đây → bỏ qua kỹ năng.
 evidence_level:
@@ -56,3 +56,9 @@ year_only_same_year_months: 6
 # Việc làm có chức danh / dòng chứa các từ này là thực tập: KHÔNG tính vào years_exp
 # (vẫn hiện trong danh sách việc làm, ghi chú số tháng đã bỏ).
 internship_words: [thuc tap, thuc tap sinh, tts, intern, internship, trainee, sinh vien thuc tap]
+
+# Mục Học vấn: dòng có các từ này là tên trường / bằng cấp / ngành học, KHÔNG lấy kỹ năng
+# ("Kỹ sư Khoa học Máy tính", "Academy of Cryptography Techniques", "B.Eng. in Network…"). S3-D06.
+school_words: [dai hoc, hoc vien, truong, cao dang, university, academy, institute, college,
+  school, bachelor, b sc, b.sc, bsc, b.eng, beng, master, m.sc, msc, cu nhan, thac si, tien si,
+  ky su, chuyen nganh, nganh, major, degree, gpa]

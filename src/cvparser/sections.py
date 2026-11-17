@@ -175,6 +175,8 @@ def _looks_like_heading(line: str, styled: bool, lex: _Lexicon) -> bool:
     body = strip_bullet(line)
     if not body or body.endswith(_SENTENCE_END) or "@" in body or any(c.isdigit() for c in body):
         return False
+    if re.fullmatch(r"(?:\[[^\]]+\]\s*)+", body):  # "[HỌ_TÊN]": nhãn che PII, không phải heading
+        return False
     if len(body.split()) > lex.unknown_max_words:
         return False
     return styled or _is_caps(body)
