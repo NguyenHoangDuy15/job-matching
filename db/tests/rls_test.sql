@@ -838,6 +838,91 @@ reset role;
 update app.cvs set delete_after = current_date - 1
  where storage_path = 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf';
 
+-- Test nhóm 5f (S4-D04, migration 0013): hồ sơ CV để so khớp + ghi một lượt Top N
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'get_cv_for_match returns own cv',
+  (v ->> 'cv_id') || '|' || jsonb_typeof(v -> 'skills') || '|' || jsonb_typeof(v -> 'sections'),
+  current_setting('test.cv_a') || '|array|object'
+  from (select api.get_cv_for_match(current_setting('test.cv_a')::uuid) v) t;
+select set_config('test.match_id', api.save_match(
+  current_setting('test.cv_a')::uuid, 10, '{"provinces": [1]}', '{"K": 0.25, "M": 0.35, "E": 0.3, "X": 0.1}',
+  'ranker-v1', 2, 812,
+  '[{"rank": 1, "job_id": 1, "score": 82.4, "k": 0.9, "m": 0.75, "e": 0.88, "x": null,
+     "gap": {"missing": ["spark"]}, "explanation": "Khớp 2/2 kỹ năng bắt buộc"}]')::text, false);
+insert into results select 'save_match writes request', kind || '|' || top_n || '|' || engine_version || '|' || latency_ms,
+  'seeker_topn|10|ranker-v1|812'
+  from app.match_requests where id = current_setting('test.match_id')::bigint;
+insert into results select 'save_match writes results (null component kept)',
+  count(*)::text || '|' || min(score_h)::text || '|' || bool_and(x is null)::text, '1|82.40|true'
+  from app.match_results where request_id = current_setting('test.match_id')::bigint;
+do $$
+declare
+  v_state text;
+  v_case  record;
+begin
+  for v_case in
+    select * from (values
+      ('save_match rejects more results than top_n', 1,
+       '[{"rank": 1, "job_id": 1, "score": 50}, {"rank": 2, "job_id": 1, "score": 40}]'::jsonb, '22023'),
+      ('save_match rejects hr job', 5, '[{"rank": 1, "job_id": 3, "score": 50}]'::jsonb, '22023'),
+      ('save_match rejects unknown job', 5, '[{"rank": 1, "job_id": 999999, "score": 50}]'::jsonb, '22023'),
+      ('save_match rejects top_n 0', 0, '[]'::jsonb, '22023'),
+      ('save_match rejects score above 100', 5, '[{"rank": 1, "job_id": 1, "score": 101}]'::jsonb, '23514')
+    ) t(name, top_n, res, expected)
+  loop
+    begin
+      perform api.save_match(current_setting('test.cv_a')::uuid, v_case.top_n, '{}', '{}', 'ranker-v1',
+                             2, 1, v_case.res);
+      insert into results values (v_case.name, 'saved', v_case.expected);
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, v_case.expected);
+    end;
+  end loop;
+end $$;
+reset role;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'seekerB cannot read A match results', count(*)::text, '0'
+  from app.match_requests where id = current_setting('test.match_id')::bigint;
+do $$
+declare
+  v_state text;
+  v_case  record;
+begin
+  for v_case in
+    select * from (values
+      ('seekerB cannot get A cv for match',
+       'select api.get_cv_for_match(current_setting(''test.cv_a'')::uuid)'),
+      ('seekerB cannot save match on A cv',
+       'select api.save_match(current_setting(''test.cv_a'')::uuid, 5, ''{}'', ''{}'', ''v'', 1, 1, ''[]'')')
+    ) t(name, sql)
+  loop
+    begin
+      execute v_case.sql;
+      insert into results values (v_case.name, 'allowed', 'P0002');
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, 'P0002');
+    end;
+  end loop;
+end $$;
+reset role;
+
+set role anon; set request.jwt.claims = '{}';
+do $$
+declare v_state text;
+begin
+  perform api.save_match(gen_random_uuid(), 5, '{}', '{}', 'v', 1, 1, '[]');
+  insert into results values ('anon cannot call save_match', 'called', '42501');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('anon cannot call save_match', v_state, '42501');
+end $$;
+reset role;
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);

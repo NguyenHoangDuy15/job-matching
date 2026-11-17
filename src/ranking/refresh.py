@@ -38,6 +38,17 @@ class RefreshingIndex(Generic[T]):
             self._refresh_in_background()
         return self._index
 
+    def peek(self) -> T | None:
+        """Bản đang có, KHÔNG chặn: chưa dựng xong lần đầu → None (API trả 503 engine_warming)
+        và bắt đầu dựng ở luồng nền; quá hạn → trả bản cũ và dựng lại ở luồng nền."""
+        if self._index is None or self._clock() - self._at >= self._every:
+            self._refresh_in_background()
+        return self._index
+
+    @property
+    def ready(self) -> bool:
+        return self._index is not None
+
     def _refresh_in_background(self) -> None:
         with self._lock:
             if self._building:
