@@ -883,6 +883,18 @@ begin
 end $$;
 reset role;
 
+-- 0014: hồ sơ + vector đoạn CV trong một lượt gọi
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'get_cv_match_input returns cv and chunks',
+  (v ->> 'cv_id') || '|' || jsonb_array_length(v -> 'chunks')::text || '|'
+    || jsonb_array_length((v -> 'chunks' -> 0 ->> 'embedding')::jsonb)::text,
+  current_setting('test.cv_a') || '|1|1024'
+  from (select api.get_cv_match_input(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3') v) t;
+insert into results select 'get_cv_match_input filters chunks by model',
+  jsonb_array_length(api.get_cv_match_input(current_setting('test.cv_a')::uuid, 'other') -> 'chunks')::text, '0';
+reset role;
+
 set role authenticated;
 set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
 insert into results select 'seekerB cannot read A match results', count(*)::text, '0'
@@ -896,6 +908,8 @@ begin
     select * from (values
       ('seekerB cannot get A cv for match',
        'select api.get_cv_for_match(current_setting(''test.cv_a'')::uuid)'),
+      ('seekerB cannot get A cv match input',
+       'select api.get_cv_match_input(current_setting(''test.cv_a'')::uuid, ''cf/baai/bge-m3'')'),
       ('seekerB cannot save match on A cv',
        'select api.save_match(current_setting(''test.cv_a'')::uuid, 5, ''{}'', ''{}'', ''v'', 1, 1, ''[]'')')
     ) t(name, sql)

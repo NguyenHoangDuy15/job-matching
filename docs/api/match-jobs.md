@@ -100,4 +100,10 @@ Công thức: `H = 100 × (0,25 K + 0,35 M + 0,30 E + 0,10 X)` chỉ trên thàn
 | `MATCH_RATE_LIMIT_PER_MINUTE` | Không | Mặc định 20 |
 
 Cần migration `db/migrations/0013_match_jobs_api.sql` (RPC `api.get_cv_for_match`, `api.save_match`).
+Nên có `0014_cv_match_input.sql` (S4-D05): đọc hồ sơ + vector CV trong một lượt gọi, nhanh hơn
+khoảng 85 ms; thiếu thì API tự dùng lại hai RPC cũ.
+
+Header `Server-Timing` của response ghi thời gian từng bước (`cv_read`, `cv_embed`, `rank`,
+`still_open`, `save`, `total`, đơn vị ms): xem trong DevTools → Network → Timing, hoặc đọc
+`response.headers.get("server-timing")` để hiện thời gian phản hồi (S4-H04).
 `/health` có thêm `matcher.ready`, `matcher.corpus_size`.

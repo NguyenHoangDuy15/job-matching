@@ -162,3 +162,32 @@ def test_cv_without_signals_scored_by_m_x(snapshot, tax, cfg):
                  vectors=None)  # fmt: skip
     out = rank(snapshot, cv, MatchFilters(), TODAY, tax, cfg)
     assert out.results[0].job.id == 3
+
+
+def test_signals_cached_per_cv_across_n_and_filters(snapshot, tax, cfg, monkeypatch):
+    """Đổi bộ lọc / N cho cùng CV: không tính lại BM25 và nhân ma trận trên toàn kho."""
+    from ranking.rank import SignalsCache
+
+    calls = {"kw": 0, "sem": 0}
+    kw_score, sem_score = snapshot.keyword.score, snapshot.semantic.score
+
+    def count_kw(q):
+        calls["kw"] += 1
+        return kw_score(q)
+
+    def count_sem(v, model=None):
+        calls["sem"] += 1
+        return sem_score(v, model=model)
+
+    monkeypatch.setattr(snapshot.keyword, "score", count_kw)
+    monkeypatch.setattr(snapshot.semantic, "score", count_sem)
+    cache = SignalsCache()
+    a = rank(snapshot, _cv(), MatchFilters(), TODAY, tax, cfg, signals_cache=cache)
+    b = rank(snapshot, _cv(), MatchFilters(provinces=(HN,)), TODAY, tax, cfg, signals_cache=cache)
+    assert calls == {"kw": 1, "sem": 1}
+    k1 = next(s.combined.components for s in a.results if s.job.id == 1)
+    k2 = next(s.combined.components for s in b.results if s.job.id == 1)
+    assert k1 == k2
+    rank(snapshot, _cv(skills={"java": "strong"}), MatchFilters(), TODAY, tax, cfg,
+         signals_cache=cache)  # fmt: skip
+    assert calls == {"kw": 2, "sem": 2}  # CV khác (hồ sơ đổi) → tính lại cả K và E

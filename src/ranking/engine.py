@@ -7,6 +7,7 @@ một tập tin; `corpus_size` là N dùng tính phân vị K, E. API giữ snap
 
 from __future__ import annotations
 
+import contextlib
 import threading
 import time
 from dataclasses import dataclass, field
@@ -128,6 +129,11 @@ class MatcherDB:
     def build_snapshot(self) -> Snapshot:
         with self.connect() as conn:
             return load_snapshot(conn)
+
+    def warm(self) -> None:
+        """Mở sẵn kết nối lúc khởi động: lượt Top N đầu không phải chờ mở kết nối (~0,5 s)."""
+        with contextlib.suppress(Exception):  # lỗi mạng lúc khởi động: lượt đầu thử lại
+            self.still_open([0])
 
     def still_open(self, ids: list[int]) -> set[int]:
         """Trong `ids`, các tin vẫn còn mở và còn hạn NGAY LÚC NÀY (snapshot có thể cũ ≤ 1 giờ)."""

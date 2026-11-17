@@ -27,10 +27,15 @@ class SupabaseClient:
         *,
         transport: httpx.BaseTransport | None = None,
         timeout: float = 10.0,
+        http: httpx.Client | None = None,
     ) -> None:
-        self._http = httpx.Client(
+        """`http`: client dùng chung giữa các request (giữ kết nối HTTPS, không bắt tay TLS lại
+        mỗi lượt, S4-D05). Khi đó token gửi theo từng request và client không bị đóng ở đây."""
+        self._auth = {"apikey": apikey, "Authorization": f"Bearer {token}"}
+        self._shared = http is not None
+        self._new_connection = not self._shared
+        self._http = http or httpx.Client(
             base_url=url.rstrip("/"),
-            headers={"apikey": apikey, "Authorization": f"Bearer {token}"},
             timeout=timeout,
             transport=transport,
         )
@@ -39,13 +44,14 @@ class SupabaseClient:
         return self
 
     def __exit__(self, *exc) -> None:
-        self._http.close()
+        if not self._shared:
+            self._http.close()
 
     def rpc(self, name: str, params: dict):
         r = self._http.post(
             f"/rest/v1/rpc/{name}",
             json=params,
-            headers={"Content-Profile": "api", "Accept-Profile": "api"},
+            headers={**self._auth, "Content-Profile": "api", "Accept-Profile": "api"},
         )
         if r.status_code >= 400:
             try:
@@ -56,7 +62,9 @@ class SupabaseClient:
         return r.json() if r.content else None
 
     def download(self, path: str) -> bytes:
-        r = self._http.get(f"/storage/v1/object/authenticated/{CV_BUCKET}/{quote(path)}")
+        r = self._http.get(
+            f"/storage/v1/object/authenticated/{CV_BUCKET}/{quote(path)}", headers=self._auth
+        )
         if r.status_code >= 400:
             raise SupabaseError(r.status_code, "storage", r.text[:200])
         return r.content
