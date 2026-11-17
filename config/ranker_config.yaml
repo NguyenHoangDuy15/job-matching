@@ -1,0 +1,32 @@
+# Cấu hình xếp hạng Top N (US-16). H = 100 × (0,25 K + 0,35 M + 0,30 E + 0,10 X).
+# Đổi file này phải ghi số đo trước/sau trong PR (checklist DoD).
+version: ranker-v1
+
+# K · điểm Từ khóa (S4-D01): BM25 (bm25s) trên tin đang mở, K = phân vị điểm BM25 trên TOÀN kho.
+keyword:
+  bm25:
+    k1: 1.5
+    b: 0.75
+    method: lucene
+  # Trọng số trường của tin = số lần lặp token (bm25s không có BM25F). Quyền lợi không đưa vào.
+  field_weights:
+    title: 3
+    requirements: 2
+    preferred: 1
+    description: 1
+  # Truy vấn từ hồ sơ CV: kỹ năng có bằng chứng strong nặng gấp đôi listed; chức danh mong muốn ×2.
+  query_weights:
+    strong: 2
+    listed: 1
+    target_title: 2
+  # Âm tiết ngắn hơn số này bị bỏ (trừ chữ số); token kỹ năng "sk:<id>" luôn giữ.
+  min_token_len: 2
+  # Làm mới index trong API (giây). Tin mới / đóng sau lượt crawl có mặt trong ≤ 1 giờ.
+  refresh_seconds: 3600
+  # Đã bỏ dấu (fold). Từ rất phổ biến trong JD, không giúp phân biệt tin.
+  stopwords: [
+    va, cac, cua, co, cho, voi, la, de, trong, tai, theo, tu, duoc, mot, nhung, nhu, khi, ve,
+    hoac, tren, cung, se, da, dang, nay, do, thi, ma, den, bang, hon, rat, khong, nhieu, moi,
+    vao, ra, len, viec, cong, ty, the, and, or, of, to, in, for, with, on, at, by, an, is, are,
+    be, as, from, our, your, you, we, will, can, etc
+  ]
