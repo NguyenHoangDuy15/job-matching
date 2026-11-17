@@ -1,5 +1,5 @@
-# Build image API đọc CV (S3-D05) và đẩy lên GHCR khi main đổi phần code API dùng; sau đó
-# "Factory reboot" Hugging Face Space để Space kéo image mới. Hướng dẫn: docs/deploy/cv-api.md.
+# Build image API đọc CV (S3-D05) và đẩy lên GHCR khi main đổi phần code API dùng; sau đó báo
+# Render (hoặc Hugging Face Space nếu còn dùng) kéo image mới. Hướng dẫn: docs/deploy/cv-api.md.
 name: cv-api-image
 
 on:
@@ -33,6 +33,17 @@ jobs:
           docker build -t "$image:latest" -t "$image:${GITHUB_SHA::7}" .
           docker push "$image:latest"
           docker push "$image:${GITHUB_SHA::7}"
+      - name: Render kéo image mới
+        # Bỏ qua nếu chưa cài secret RENDER_DEPLOY_HOOK (Render → service → Settings → Deploy Hook).
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "Chưa cài RENDER_DEPLOY_HOOK: bỏ qua"
+            exit 0
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
+          echo "Đã báo Render deploy image mới"
       - name: Factory reboot Hugging Face Space
         # Bỏ qua nếu chưa cài (secret HF_TOKEN + biến HF_SPACE, ví dụ "ten-tai-khoan/jobmatch-cv-api").
         if: ${{ vars.HF_SPACE != '' }}
