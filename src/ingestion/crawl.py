@@ -9,6 +9,8 @@ Luồng: trang danh sách → link tin → trang chi tiết → JSON-LD JobPosti
     uv run python scripts/crawl.py parse duong/dan/trang.html --source itviec
 
 Sau crawl (S2-D06): ③ gắn kỹ năng + mức cho tin mới/đổi (bỏ bằng --skip-skills).
+                  ④ (S3-D07) vector hóa tin mới/đổi + tin đang mở còn thiếu (bỏ bằng --skip-embed;
+                  tự bỏ qua khi chưa cấu hình EMBEDDER / CF_API_TOKEN).
 """
 
 import argparse
@@ -220,7 +222,53 @@ def label_skills_after_crawl(store: PgStore) -> bool:
     return True
 
 
+def embed_after_crawl(store: PgStore) -> bool:
+    """Bước ④ (S3-D07): vector hóa theo đoạn cho tin mới / đổi nội dung / thẻ kỹ năng đổi, cùng mọi
+    tin đang mở còn thiếu vector (bảo đảm 100% tin mở có vector), rồi dọn tin đóng quá 30 ngày.
+    Chưa cấu hình model thì bỏ qua. Hết quota / lỗi mạng: dừng gọn, lượt sau làm tiếp.
+    """
+    from embedding.embedder import from_env
+    from embedding.store import coverage_report, embed_jobs, prune_closed
+
+    conn = store.conn
+    try:
+        embedder = from_env()
+        if embedder is None:
+            _log("== vector: chưa cấu hình EMBEDDER / CF_API_TOKEN, bỏ qua ==")
+            return True
+        stats = embed_jobs(conn, embedder)
+        pruned = prune_closed(conn)
+        report = coverage_report(conn, embedder.model)
+    except Exception as exc:  # không để bước phụ làm hỏng lượt crawl (cả EmbedderError)
+        conn.rollback()
+        _log(f"  ✗ vector hóa lỗi: {exc!r}")
+        return False
+    _log(
+        f"== vector ({embedder.model}) ==\n"
+        f"  cần làm {stats.get('can_lam', 0)} tin · đã ghi {stats.get('da_ghi_tin', 0)} tin "
+        f"({stats.get('da_ghi_doan', 0)} đoạn) · dọn {pruned} đoạn tin đóng · "
+        f"độ phủ {report['pct']}% ({report['with_vectors']}/{report['open_jobs']})"
+        + (" · DỪNG GIỮA CHỪNG (lượt sau làm tiếp)" if stats.get("dung_vi") else "")
+    )
+    return not stats.get("dung_vi")
+
+
 # ---- CLI -------------------------------------------------------------------------
+SECRET_KEYS = ("EMBEDDER", "CF_ACCOUNT_ID", "CF_API_TOKEN")
+
+
+def load_env_file(keys: tuple[str, ...] = SECRET_KEYS) -> None:
+    """Chạy trên máy: lấy các khóa này từ .env (đã gitignore) nếu biến môi trường chưa có.
+    Trên GitHub Actions / server, biến môi trường (secret) luôn được ưu tiên."""
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key.strip() in keys:
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 def _database_url() -> str | None:
     if os.environ.get("DATABASE_URL"):
         return os.environ["DATABASE_URL"]
@@ -293,6 +341,7 @@ def cmd_parse(path: Path, cfg: SourceConfig) -> int:
 def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
+    load_env_file()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", default=str(ROOT / "config" / "sources.yaml"))
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -316,6 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         "--skip-fx", action="store_true", help="không cập nhật tỷ giá trước khi crawl"
     )
     p_run.add_argument("--skip-skills", action="store_true", help="không gắn kỹ năng sau khi crawl")
+    p_run.add_argument("--skip-embed", action="store_true", help="không vector hóa sau khi crawl")
 
     p_parse = sub.add_parser("parse", help="đọc 1 file HTML đã lưu, không cần mạng")
     p_parse.add_argument("path", type=Path)
@@ -376,6 +426,8 @@ def main(argv: list[str] | None = None) -> int:
             not isinstance(store, PgStore) or args.skip_skills or label_skills_after_crawl(store)
         )
         if not skills_ok:
+            exit_code = 1
+        if isinstance(store, PgStore) and not args.skip_embed and not embed_after_crawl(store):
             exit_code = 1
     finally:
         store.close()
