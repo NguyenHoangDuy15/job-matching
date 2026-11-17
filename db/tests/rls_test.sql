@@ -621,6 +621,146 @@ end $$;
 insert into results select 'seeker keeps 5 cvs', count(*)::text, '5' from api.v_my_cvs;
 reset role;
 
+-- Test nhóm 5c (S4-D01/D02, migration 0012): role chỉ đọc matcher_ro cho API so khớp
+-- Đoạn vector cho tin crawl #1 và JD nội bộ HR #3 (worker ghi bằng service_role → seed bằng superuser)
+insert into core.job_chunks (job_id, section, chunk_no, content, embedding, model)
+select j, 'summary', 0, 'đoạn thử',
+       ('[' || array_to_string(array_fill(0.01::float4, array[1024]), ',') || ']')::extensions.halfvec,
+       'test-model'
+  from unnest(array[1, 3]) j
+on conflict do nothing;
+grant all on results to matcher_ro;  -- chỉ bảng tạm của bộ test
+insert into results select 'matcher_ro logs in read-only',
+  (select coalesce(array_to_string(rolconfig, ','), '') like '%default_transaction_read_only=on%'
+     from pg_roles where rolname = 'matcher_ro')::text, 'true';
+set role matcher_ro;
+insert into results select 'matcher sees only crawled jobs',
+  (select string_agg(distinct origin::text, ',') from core.jobs), 'crawled';
+insert into results select 'matcher reads chunks of crawled jobs only',
+  (select string_agg(job_id::text, ',' order by job_id) from core.job_chunks where model = 'test-model'), '1';
+insert into results select 'matcher reads skills of crawled jobs only',
+  (select count(*) from core.job_skills where job_id in (3, 4))::text, '0';
+insert into results select 'matcher reads skill dictionary', ((select count(*) from ref.skills) > 0)::text, 'true';
+do $$
+declare
+  v_state text;
+  v_case  record;
+begin
+  for v_case in
+    select * from (values
+      ('matcher cannot read cvs',        'select count(*) from app.cvs'),
+      ('matcher cannot read cv chunks',  'select count(*) from app.cv_chunks'),
+      ('matcher cannot update jobs',     'update core.jobs set title = title where id = 1'),
+      ('matcher cannot insert job skills',
+       'insert into core.job_skills (job_id, skill_id, level) select 1, id, ''required'' from ref.skills limit 1')
+    ) t(name, sql)
+  loop
+    begin
+      execute v_case.sql;
+      insert into results values (v_case.name, 'allowed', '42501');
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, '42501');
+    end;
+  end loop;
+end $$;
+reset role;
+
+-- Test nhóm 5d (S4-D02, migration 0012): lưu / đọc vector đoạn CV bằng JWT người dùng
+create temp table t_vec as
+select jsonb_agg(0.25) as v1024, '[0.25, 0.5, 0.75]'::jsonb as v3 from generate_series(1, 1024);
+grant select on t_vec to authenticated;
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'save_cv_chunks stores chunks',
+  api.save_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3',
+    jsonb_build_array(
+      jsonb_build_object('section', 'summary', 'chunk_no', 0, 'content', 'Data Engineer · Python', 'embedding', v1024),
+      jsonb_build_object('section', 'experience', 'chunk_no', 0, 'content', 'ETL bằng Airflow', 'embedding', v1024)))::text,
+  '2'
+  from t_vec;
+insert into results select 'get_cv_chunks returns 1024-dim vectors',
+  count(*)::text || '|' || min(jsonb_array_length(embedding::jsonb))::text || '|' || min((embedding::jsonb ->> 0)::numeric)::text,
+  '2|1024|0.25'
+  from api.get_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3');
+insert into results select 'get_cv_chunks filters by model', count(*)::text, '0'
+  from api.get_cv_chunks(current_setting('test.cv_a')::uuid, 'other-model');
+-- Lưu lại (CV đọc lại / hồ sơ đổi): thay toàn bộ đoạn cũ
+select api.save_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3',
+  jsonb_build_array(jsonb_build_object('section', 'summary', 'chunk_no', 0, 'content', 'Mới', 'embedding', v1024)))
+  from t_vec;
+insert into results select 'save_cv_chunks replaces old chunks', string_agg(section || ':' || content, ','), 'summary:Mới'
+  from api.get_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3');
+do $$
+declare
+  v_state text;
+  v_case  record;
+  v1024   jsonb := (select v1024 from t_vec);
+  v3      jsonb := (select v3 from t_vec);
+begin
+  for v_case in
+    select * from (values
+      ('save_cv_chunks rejects 3-dim vector', 'm',
+       jsonb_build_array(jsonb_build_object('section', 's', 'chunk_no', 0, 'embedding', v3))),
+      ('save_cv_chunks rejects non-array', 'm', '{"section": "s"}'::jsonb),
+      ('save_cv_chunks rejects missing section', 'm',
+       jsonb_build_array(jsonb_build_object('chunk_no', 0, 'embedding', v1024))),
+      ('save_cv_chunks rejects missing model', '',
+       jsonb_build_array(jsonb_build_object('section', 's', 'chunk_no', 0, 'embedding', v1024)))
+    ) t(name, model, chunks)
+  loop
+    begin
+      perform api.save_cv_chunks(current_setting('test.cv_a')::uuid, v_case.model, v_case.chunks);
+      insert into results values (v_case.name, 'saved', '22023');
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, '22023');
+    end;
+  end loop;
+end $$;
+insert into results select 'rejected saves keep old chunks', count(*)::text, '1'
+  from api.get_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3');
+reset role;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'seekerB cannot see A cv chunks', count(*)::text, '0'
+  from app.cv_chunks where cv_id = current_setting('test.cv_a')::uuid;
+do $$
+declare
+  v_state text;
+begin
+  begin
+    perform * from api.get_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3');
+    insert into results values ('seekerB cannot read A chunks via RPC', 'read', 'P0002');
+  exception when others then
+    get stacked diagnostics v_state = returned_sqlstate;
+    insert into results values ('seekerB cannot read A chunks via RPC', v_state, 'P0002');
+  end;
+  begin
+    perform api.save_cv_chunks(current_setting('test.cv_a')::uuid, 'cf/baai/bge-m3', '[]');
+    insert into results values ('seekerB cannot save chunks into A cv', 'saved', 'P0002');
+  exception when others then
+    get stacked diagnostics v_state = returned_sqlstate;
+    insert into results values ('seekerB cannot save chunks into A cv', v_state, 'P0002');
+  end;
+end $$;
+reset role;
+insert into results select 'A chunks intact after B attempts', count(*)::text, '1'
+  from app.cv_chunks where cv_id = current_setting('test.cv_a')::uuid;
+
+set role anon; set request.jwt.claims = '{}';
+do $$
+declare v_state text;
+begin
+  perform api.save_cv_chunks(gen_random_uuid(), 'm', '[]');
+  insert into results values ('anon cannot call save_cv_chunks', 'called', '42501');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('anon cannot call save_cv_chunks', v_state, '42501');
+end $$;
+reset role;
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
