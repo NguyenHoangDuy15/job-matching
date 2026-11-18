@@ -56,8 +56,8 @@ export function ParsePending({ cvId, status }: { cvId: string; status: string })
             {busy ? "Đang phân tích…" : status === "queued" ? "Phân tích" : "Phân tích lại"}
           </Button>
         )}
-        <Link href="/ho-so/tai-cv" className={buttonVariants({ variant: "ghost" })}>
-          Tải CV khác
+        <Link href="/ho-so" className={buttonVariants({ variant: "ghost" })}>
+          Về Hồ sơ của tôi
         </Link>
       </div>
     </div>

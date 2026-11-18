@@ -301,13 +301,13 @@ export function SkillConfirmForm({
 
       <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t bg-background py-3">
         <Link
-          href="/ho-so/tai-cv"
+          href="/ho-so"
           className={buttonVariants({ variant: "ghost" })}
           onClick={(e) => {
             if (dirty && !window.confirm(LEAVE_PROMPT)) e.preventDefault();
           }}
         >
-          ← Tải CV khác
+          ← Hồ sơ của tôi
         </Link>
         <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
           {dirty ? "Chưa lưu thay đổi" : confirmed ? `Đã lưu ${lastSaved === "vừa xong" ? "vừa xong" : `lúc ${lastSaved}`}` : ""}

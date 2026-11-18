@@ -175,8 +175,8 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
               Tải CV khác
             </Button>
           )}
-          <Link href="/viec-lam" className={buttonVariants({ variant: "ghost" })}>
-            Xem việc làm
+          <Link href="/ho-so" className={buttonVariants({ variant: "ghost" })}>
+            Về Hồ sơ của tôi
           </Link>
         </div>
       </div>
@@ -188,7 +188,13 @@ export function CvUploadForm({ userId, cvCount, terms }: { userId: string; cvCou
       {full ? (
         <Alert>
           <AlertTitle>Bạn đã có {MAX_CVS} CV</AlertTitle>
-          <AlertDescription>Xóa bớt CV cũ ở trang Hồ sơ của tôi để tải CV mới (Sprint 3).</AlertDescription>
+          <AlertDescription>
+            Xóa bớt CV cũ ở trang{" "}
+            <Link href="/ho-so" className="font-medium underline underline-offset-4">
+              Hồ sơ của tôi
+            </Link>{" "}
+            để tải CV mới.
+          </AlertDescription>
         </Alert>
       ) : (
         <label
