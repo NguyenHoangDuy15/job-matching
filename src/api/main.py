@@ -50,10 +50,16 @@ def setup_matcher(app: FastAPI, settings) -> None:
 
     db = MatcherDB(settings.matcher_database_url)
     app.state.matcher_db = db
-    app.state.match_engine = RefreshingIndex(db.build_snapshot, settings.match_refresh_seconds)
+    from api.match import warm_rank
+
+    def build():
+        return warm_rank(db.build_snapshot())  # chỉ báo sẵn sàng sau khi đã làm nóng
+
+    app.state.match_engine = RefreshingIndex(build, settings.match_refresh_seconds)
     embedder = from_env()
     app.state.cv_vectors = CvVectorCache(embedder) if embedder is not None else None
     app.state.match_engine.peek()  # bắt đầu nạp ở luồng nền
+    threading.Thread(target=db.warm, daemon=True).start()  # mở sẵn kết nối kiểm tin còn mở
 
 
 app = FastAPI(title="Job Matching API", lifespan=lifespan)

@@ -80,27 +80,35 @@ class MatchDetail:
         return [r for r in self.rows if r.credit == 0]
 
 
+def _candidates(skill_id: str, tax) -> tuple[tuple[str, str], ...]:
+    """Mọi kỹ năng có thể đáp ứng `skill_id` và quan hệ, theo thứ tự ưu tiên. Chỉ phụ thuộc từ
+    điển nên tính một lần rồi nhớ trên chính đối tượng taxonomy (S4-D05: duyệt cây ở mỗi lượt
+    chiếm 64% thời gian rank())."""
+    cache = tax.__dict__.setdefault("_m_candidates", {}) if hasattr(tax, "__dict__") else {}
+    hit = cache.get(skill_id)
+    if hit is not None:
+        return hit
+    out: list[tuple[str, str]] = [(skill_id, "exact")]
+    if skill_id in tax:
+        # Kỹ năng con và cháu (JD Java, CV Spring Boot).
+        stack = list(tax.children(skill_id))
+        while stack:
+            child = stack.pop()
+            out.append((child, "child"))
+            stack.extend(tax.children(child))
+        parent = tax.get(skill_id).parent
+        if parent is not None and tax.get(parent).level >= 2:
+            out.append((parent, "parent_only"))
+            # Anh em chỉ khi cùng cha cấp 2 (Spring Boot ↔ Hibernate); cùng nhóm cấp 1 không tính.
+            out += [(sib, "sibling") for sib in tax.children(parent) if sib != skill_id]
+    result = tuple(out)
+    cache[skill_id] = result
+    return result
+
+
 def _relations(skill_id: str, cv: Mapping[str, str], tax) -> list[tuple[str, str]]:
     """(kỹ năng CV, quan hệ với kỹ năng JD) theo thứ tự ưu tiên."""
-    out: list[tuple[str, str]] = []
-    if skill_id in cv:
-        out.append((skill_id, "exact"))
-    if skill_id not in tax:
-        return out
-    # Kỹ năng con và cháu (JD Java, CV Spring Boot).
-    stack = list(tax.children(skill_id))
-    while stack:
-        child = stack.pop()
-        if child in cv:
-            out.append((child, "child"))
-        stack.extend(tax.children(child))
-    parent = tax.get(skill_id).parent
-    if parent is not None and tax.get(parent).level >= 2:
-        if parent in cv:
-            out.append((parent, "parent_only"))
-        # Anh em chỉ khi cùng cha cấp 2 (Spring Boot ↔ Spring MVC); cùng nhóm cấp 1 không tính.
-        out += [(sib, "sibling") for sib in tax.children(parent) if sib != skill_id and sib in cv]
-    return out
+    return [(s, rel) for s, rel in _candidates(skill_id, tax) if s in cv]
 
 
 def m_score(
@@ -119,14 +127,20 @@ def m_score(
         if r is None or skill_id in seen:  # "chỉ nhắc" không tính; một kỹ năng tính một lần
             continue
         seen.add(skill_id)
-        best = SkillMatchRow(skill_id, level, r, None, None, 0.0, None, 0.0)
-        for cv_skill, relation in _relations(skill_id, cv_evidence, tax):
+        best: tuple | None = None  # (credit, kỹ năng CV, quan hệ, f, bằng chứng)
+        for cv_skill, relation in _candidates(skill_id, tax):
+            ev = cv_evidence.get(cv_skill)
+            if ev is None:
+                continue
             factor = cfg.tree[relation]
-            ev = cv_evidence[cv_skill]
             credit = factor * cfg.evidence.get(ev, 0.0)
-            if credit > best.credit:
-                best = SkillMatchRow(skill_id, level, r, cv_skill, relation, factor, ev, credit)
-        rows.append(best)
+            if best is None or credit > best[0]:
+                best = (credit, cv_skill, relation, factor, ev)
+        if best is None or best[0] <= 0:
+            rows.append(SkillMatchRow(skill_id, level, r, None, None, 0.0, None, 0.0))
+        else:
+            credit, cv_skill, relation, factor, ev = best
+            rows.append(SkillMatchRow(skill_id, level, r, cv_skill, relation, factor, ev, credit))
     if not rows:
         return None
     rows.sort(key=lambda x: (x.level != "required", -x.credit, x.skill_id))

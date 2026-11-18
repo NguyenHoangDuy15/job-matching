@@ -6,7 +6,12 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH=/app/src
+    PYTHONPATH=/app/src \
+    # BLAS 1 luồng (S4-D05): máy chủ giới hạn CPU theo hạn mức (Render Free 0,1 CPU); BLAS nhiều
+    # luồng tiêu hết hạn mức rồi bị treo chờ chu kỳ sau, nhân ma trận chậm ~400 lần thay vì ~10.
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1
 
 # Cài thư viện trước, copy code sau: sửa code không phải cài lại thư viện (cache layer).
 COPY pyproject.toml uv.lock .python-version ./

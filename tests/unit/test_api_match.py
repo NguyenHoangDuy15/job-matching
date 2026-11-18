@@ -86,7 +86,7 @@ class TwoDimEmbedder:
 
 
 class FakeSupabase:
-    def __init__(self, cv=None, cv_error=None, save_error=None, stored_chunks=None):
+    def __init__(self, cv=None, cv_error=None, save_error=None, stored_chunks=None, merged=True):
         self.cv = cv if cv is not None else {
             "cv_id": CV_ID, "parse_status": "parsed", "target_title": "Data Engineer",
             "years_exp": 5, "profile_confirmed_at": None,
@@ -97,6 +97,7 @@ class FakeSupabase:
         self.cv_error = cv_error
         self.save_error = save_error
         self.stored = stored_chunks or []
+        self.merged = merged  # False: Supabase chưa chạy migration 0014
         self.calls: list[tuple[str, dict]] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
@@ -104,6 +105,12 @@ class FakeSupabase:
         name = request.url.path.rsplit("/", 1)[-1]
         body = json.loads(request.content or b"{}")
         self.calls.append((name, body))
+        if name == "get_cv_match_input":
+            if not self.merged:  # PostgREST: hàm không tồn tại
+                return httpx.Response(404, json={"code": "PGRST202", "message": "x"})
+            if self.cv_error:
+                return httpx.Response(400, json={"code": self.cv_error, "message": "x"})
+            return httpx.Response(200, json={**self.cv, "chunks": self.stored})
         if name == "get_cv_for_match":
             if self.cv_error:
                 return httpx.Response(400, json={"code": self.cv_error, "message": "x"})
@@ -140,7 +147,16 @@ def make_client():
 
     yield _make
     app.dependency_overrides.clear()
-    for attr in ("jwks", "supabase_transport", "pool", "match_engine", "matcher_db", "cv_vectors"):
+    for attr in (
+        "jwks",
+        "supabase_transport",
+        "pool",
+        "match_engine",
+        "matcher_db",
+        "cv_vectors",
+        "supabase_http",
+        "supabase_http_key",
+    ):
         if hasattr(app.state, attr):
             delattr(app.state, attr)
 
@@ -169,7 +185,18 @@ def test_returns_top_n_with_schema(make_client):
     assert top.apply_url == "https://x/1" and top.valid_through == FUTURE
     assert "không phải xác suất" in body.note
     assert [c[0] for c in fake.calls] == [
-        "get_cv_for_match", "get_cv_chunks", "save_cv_chunks", "save_match"]  # fmt: skip
+        "get_cv_match_input", "save_cv_chunks", "save_match"]  # fmt: skip
+    assert "rank;dur=" in r.headers["server-timing"]  # thời gian từng bước cho web / DevTools
+
+
+def test_falls_back_when_merged_rpc_missing(make_client):
+    """Supabase chưa chạy 0014: dùng lại get_cv_for_match + get_cv_chunks, kết quả như cũ."""
+    client, fake = make_client(fake=FakeSupabase(merged=False))
+    r = _post(client)
+    assert r.status_code == 200 and len(r.json()["results"]) == 3
+    assert [c[0] for c in fake.calls] == [
+        "get_cv_match_input", "get_cv_for_match", "get_cv_chunks",
+        "save_cv_chunks", "save_match"]  # fmt: skip
 
 
 def test_top_n_cut_and_saved_payload(make_client):
@@ -256,3 +283,8 @@ def test_rate_limited(make_client):
     client, _ = make_client()
     codes = [_post(client).status_code for _ in range(21)]
     assert codes[-1] == 429 and set(codes[:20]) == {200}
+
+
+def test_warm_rank_prepares_snapshot_before_ready():
+    snap = _snapshot()
+    assert match_module.warm_rank(snap) is snap  # chạy thử rank() không lỗi, trả lại snapshot

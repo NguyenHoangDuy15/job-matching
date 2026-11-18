@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import threading
+from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date
@@ -108,6 +111,49 @@ def explain(job: JobMeta, combined: Combined, match: MatchDetail | None, cv_year
     return " · ".join(parts)
 
 
+class SignalsCache:
+    """K, E trên TOÀN kho của một CV (BM25 mọi tin + nhân ma trận mọi đoạn), nhớ theo snapshot +
+    nội dung truy vấn: đổi N hay bộ lọc cho cùng CV không tính lại (S4-D05: trên 0,1 CPU phép
+    nhân ma trận chiếm phần lớn thời gian một lượt)."""
+
+    def __init__(self, max_items: int = 64):
+        self.max_items = max_items
+        self._data: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key):
+        with self._lock:
+            hit = self._data.get(key)
+            if hit is not None:
+                self._data.move_to_end(key)
+            return hit
+
+    def put(self, key, value) -> None:
+        with self._lock:
+            self._data[key] = value
+            while len(self._data) > self.max_items:
+                self._data.popitem(last=False)
+
+
+def _signals(snapshot: Snapshot, cv: CvInput, cache: SignalsCache | None):
+    key = None
+    if cache is not None:
+        h = hashlib.sha256(" ".join(cv.query_tokens).encode())
+        if cv.vectors is not None:
+            h.update(np.ascontiguousarray(cv.vectors, dtype=np.float32).tobytes())
+        key = (id(snapshot), snapshot.built_at, cv.vectors_model, h.hexdigest())
+        hit = cache.get(key)
+        if hit is not None:
+            return hit
+    kw = snapshot.keyword.score(cv.query_tokens) if cv.query_tokens else None
+    sem = None
+    if cv.vectors is not None and len(cv.vectors):
+        sem = snapshot.semantic.score(cv.vectors, model=cv.vectors_model)
+    if cache is not None:
+        cache.put(key, (kw, sem))
+    return kw, sem
+
+
 def rank(
     snapshot: Snapshot,
     cv: CvInput,
@@ -117,16 +163,14 @@ def rank(
     cfg: RankerConfig,
     per_source: int = 100,
     keep: int = 60,
+    signals_cache: SignalsCache | None = None,
 ) -> RankOutput:
     allowed = allowed_jobs(snapshot, filters, today)
     notes: list[str] = []
-    kw = snapshot.keyword.score(cv.query_tokens) if cv.query_tokens else None
+    kw, sem = _signals(snapshot, cv, signals_cache)
     if kw is None:
         notes.append("K không xác định: CV không có kỹ năng và chức danh")
-    sem = None
-    if cv.vectors is not None and len(cv.vectors):
-        sem = snapshot.semantic.score(cv.vectors, model=cv.vectors_model)
-    else:
+    if sem is None:
         notes.append("E không xác định: chưa có vector CV")
 
     candidates: set[int] = set()

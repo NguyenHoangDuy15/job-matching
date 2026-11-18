@@ -10,15 +10,18 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import time
 import uuid
 from datetime import date, datetime
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo
 
+import httpx
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.auth import User, current_user
@@ -98,10 +101,13 @@ class MatchResponse(BaseModel):
 
 # ---- Vector CV ----------------------------------------------------------------------
 def cv_chunk_list(cv: dict):
-    from embedding.chunker import cv_chunks
+    """Đoạn CV ≤ 300 token. Đếm token bằng ước lượng DƯ (approx_tokens), không nạp tokenizer
+    bge-m3: tokenizer đó tốn khoảng 400 MB RAM, quá giới hạn 512 MB của máy chủ (S4-D05). Đếm
+    dư nên đoạn không bao giờ vượt giới hạn thật, chỉ có thể nhiều đoạn hơn một chút."""
+    from embedding.chunker import approx_tokens, cv_chunks
 
     names = [s.get("name") or s["skill_id"] for s in cv.get("skills") or []]
-    return cv_chunks(cv.get("sections") or {}, cv.get("target_title"), names)
+    return cv_chunks(cv.get("sections") or {}, cv.get("target_title"), names, count=approx_tokens)
 
 
 def cv_vectors(sb: SupabaseClient, cv: dict, cache, timings: dict) -> np.ndarray | None:
@@ -115,10 +121,12 @@ def cv_vectors(sb: SupabaseClient, cv: dict, cache, timings: dict) -> np.ndarray
         return None
     want = [(c.section, c.chunk_no, c.content) for c in chunks]
     t = time.perf_counter()
-    try:
-        stored = sb.rpc("get_cv_chunks", {"p_cv_id": cv["cv_id"], "p_model": cache.model}) or []
-    except SupabaseError:
-        stored = []
+    stored = cv.get("chunks")
+    if stored is None:  # Supabase chưa có 0014: đọc riêng
+        try:
+            stored = sb.rpc("get_cv_chunks", {"p_cv_id": cv["cv_id"], "p_model": cache.model}) or []
+        except SupabaseError:
+            stored = []
     by_key = {(r["section"], r["chunk_no"], r["content"]): r["embedding"] for r in stored}
     timings["cv_chunks_read"] = _ms(t)
     if len(stored) == len(want) and all(k in by_key for k in want):
@@ -140,18 +148,53 @@ def cv_vectors(sb: SupabaseClient, cv: dict, cache, timings: dict) -> np.ndarray
 
 
 # ---- Endpoint -----------------------------------------------------------------------
+_HTTP_LOCK = threading.Lock()
+
+
+def _shared_http(request: Request, settings: Settings) -> httpx.Client:
+    """Một httpx.Client cho mọi lượt /match/jobs: giữ kết nối HTTPS tới Supabase (S4-D05)."""
+    state = request.app.state
+    transport = getattr(state, "supabase_transport", None)
+    key = (settings.supabase_url, id(transport))
+    client = getattr(state, "supabase_http", None)
+    if client is None or getattr(state, "supabase_http_key", None) != key:
+        with _HTTP_LOCK:
+            client = getattr(state, "supabase_http", None)
+            if client is None or getattr(state, "supabase_http_key", None) != key:
+                client = httpx.Client(
+                    base_url=settings.supabase_url.rstrip("/"),
+                    timeout=10.0,
+                    transport=transport,
+                    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+                )
+                state.supabase_http, state.supabase_http_key = client, key
+    return client
+
+
 def _client(request: Request, settings: Settings, user: User) -> SupabaseClient:
     return SupabaseClient(
         settings.supabase_url,
         settings.supabase_publishable_key,
         user.token,
-        transport=getattr(request.app.state, "supabase_transport", None),
+        http=_shared_http(request, settings),
     )
 
 
-def _match(request: Request, body: MatchRequest, user: User, settings: Settings) -> dict:
+def read_cv(sb: SupabaseClient, cv_id: str, model: str | None) -> dict:
+    """Hồ sơ CV + vector đoạn đã lưu trong MỘT lượt gọi (api.get_cv_match_input, migration
+    0014). Supabase chưa chạy 0014 thì dùng lại hai RPC cũ."""
+    if model:
+        try:
+            return sb.rpc("get_cv_match_input", {"p_cv_id": cv_id, "p_model": model})
+        except SupabaseError as e:
+            if e.code not in ("PGRST202", "42883"):  # hàm chưa có: dự phòng bên dưới
+                raise
+    return sb.rpc("get_cv_for_match", {"p_cv_id": cv_id})
+
+
+def _match(request: Request, body: MatchRequest, user: User, settings: Settings) -> tuple:
     from ranking.components import load_ranker_config
-    from ranking.rank import CvInput, MatchFilters, rank, skill_rows
+    from ranking.rank import CvInput, MatchFilters, SignalsCache, rank, skill_rows
     from retrieval.bm25 import query_from_profile
     from skillkit.levels.pipeline import SKILLS_YAML
     from skillkit.taxonomy import load_taxonomy
@@ -169,7 +212,8 @@ def _match(request: Request, body: MatchRequest, user: User, settings: Settings)
     with _client(request, settings, user) as sb:
         t = time.perf_counter()
         try:
-            cv = sb.rpc("get_cv_for_match", {"p_cv_id": cv_id})
+            cache = getattr(request.app.state, "cv_vectors", None)
+            cv = read_cv(sb, cv_id, getattr(cache, "model", None))
         except SupabaseError as e:
             if e.code == "P0002":
                 raise HTTPException(404, {"error": "cv_not_found"}) from None
@@ -180,7 +224,6 @@ def _match(request: Request, body: MatchRequest, user: User, settings: Settings)
         if not cv or cv.get("parse_status") != "parsed":
             raise HTTPException(409, {"error": "cv_not_parsed"})
 
-        cache = getattr(request.app.state, "cv_vectors", None)
         try:
             vectors = cv_vectors(sb, cv, cache, timings)
         except Exception:  # Workers AI lỗi / hết quota: vẫn trả kết quả, E không xác định
@@ -205,7 +248,11 @@ def _match(request: Request, body: MatchRequest, user: User, settings: Settings)
         )
         today = datetime.now(ZoneInfo(settings.timezone)).date()
         t = time.perf_counter()
-        out = rank(snapshot, cv_input, filters, today, _taxonomy(SKILLS_YAML, load_taxonomy), cfg)
+        signals = getattr(request.app.state, "match_signals", None)
+        if signals is None:
+            signals = request.app.state.match_signals = SignalsCache()
+        tax = _taxonomy(SKILLS_YAML, load_taxonomy)
+        out = rank(snapshot, cv_input, filters, today, tax, cfg, signals_cache=signals)
         timings["rank"] = _ms(t)
 
         # Snapshot có thể cũ ≤ 1 giờ: bỏ tin vừa đóng / hết hạn, lấy tin kế tiếp bù vào.
@@ -284,7 +331,8 @@ def _match(request: Request, body: MatchRequest, user: User, settings: Settings)
         "match cv_id=%s top_n=%s allowed=%s candidates=%s results=%s latency_ms=%s timings=%s",
         cv_id, body.top_n, out.allowed, out.candidates, len(results), latency_ms, timings,
     )  # fmt: skip
-    return MatchResponse(
+    timings["total"] = _ms(t0)
+    return timings, MatchResponse(
         request_id=request_id,
         cv_id=body.cv_id,
         top_n=body.top_n,
@@ -300,6 +348,33 @@ def _match(request: Request, body: MatchRequest, user: User, settings: Settings)
 _TAX = {}
 
 
+def warm_rank(snapshot):
+    """Chạy thử một lượt rank() trên snapshot vừa dựng, TRƯỚC khi API báo sẵn sàng: nạp từ
+    điển, bộ so khớp kỹ năng (FlashText), quan hệ cây kỹ năng, numpy. Trên 0,1 CPU lượt đầu
+    chưa làm nóng mất ~6,5 s chỉ cho rank() (S4-D05)."""
+    from ranking.components import load_ranker_config
+    from ranking.rank import CvInput, MatchFilters, rank
+    from retrieval.bm25 import query_from_profile
+    from skillkit.levels.pipeline import SKILLS_YAML
+    from skillkit.taxonomy import load_taxonomy
+
+    if not snapshot.jobs:
+        return snapshot
+    tax = _taxonomy(SKILLS_YAML, load_taxonomy)
+    skills = {slug for job in snapshot.jobs.values() for slug, _, _ in job.skills}
+    for slug in skills:  # quan hệ cây kỹ năng của mọi kỹ năng JD trong kho
+        from ranking.components import _candidates
+
+        _candidates(slug, tax)
+    profile = {"target_title": "Data Engineer",
+               "skills": [{"skill_id": "python", "evidence_level": "strong"}]}  # fmt: skip
+    vec = snapshot.semantic.matrix[:1] if snapshot.semantic.n_chunks else None
+    cv = CvInput({"python": "strong"}, {}, 2.0, query_from_profile(profile), vec,
+                 snapshot.semantic.model)  # fmt: skip
+    rank(snapshot, cv, MatchFilters(), date.today(), tax, load_ranker_config())
+    return snapshot
+
+
 def _taxonomy(path, loader):
     if path not in _TAX:
         _TAX[path] = loader(path)
@@ -312,10 +387,13 @@ async def match_jobs(
     request: Request,
     user: Annotated[User, Depends(current_user)],
     settings: Annotated[Settings, Depends(get_settings)],
-) -> dict:
+) -> JSONResponse:
     if not limiter.check(user.id, settings.match_rate_limit_per_minute):
         raise HTTPException(429, {"error": "rate_limited"})
-    return await run_in_threadpool(_match, request, body, user, settings)
+    timings, payload = await run_in_threadpool(_match, request, body, user, settings)
+    # Server-Timing: thời gian từng bước (DevTools → Network → Timing; web hiện thời gian phản hồi)
+    header = ", ".join(f"{k};dur={v}" for k, v in timings.items())
+    return JSONResponse(payload, headers={"Server-Timing": header})
 
 
 def _ms(t: float) -> float:
