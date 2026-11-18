@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api.cv import router as cv_router
+from api.match import router as match_router
 from api.settings import get_settings
 from api.worker import ParsePool
 
@@ -30,8 +31,29 @@ async def lifespan(app: FastAPI):
         app.state.warm = app.state.pool.warm()
 
     threading.Thread(target=warm, daemon=True).start()  # không chặn cổng mở (Cloud Run/HF đợi)
+    if not hasattr(app.state, "match_engine"):  # test có thể gắn sẵn kho tin giả
+        setup_matcher(app, settings)
     yield
     app.state.pool.close()
+
+
+def setup_matcher(app: FastAPI, settings) -> None:
+    """S4-D04: kho tin trong RAM (BM25 + ma trận vector) qua matcher_ro, nạp ở luồng nền ngay khi
+    khởi động, dựng lại mỗi giờ. Chưa cấu hình MATCHER_DATABASE_URL thì /match/jobs trả 503."""
+    if not settings.matcher_database_url:
+        logging.getLogger("api").warning("chưa có MATCHER_DATABASE_URL: tắt /match/jobs")
+        return
+    from embedding.embedder import from_env
+    from ranking.engine import MatcherDB
+    from ranking.refresh import RefreshingIndex
+    from ranking.semantic import CvVectorCache
+
+    db = MatcherDB(settings.matcher_database_url)
+    app.state.matcher_db = db
+    app.state.match_engine = RefreshingIndex(db.build_snapshot, settings.match_refresh_seconds)
+    embedder = from_env()
+    app.state.cv_vectors = CvVectorCache(embedder) if embedder is not None else None
+    app.state.match_engine.peek()  # bắt đầu nạp ở luồng nền
 
 
 app = FastAPI(title="Job Matching API", lifespan=lifespan)
@@ -42,6 +64,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 app.include_router(cv_router)
+app.include_router(match_router)
 
 
 @app.exception_handler(HTTPException)
@@ -52,4 +75,16 @@ async def _http_error(request: Request, exc: HTTPException) -> JSONResponse:
 
 @app.get("/health")
 def health(request: Request) -> dict:
-    return {"status": "ok", "warm": bool(getattr(request.app.state, "warm", False))}
+    engine = getattr(request.app.state, "match_engine", None)
+    snapshot = engine.peek() if engine is not None else None
+    return {
+        "status": "ok",
+        "warm": bool(getattr(request.app.state, "warm", False)),
+        "matcher": None
+        if engine is None
+        else {
+            "ready": snapshot is not None,
+            "corpus_size": snapshot.corpus_size if snapshot else None,
+            "load_seconds": round(snapshot.load_seconds, 1) if snapshot else None,
+        },
+    }

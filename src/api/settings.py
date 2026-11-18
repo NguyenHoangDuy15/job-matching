@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 10  # mỗi người dùng
     max_cv_bytes: int = 5 * 1024 * 1024
     timezone: str = "Asia/Ho_Chi_Minh"
+    # API Top N (S4-D04): kết nối CHỈ ĐỌC role matcher_ro (migration 0012). Trống = tắt /match/jobs.
+    matcher_database_url: str = ""
+    match_refresh_seconds: int = 3600  # dựng lại kho tin trong RAM
+    match_rate_limit_per_minute: int = 20
 
     @property
     def jwks_url(self) -> str:
