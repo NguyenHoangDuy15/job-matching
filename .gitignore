@@ -24,6 +24,9 @@ data/storage/*
 models/*
 !models/.gitkeep
 
+# S3-T05: trang xem cặp tin chứa toàn văn JD, tạo lại bằng scripts/eval_dedup.py sample
+reports/s3_t05/*.html
+
 # Python
 __pycache__/
 *.py[cod]

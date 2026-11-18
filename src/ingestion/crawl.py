@@ -188,8 +188,9 @@ def crawl_source(
 
 
 def near_dedup_after_crawl(store: PgStore) -> bool:
-    """Sau crawl, trước gắn kỹ năng (S3-T04): gộp tin gần trùng ≥ 0,85 (đủ chắc), đưa cặp
-    0,70–0,85 vào core.dedup_candidates. Chạy trước bước ③ để không gắn kỹ năng cho tin vừa bị gộp.
+    """Sau crawl, trước gắn kỹ năng (S3-T04): gộp tin gần trùng đủ chắc (ingestion.near_dedup),
+    đưa cặp chưa chắc vào core.dedup_candidates. Chạy trước bước ③ để không gắn kỹ năng cho tin
+    vừa bị gộp.
     Lỗi ở bước này không làm mất dữ liệu đã crawl.
     """
     from ingestion.dedup_pg import run_near_dedup
