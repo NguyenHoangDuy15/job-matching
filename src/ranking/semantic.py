@@ -41,6 +41,25 @@ def _l2(m: np.ndarray) -> np.ndarray:
     return m / norms
 
 
+def register_halfvec(conn) -> None:
+    """Đăng ký kiểu halfvec (đọc binary → numpy) cho kết nối. Trên Supabase kiểu nằm ở schema
+    `extensions`, ngoài search_path của role matcher_ro (migration 0012), nên tìm cả tên đầy đủ.
+    Không dùng pgvector.register_vector: hàm đó đòi kiểu `vector` nằm trong search_path."""
+    from pgvector.psycopg.halfvec import register_halfvec_info
+    from psycopg.types import TypeInfo
+
+    for name in ("halfvec", "extensions.halfvec"):
+        try:
+            info = TypeInfo.fetch(conn, name)
+        except Exception:  # schema không tồn tại (Postgres thường): thử tên tiếp theo
+            conn.rollback()
+            info = None
+        if info is not None:
+            register_halfvec_info(conn, info)
+            return
+    raise RuntimeError("không tìm thấy kiểu halfvec (cài extension pgvector chưa?)")
+
+
 def maxsim(query: np.ndarray, docs: np.ndarray, starts: np.ndarray) -> np.ndarray:
     """query (n × d), docs (m × d) đã chuẩn hóa L2, đoạn của mỗi tài liệu nằm liền nhau bắt đầu
     ở `starts` → mảng (số tài liệu,): trung bình theo n đoạn query của max cosine trong tài liệu."""
@@ -90,9 +109,7 @@ class SemanticIndex:
     def from_db(cls, conn, model: str = DEFAULT_MODEL) -> SemanticIndex:
         """Nạp ma trận vector tin đang mở dạng BINARY (pgvector → numpy float16): khoảng 3 s cho
         6.130 đoạn, so với 24 s khi đọc dạng text. Chỉ đọc."""
-        from pgvector.psycopg import register_vector
-
-        register_vector(conn)
+        register_halfvec(conn)
         with conn.cursor(binary=True) as cur:
             cur.execute(_MATRIX_SQL, {"model": model})
             rows = cur.fetchall()
