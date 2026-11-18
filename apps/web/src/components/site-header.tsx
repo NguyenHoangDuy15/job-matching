@@ -14,7 +14,7 @@ const NAV: Record<Role | "guest", NavItem[]> = {
     { href: "/", label: "Trang chủ" },
     { href: "/viec-lam", label: "Việc làm" },
     { href: "/viec-phu-hop", label: "Việc phù hợp", soon: "Sprint 4" },
-    { href: "/ho-so/tai-cv", label: "Hồ sơ CV" }, // S3-H04 đổi về /ho-so (Hồ sơ của tôi)
+    { href: "/ho-so", label: "Hồ sơ CV" }, // Hồ sơ của tôi (S3-H04)
     { href: "/ky-nang-hot", label: "Kỹ năng hot", soon: "Sprint 6" },
   ],
   hr: [

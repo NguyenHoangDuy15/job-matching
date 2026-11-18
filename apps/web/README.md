@@ -31,6 +31,7 @@ src/
     page.tsx · hr/ · admin/ · 403/     trang chủ theo vai trò (US-02)
     viec-lam/            tìm việc + bộ lọc trên URL, 20 tin/trang, skeleton (US-03, US-05)
     viec-lam/[id]/       chi tiết tin: kỹ năng, mô tả/yêu cầu/quyền lợi (US-06, api.v_job_detail)
+    ho-so/               Hồ sơ của tôi: danh sách CV, CV chính, xóa CV (US-13)
     ho-so/tai-cv/        tải CV: kéo thả, kiểm định dạng/dung lượng, đồng ý, tiến trình (US-11)
     ho-so/[cvId]/xac-nhan/  xác nhận kỹ năng theo mức bằng chứng, thêm/xóa kỹ năng (US-12)
     actions/auth.ts      Server Action: đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu, đăng xuất
@@ -40,6 +41,7 @@ src/
     cv-file.ts           kiểm tệp CV trước khi tải (đuôi, 5 MB, byte đầu tệp; unit test: npm test)
     cv-upload.ts         tải CV thẳng lên Storage có % tiến trình
     cv-parse.ts          gọi API đọc CV POST /cv/parse (NEXT_PUBLIC_CV_API_URL)
+    cv-list.ts           danh sách CV của tôi: trạng thái, đếm kỹ năng, lỗi (unit test)
     cv-profile.ts        hồ sơ kỹ năng: gợi ý từ từ điển, in đậm câu trích, lỗi (unit test)
     jobs/                đọc/ghi bộ lọc URL, gọi rpc api.search_jobs, định dạng lương/ngày/nguồn
     auth-rules.ts        bảng route × vai trò, đọc claim JWT (user_role, account_status, org_id)
