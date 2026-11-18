@@ -761,6 +761,83 @@ exception when others then
 end $$;
 reset role;
 
+-- Test nhóm 5e (S3-H04, S3-H05, migration 0015): CV chính, hạn lưu, chuyển hướng tin đã gộp
+-- Seeker D tải 3 CV: c4…01, c4…02, c4…03
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000011', 'seeker4@x.vn', '{"full_name":"Mai Ứng Viên D"}'::jsonb);
+insert into storage.objects (bucket_id, name) values
+  ('cvs', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000001.pdf'),
+  ('cvs', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000002.pdf'),
+  ('cvs', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000003.pdf');
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000011","user_role":"seeker","account_status":"active"}';
+select api.register_cv('c4000000-0000-0000-0000-000000000001', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000001.pdf',
+                       repeat('e1', 32), 'application/pdf', 1000, 'cv-2026-11', 'cv-1.pdf');
+select api.register_cv('c4000000-0000-0000-0000-000000000002', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000002.pdf',
+                       repeat('e2', 32), 'application/pdf', 1000, 'cv-2026-11', 'cv-2.pdf');
+select api.register_cv('c4000000-0000-0000-0000-000000000003', 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000003.pdf',
+                       repeat('e3', 32), 'application/pdf', 1000, 'cv-2026-11', 'cv-3.pdf');
+insert into results select 'register_cv: first cv becomes primary',
+  string_agg(right(id::text, 2) || ':' || is_primary, ',' order by id), '01:true,02:false,03:false' from api.v_my_cvs;
+insert into results select 'register_cv: delete_after = today + 30 in v_my_cvs',
+  bool_and(delete_after = current_date + 30)::text, 'true' from api.v_my_cvs;
+reset role;
+
+-- Thứ tự tải cố định để kiểm "CV mới nhất còn lại"
+update app.cvs set created_at = now() - interval '3 days' where id = 'c4000000-0000-0000-0000-000000000001';
+update app.cvs set created_at = now() - interval '2 days' where id = 'c4000000-0000-0000-0000-000000000002';
+update app.cvs set created_at = now() - interval '1 day'  where id = 'c4000000-0000-0000-0000-000000000003';
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000011","user_role":"seeker","account_status":"active"}';
+select api.set_primary_cv('c4000000-0000-0000-0000-000000000001');
+select api.set_primary_cv('c4000000-0000-0000-0000-000000000002');
+select api.set_primary_cv('c4000000-0000-0000-0000-000000000002');   -- bấm lại: không lỗi
+insert into results select 'set_primary_cv moves primary, exactly one',
+  string_agg(right(id::text, 2) || ':' || is_primary, ',' order by id), '01:false,02:true,03:false' from api.v_my_cvs;
+do $$
+begin
+  begin
+    perform api.set_primary_cv(current_setting('test.cv_a')::uuid);
+    insert into results values ('seekerD cannot set A cv as primary', 'accepted', 'P0002');
+  exception when no_data_found then
+    insert into results values ('seekerD cannot set A cv as primary', 'P0002', 'P0002');
+  end;
+end $$;
+
+-- Xóa CV chính (02) → CV mới nhất còn lại (03) thành CV chính
+delete from storage.objects where name = 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000002.pdf';
+select api.delete_cv('c4000000-0000-0000-0000-000000000002');
+insert into results select 'deleting primary cv promotes newest remaining',
+  string_agg(right(id::text, 2) || ':' || is_primary, ',' order by id), '01:false,03:true' from api.v_my_cvs;
+-- Xóa CV thường → CV chính giữ nguyên
+delete from storage.objects where name = 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000001.pdf';
+select api.delete_cv('c4000000-0000-0000-0000-000000000001');
+insert into results select 'deleting non-primary cv keeps primary',
+  string_agg(right(id::text, 2) || ':' || is_primary, ',' order by id), '03:true' from api.v_my_cvs;
+-- Xóa CV cuối cùng → không lỗi, không còn CV
+delete from storage.objects where name = 'u/00000000-0000-0000-0000-000000000011/c4000000-0000-0000-0000-000000000003.pdf';
+insert into results select 'deleting last cv works', api.delete_cv('c4000000-0000-0000-0000-000000000003')::text, 'true';
+insert into results select 'no cv left after deleting last', count(*)::text, '0' from api.v_my_cvs;
+reset role;
+
+set role anon; set request.jwt.claims = '{}';
+do $$
+declare v_state text;
+begin
+  perform api.set_primary_cv(gen_random_uuid());
+  insert into results values ('anon cannot call set_primary_cv', 'called', '42501');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('anon cannot call set_primary_cv', v_state, '42501');
+end $$;
+reset role;
+
+-- CV người tìm việc quá hạn: chưa bị xóa (chưa có bước xóa file trong Storage), kiểm sau purge ở nhóm 6
+update app.cvs set delete_after = current_date - 1
+ where storage_path = 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf';
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
@@ -771,6 +848,26 @@ insert into results select 'skill_weekly python share (2 tin mở, 1 có Python)
 insert into results select 'region_salary hides salary when n < 20', (p50_vnd is null)::text, 'true' from mart.region_salary where province_code=1 and job_family_id=0;
 insert into results select 'system_daily recorded logins_today', (logins_today >= 1)::text, 'true' from mart.system_daily where day = current_date;
 insert into results select 'purge expired hr cv', app.purge_expired_cvs()::text, '1';
+insert into results select 'purge keeps expired seeker cv (no Storage cleanup yet)', count(*)::text, '1'
+  from app.cvs where storage_path = 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf';
+
+-- (S3-H05, migration 0015) Chạy sau bảng tổng hợp để tin gộp thêm không làm lệch số tuần.
+-- Tin 1 giữ lại, tin TopCV trùng bị gộp vào; link cũ của tin bị gộp phải chuyển về tin 1
+insert into core.jobs (title, title_norm, company_id, apply_url)
+values ('Lập trình viên Python (Data Engineer)', 'lap trinh vien python', 1, 'https://www.topcv.vn/x-1-dup');
+select set_config('test.dup_job', id::text, false) from core.jobs where apply_url = 'https://www.topcv.vn/x-1-dup';
+select core.merge_jobs(1, current_setting('test.dup_job')::bigint);
+select set_config('test.dup_pid',  public_id::text, false) from core.jobs where id = current_setting('test.dup_job')::bigint;
+select set_config('test.keep_pid', public_id::text, false) from core.jobs where id = 1;
+
+set role anon; set request.jwt.claims = '{}';
+insert into results select 'job_redirect: merged job -> kept job',
+  api.job_redirect(current_setting('test.dup_pid')::uuid)::text, current_setting('test.keep_pid');
+insert into results select 'job_redirect: job not merged -> null',
+  coalesce(api.job_redirect(current_setting('test.keep_pid')::uuid)::text, 'null'), 'null';
+insert into results select 'job_redirect: unknown id -> null',
+  coalesce(api.job_redirect(gen_random_uuid())::text, 'null'), 'null';
+reset role;
 
 -- In bảng kết quả và dừng CI nếu có bất kỳ test nào FAIL
 select test, got, expected, case when got = expected then 'PASS' else 'FAIL' end as status from results;
