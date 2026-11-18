@@ -150,3 +150,36 @@ export function parseErrorMessage(status: number, body: { error?: string; messag
   if (status === 0) return "Không kết nối được dịch vụ đọc CV. Hãy kiểm tra mạng rồi thử lại.";
   return "Có lỗi hệ thống khi đọc CV, hãy thử lại.";
 }
+
+// --- Số năm kinh nghiệm + chức danh mong muốn (S3-H03) -----------------------------------
+
+export const MAX_YEARS = 60; // api.confirm_cv_profile từ chối ngoài 0–60 (errcode 22023)
+export const MAX_TITLE = 200; // app.cvs.target_title cắt 200 ký tự
+
+export type YearsCheck = { ok: true; value: number | null } | { ok: false; error: string };
+
+/**
+ * Đọc ô số năm: nhận "1,5" lẫn "1.5", làm tròn 1 chữ số thập phân (như DB).
+ * Ô trống = null (giữ nguyên), nhưng chỉ cho trống khi CV chưa có số năm: đã có mà xóa trắng
+ * thì báo lỗi, vì gửi null lên sẽ âm thầm giữ số cũ.
+ */
+export function parseYears(input: string, hadValue: boolean): YearsCheck {
+  const text = input.trim().replace(",", ".");
+  if (text === "") {
+    return hadValue ? { ok: false, error: `Nhập số năm kinh nghiệm từ 0 đến ${MAX_YEARS}.` } : { ok: true, value: null };
+  }
+  if (!/^\d+(\.\d+)?$/.test(text)) return { ok: false, error: "Số năm kinh nghiệm phải là số, ví dụ 1,5." };
+  const value = Math.round(Number(text) * 10) / 10;
+  if (value > MAX_YEARS) return { ok: false, error: `Số năm kinh nghiệm từ 0 đến ${MAX_YEARS}.` };
+  return { ok: true, value };
+}
+
+/** Số năm để hiện trong ô nhập: 1.5 → "1,5"; null → "". */
+export function formatYears(value: number | null): string {
+  return value == null ? "" : value.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
+}
+
+/** Chức danh gửi lên: bỏ khoảng trắng thừa; chuỗi rỗng = xóa chức danh (theo 0010). */
+export function cleanTitle(input: string): string {
+  return input.replace(/\s+/g, " ").trim().slice(0, MAX_TITLE);
+}
