@@ -1,10 +1,10 @@
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { buttonVariants } from "@/components/ui/button";
-import { getJobDetail, jdSections, type JobDetail, type JobSkill } from "@/lib/jobs/detail";
+import { getJobDetail, getJobRedirect, jdSections, type JobDetail, type JobSkill } from "@/lib/jobs/detail";
 import { LEVEL_LABEL, WORK_MODE_LABEL } from "@/lib/jobs/filters";
 import { JobProvenance } from "@/components/jobs/job-provenance";
 import { daysLeft, daysLeftLabel, formatDay, formatSalary, salaryFull } from "@/lib/jobs/format";
@@ -12,7 +12,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
 // S2-H04 (trang) + S2-H05 (hạn nộp, độ mới, nguồn) · US-06 · docs/ui/wireframe_jobs.png (màn 3).
-// Khách và mọi vai trò đều xem được.
+// S3-H05 · US-14: tin gộp từ nhiều nguồn hiện "Có trên N trang" (JobProvenance); link cũ của tin
+// đã bị gộp chuyển sang tin được giữ lại (api.job_redirect). Khách và mọi vai trò đều xem được.
 
 // generateMetadata và trang cùng cần dữ liệu: cache() để chỉ gọi DB một lần mỗi request.
 const loadJob = cache(getJobDetail);
@@ -46,7 +47,13 @@ export default async function JobDetailPage({ params }: PageProps<"/viec-lam/[id
       </Shell>
     );
   }
-  if (!result) notFound();
+  if (!result) {
+    // Gọi ngoài try/catch: redirect() ném lỗi đặc biệt để Next chuyển trang. 307 (không phải 308)
+    // để trình duyệt không nhớ cứng nếu dữ liệu gộp tin thay đổi về sau.
+    const target = await getJobRedirect(id);
+    if (target) redirect(`/viec-lam/${target}`);
+    notFound();
+  }
 
   const { job, skills, complete } = result;
   const sections = jdSections(job);

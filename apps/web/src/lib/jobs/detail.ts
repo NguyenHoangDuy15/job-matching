@@ -57,6 +57,18 @@ export function isPublicId(id: string): boolean {
 const MISSING_RELATION = "PGRST205";
 
 /**
+ * Tin đã bị gộp vào tin khác (S3-T03/T04, core.merge_jobs): public_id của tin được giữ lại, để
+ * link cũ (đã lưu, chia sẻ, Google) chuyển hướng thay vì báo "không còn tuyển" (S3-H05, 0015).
+ * null = tin không bị gộp, không tồn tại, hoặc DB chưa có api.job_redirect.
+ */
+export async function getJobRedirect(publicId: string): Promise<string | null> {
+  if (!isPublicId(publicId)) return null;
+  const { data, error } = await (await createClient()).schema("api").rpc("job_redirect", { p_public_id: publicId });
+  if (error || typeof data !== "string" || !isPublicId(data) || data === publicId) return null;
+  return data;
+}
+
+/**
  * Chi tiết một tin đang mở theo public_id (S2-H04). null = không có hoặc đã đóng/hết hạn.
  * Lỗi kết nối DB thì ném ra để trang hiện "Thử lại".
  */
