@@ -118,7 +118,11 @@ Phản hồi thành công:
 | `org_name` | Tên kỹ năng nằm trong tên CLB / hội / sự kiện / cuộc thi ("CLB Tiếng Anh", "Japanese Club", "Korean Culture Festival") | Tìm thấy trong tên câu lạc bộ / sự kiện, bạn có biết kỹ năng này không? |
 | `language_no_proficiency` | Ngoại ngữ nhắc ngoài mục Ngoại ngữ / Chứng chỉ / Kỹ năng, không kèm trình độ (JLPT, IELTS, giao tiếp, phiên dịch…) | CV có nhắc tới ngoại ngữ này nhưng chưa ghi trình độ |
 
-Gợi ý chỉ có trong phản hồi `/cv/parse` (không lưu DB): tải lại trang sau khi đọc thì không còn.
+Gợi ý được lưu ở `app.cvs.suggested_skills` (migration 0016) mỗi lần đọc CV và đọc lại qua cột
+`suggested_skills` của `api.v_my_cvs`, nên chuyển trang / F5 / vào lại từ "Hồ sơ của tôi" vẫn còn.
+Mỗi phần tử có `skill_id` (slug), `name`, `reason`, `evidence`, `highlight`, `section`; web tự ẩn
+gợi ý đã có trong `cv_skills` (người dùng đã tick). Đọc lại CV thì gợi ý được thay bằng kết quả mới.
+DB chưa chạy 0016 thì API vẫn lưu hồ sơ như cũ (bỏ qua gợi ý) và ghi cảnh báo vào log.
 Alias ngắn không có ngữ cảnh ("site N2", "đội BrSE") bị bỏ hẳn, không gợi ý. Từ khóa cấu hình ở
 `config/cv_profile.yaml` (`org_context_words`, `proficiency_words`, `alias_requires_context`).
 

@@ -48,6 +48,7 @@ class FakeSupabase:
     def __init__(self, file: bytes, claim_error: str | None = None) -> None:
         self.file = file
         self.claim_error = claim_error
+        self.old_db = False
         self.calls: list[tuple[str, dict]] = []
 
     def handler(self, request: httpx.Request) -> httpx.Response:
@@ -67,6 +68,8 @@ class FakeSupabase:
                            "size_bytes": len(self.file)}],
                 )  # fmt: skip
             if name == "save_cv_profile":
+                if self.old_db and "p_suggested_skills" in body:  # DB chưa chạy 0016
+                    return httpx.Response(404, json={"code": "PGRST202", "message": "x"})
                 return httpx.Response(200, json=len(body["p_skills"]))
             if name == "fail_cv_parse":
                 return httpx.Response(204)
@@ -122,6 +125,7 @@ def test_parse_returns_profile_and_saves_with_user_jwt(make_client):
     assert "Nguyễn Văn Hùng" not in saved["p_text_redacted"]  # chỉ văn bản đã che PII đi ra
     assert "hung.nguyen@example.com" not in json.dumps(saved, ensure_ascii=False)
     assert saved["p_skills"][0].keys() == {"skill_id", "evidence_level", "evidence", "years"}
+    assert isinstance(saved["p_suggested_skills"], list)  # migration 0016
     assert elapsed < 15
 
 
@@ -195,3 +199,14 @@ def test_hard_timeout_kills_worker_and_marks_failed(make_client):
         assert result["status"] == "parsed"
     finally:
         pool.close()
+
+
+def test_save_falls_back_when_db_lacks_migration_0016(make_client):
+    """DB chưa chạy 0016 (save_cv_profile 7 tham số): ghi lại không kèm gợi ý, vẫn 200."""
+    client, fake = make_client((FIX / "samples" / "cv01.pdf").read_bytes())
+    fake.old_db = True
+    r = _post(client)
+    assert r.status_code == 200, r.text
+    saves = [body for name, body in fake.calls if name == "save_cv_profile"]
+    assert len(saves) == 2
+    assert "p_suggested_skills" in saves[0] and "p_suggested_skills" not in saves[1]

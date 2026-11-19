@@ -114,21 +114,7 @@ def _parse(request: Request, cv_id: str, user: User, settings: Settings) -> dict
         profile = result["profile"]
         t = time.perf_counter()
         try:
-            saved = sb.rpc(
-                "save_cv_profile",
-                {
-                    "p_cv_id": cv_id,
-                    "p_text_redacted": result["text_redacted"],
-                    "p_sections": result["sections"],
-                    "p_years_exp": profile["years_exp"],
-                    "p_target_title": profile["target_title"],
-                    "p_skills": [
-                        {k: s[k] for k in ("skill_id", "evidence_level", "evidence", "years")}
-                        for s in profile["skills"]
-                    ],
-                    "p_parser_version": result["parser_version"],
-                },
-            )
+            saved = save_profile(sb, cv_id, result)
         except SupabaseError:
             fail("save_failed", 502)
         timings["save"] = _ms(t)
@@ -147,6 +133,37 @@ def _parse(request: Request, cv_id: str, user: User, settings: Settings) -> dict
         "warnings": result.get("warnings", []),
         "timings_ms": {**result.get("timings_ms", {}), **timings},
     }
+
+
+_SUGGESTION_KEYS = ("skill_id", "name", "reason", "evidence", "highlight", "section")
+
+
+def save_profile(sb: SupabaseClient, cv_id: str, result: dict):
+    """api.save_cv_profile. Gợi ý kỹ năng (migration 0016) gửi kèm; DB chưa có 0016 (hàm chỉ có
+    7 tham số → PGRST202) thì ghi lại không kèm gợi ý, đọc CV vẫn thành công."""
+    profile = result["profile"]
+    params = {
+        "p_cv_id": cv_id,
+        "p_text_redacted": result["text_redacted"],
+        "p_sections": result["sections"],
+        "p_years_exp": profile["years_exp"],
+        "p_target_title": profile["target_title"],
+        "p_skills": [
+            {k: s[k] for k in ("skill_id", "evidence_level", "evidence", "years")}
+            for s in profile["skills"]
+        ],
+        "p_parser_version": result["parser_version"],
+    }
+    suggested = [
+        {k: s.get(k) for k in _SUGGESTION_KEYS} for s in profile.get("suggested_skills") or []
+    ]
+    try:
+        return sb.rpc("save_cv_profile", {**params, "p_suggested_skills": suggested})
+    except SupabaseError as e:
+        if e.code not in ("PGRST202", "42883"):
+            raise
+        log.warning("save_cv_profile chưa nhận p_suggested_skills (chưa chạy migration 0016)")
+        return sb.rpc("save_cv_profile", params)
 
 
 @router.post("/cv/parse")
