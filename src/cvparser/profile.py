@@ -9,6 +9,8 @@ chức danh mong muốn. Nội dung màn "Xác nhận hồ sơ" (docs/ui/wirefra
 
 Mức bằng chứng theo section (config/cv_profile.yaml): Kinh nghiệm/Dự án → strong; Kỹ năng, Tóm tắt,
 Chứng chỉ, Ngoại ngữ, Học vấn, Hoạt động → listed; phần đầu CV và mục khác → bỏ qua.
+Kỹ năng chưa chắc (tên CLB / sự kiện, ngoại ngữ không kèm trình độ) → suggested_skills, không lưu,
+không tính điểm; alias nhập nhằng không có ngữ cảnh ("site N2") → bỏ.
 Số năm: chỉ khoảng thời gian trong mục Kinh nghiệm, gộp chồng nhau, không tính thực tập.
 Chức danh mong muốn: dòng chức danh ở phần đầu CV, không có thì việc làm gần nhất.
 Hàm thuần: không DB, không mạng; `as_of` là ngày tính "nay".
@@ -63,6 +65,22 @@ class SkillEvidence(BaseModel):
     years: float | None = None  # thời gian các việc làm có dùng kỹ năng này
 
 
+class SkillSuggestion(BaseModel):
+    """Kỹ năng CV có nhắc tới nhưng chưa đủ bằng chứng: KHÔNG lưu vào app.cv_skills, không tính
+    điểm. Màn Xác nhận hỏi người dùng (mặc định bỏ chọn); chọn → confirm_cv_profile lưu user_added.
+    reason: org_name (nằm trong tên CLB / sự kiện), language_no_proficiency (ngoại ngữ không kèm
+    trình độ, ngoài mục Ngoại ngữ / Chứng chỉ / Kỹ năng)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    skill_id: str
+    name: str
+    reason: Literal["org_name", "language_no_proficiency"]
+    evidence: str
+    highlight: tuple[int, int]
+    section: str
+
+
 class CvProfile(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -75,6 +93,7 @@ class CvProfile(BaseModel):
     internship_months: int = 0  # thời gian thực tập không tính vào years_exp
     entries: list[Entry] = []
     skills: list[SkillEvidence] = []
+    suggested_skills: list[SkillSuggestion] = []  # chưa chắc, chờ người dùng chọn
     warnings: list[str] = []
 
 
@@ -90,6 +109,21 @@ class _Config:
         )
         words = sorted(data["internship_words"], key=len, reverse=True)
         self.internship = re.compile(rf"(?<![\w])(?:{'|'.join(map(re.escape, words))})(?![\w])")
+        self.org_words = _phrases(data.get("org_context_words", []))
+        self.org_window = int(data.get("org_context_window", 4))
+        self.language_skills = set(data.get("language_skills", []))
+        self.language_sections = set(data.get("language_sections", []))
+        self.proficiency = _phrases(data.get("proficiency_words", []))
+        self.context_terms: dict[str, tuple[set[str], re.Pattern]] = {
+            sid: ({t.lower() for t in rule["terms"]}, _phrases(rule["context"]))
+            for sid, rule in (data.get("alias_requires_context") or {}).items()
+        }
+
+
+def _phrases(words: list[str]) -> re.Pattern:
+    """Cụm từ nguyên vẹn (không dính chữ hai bên) trên văn bản đã bỏ dấu, chữ thường."""
+    alts = "|".join(map(re.escape, sorted(words, key=len, reverse=True))) or "(?!)"
+    return re.compile(rf"(?<![\w])(?:{alts})(?![\w])")
 
 
 @lru_cache(maxsize=2)
@@ -311,9 +345,43 @@ def _snippet(line: str, s: int, e: int, max_chars: int) -> tuple[str, tuple[int,
     return f"{prefix}{body[a:b]}{suffix}", (s - a + len(prefix), e - a + len(prefix))
 
 
+_SEPARATOR = re.compile(r"[,;:|()\[\]–—•/]|\s-\s")
+_WORD = re.compile(r"[\w+#.]+")
+
+
+def _near_words(folded: str, start: int, end: int, n: int) -> tuple[str, str]:
+    """≤ n từ ngay trước và ngay sau đoạn [start, end), không vượt qua dấu phân cách."""
+    before = _SEPARATOR.split(folded[:start])[-1]
+    after = _SEPARATOR.split(folded[end:])[0]
+    return " ".join(_WORD.findall(before)[-n:]), " ".join(_WORD.findall(after)[:n])
+
+
+def _doubt(m, folded: str, section: str | None, cfg: _Config) -> str | None:
+    """Lý do chưa tin lần khớp này: "drop" (bỏ hẳn), "org_name" / "language_no_proficiency"
+    (đưa vào gợi ý); None = bằng chứng bình thường."""
+    rule = cfg.context_terms.get(m.skill_id)
+    if (
+        rule
+        and m.term in rule[0]
+        and section not in cfg.language_sections
+        and not rule[1].search(folded)
+    ):
+        return "drop"  # "site N2 và N3", "phối hợp với đội BrSE"
+    before, after = _near_words(folded, m.start, m.end, cfg.org_window)
+    if cfg.org_words.search(before) or cfg.org_words.search(after):
+        return "org_name"
+    if (
+        m.skill_id in cfg.language_skills
+        and section not in cfg.language_sections
+        and not cfg.proficiency.search(folded)
+    ):
+        return "language_no_proficiency"
+    return None
+
+
 def _skills(
     text: str, secs: CvSections, entries: list[Entry], cfg: _Config, now: int
-) -> list[SkillEvidence]:
+) -> tuple[list[SkillEvidence], list[SkillSuggestion]]:
     from skillkit.matcher import prepare
 
     matcher, names = _taxonomy()
@@ -321,10 +389,12 @@ def _skills(
     best: dict[str, dict] = {}
     counts: dict[str, int] = {}
     entry_hits: dict[str, list[Entry]] = {}
+    doubts: dict[str, SkillSuggestion] = {}
     for pos, raw in _lines(text):
         if not raw.strip():
             continue
         line = prepare(raw)[0]
+        folded = fold_keep_length(line)
         lead = len(raw) - len(raw.lstrip())
         skip = _non_skill_spans(line, pos, entries)
         for m in matcher.find(line):
@@ -335,6 +405,17 @@ def _skills(
                 continue  # tên trường / ngành học ("Khoa học Máy tính", "Học viện Mật mã")
             level = cfg.fallback_level if fallback else cfg.levels.get(section)
             if level is None:
+                continue
+            reason = _doubt(m, folded, section, cfg)
+            if reason == "drop":
+                continue
+            if reason:
+                if m.skill_id not in doubts:
+                    snippet, hl = _snippet(line, m.start, m.end, cfg.max_chars)
+                    doubts[m.skill_id] = SkillSuggestion(
+                        skill_id=m.skill_id, name=names.get(m.skill_id, m.skill_id),
+                        reason=reason, evidence=snippet, highlight=hl, section=section,
+                    )  # fmt: skip
                 continue
             counts[m.skill_id] = counts.get(m.skill_id, 0) + 1
             entry = next(
@@ -368,7 +449,10 @@ def _skills(
             years = round(months / 12, 1) if months else None
         b.pop("rank")
         out.append(SkillEvidence(**b, mentions=counts[sid], years=years))
-    return sorted(out, key=lambda s: (s.evidence_level != "strong", -s.mentions, s.name.lower()))
+    skills = sorted(out, key=lambda s: (s.evidence_level != "strong", -s.mentions, s.name.lower()))
+    # Kỹ năng đã có bằng chứng thật ở chỗ khác thì không cần hỏi lại.
+    suggested = [s for sid, s in doubts.items() if sid not in best]
+    return skills, sorted(suggested, key=lambda s: s.name.lower())
 
 
 def _merge_labels(labels: list[tuple[str | None, str | None]], now: int) -> int:
@@ -451,6 +535,7 @@ def build_profile(text: str, sections: CvSections, tables=(), *, as_of: date) ->
         warnings.append("no_experience_section")
     months = total_months(ranges)
     title, source = _target_title(text, sections, entries)
+    skills, suggested = _skills(text, sections, entries, cfg, as_of.year * 12 + as_of.month - 1)
     return CvProfile(
         version=cfg.version,
         as_of=as_of,
@@ -460,7 +545,8 @@ def build_profile(text: str, sections: CvSections, tables=(), *, as_of: date) ->
         years_ranges=[r.label() for r in sorted(ranges, key=lambda r: r.start)],
         internship_months=sum(intern),
         entries=entries,
-        skills=_skills(text, sections, entries, cfg, as_of.year * 12 + as_of.month - 1),
+        skills=skills,
+        suggested_skills=suggested,
         warnings=warnings,
     )
 

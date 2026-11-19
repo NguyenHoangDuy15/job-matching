@@ -99,10 +99,28 @@ Phản hồi thành công:
               "internship_months": 0, "entries": [...],
               "skills": [{"skill_id": "docker", "name": "Docker", "evidence_level": "strong",
                           "evidence": "Triển khai Docker và …", "highlight": [11, 17],
-                          "section": "experience", "context": "Công ty …", "years": 3.8}]},
+                          "section": "experience", "context": "Công ty …", "years": 3.8}],
+              "suggested_skills": [{"skill_id": "japanese", "name": "Tiếng Nhật",
+                                    "reason": "org_name",
+                                    "evidence": "Thành viên Câu lạc bộ tiếng Nhật (2020 – 2022)",
+                                    "highlight": [22, 32], "section": "activities"}]},
   "warnings": [], "timings_ms": {"extract": 95, "redact": 30, "profile": 8, "total": 1400}
 }
 ```
+
+`profile.suggested_skills`: kỹ năng CV **có nhắc** nhưng chưa đủ bằng chứng. Các kỹ năng này
+**không** lưu vào `app.cv_skills` và không tính điểm so khớp. Màn "Xác nhận hồ sơ" nên hỏi
+"Bạn có biết …?" và để **bỏ chọn** mặc định; người dùng chọn thì gửi `skill_id` trong
+`confirm_cv_profile` như kỹ năng tự thêm (lưu `user_added`).
+
+| `reason` | Khi nào | Gợi ý hiển thị |
+|---|---|---|
+| `org_name` | Tên kỹ năng nằm trong tên CLB / hội / sự kiện / cuộc thi ("CLB Tiếng Anh", "Japanese Club", "Korean Culture Festival") | Tìm thấy trong tên câu lạc bộ / sự kiện, bạn có biết kỹ năng này không? |
+| `language_no_proficiency` | Ngoại ngữ nhắc ngoài mục Ngoại ngữ / Chứng chỉ / Kỹ năng, không kèm trình độ (JLPT, IELTS, giao tiếp, phiên dịch…) | CV có nhắc tới ngoại ngữ này nhưng chưa ghi trình độ |
+
+Gợi ý chỉ có trong phản hồi `/cv/parse` (không lưu DB): tải lại trang sau khi đọc thì không còn.
+Alias ngắn không có ngữ cảnh ("site N2", "đội BrSE") bị bỏ hẳn, không gợi ý. Từ khóa cấu hình ở
+`config/cv_profile.yaml` (`org_context_words`, `proficiency_words`, `alias_requires_context`).
 
 ## Kiểm tra sau khi triển khai
 
