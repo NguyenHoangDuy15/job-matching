@@ -13,7 +13,8 @@ Presidio: DATE_TIME sẽ che mất khoảng thời gian làm việc mà S3-D04 c
   - Địa chỉ không nhãn ở phần đầu CV: đoạn có ≥ 2 từ khóa (ngõ, hẻm, phường, P.5, Q.3...).
   - Tên: dòng chỉ có họ Việt + 1–3 chữ viết hoa; dòng tên ở đầu CV; spaCy PERSON (tiếng Anh)
     chỉ được nhận ở phần đầu CV / mục khác; tên tài khoản (known_names). Tên đã tìm thấy được
-    che ở MỌI chỗ (cả viết hoa, không dấu, đảo thứ tự).
+    che ở MỌI chỗ (cả viết hoa, không dấu, đảo thứ tự), kể cả tên gọi đứng một mình
+    ("Hùng phụ trách...") khi viết hoa và không dính chữ hoa khác ("Trần Duy Hưng" giữ nguyên).
   - Không che: kỹ năng trong từ điển, tổ chức/trường, tên tỉnh; khoảng thời gian không bị đụng.
   - Kiểm lần cuối: quét lại email/SĐT trên văn bản đã che.
 Không ghi log nội dung; `entities` chỉ giữ loại và vị trí.
@@ -97,6 +98,7 @@ class _Config:
         self.place_accented = _words(place)  # khớp trên chữ thường CÓ dấu
         self.place_folded = {fold_keep_length(w) for w in place}
         self.title_words = _words(data["title_words"])
+        self.given_ascii_skip: set[str] = set(data.get("given_name_ascii_skip", []))
         domains = "|".join(re.escape(d) for d in data["profile_domains"])
         hosts = "|".join(re.escape(d) for d in data.get("profile_hosts", []))
         self.profile_url = (
@@ -369,6 +371,66 @@ def _propagate_names(text: str, names: list[str]) -> list[tuple[int, int]]:
     return spans
 
 
+_WORD = re.compile(r"[^\W\d_]+")
+_SAME_PHRASE_GAP = re.compile(r"[ \t]+")
+
+
+def _given_name(name: str, cfg: _Config) -> str | None:
+    """Tên gọi của họ tên: chữ cuối ("Nguyễn Văn Hùng"), hoặc chữ đầu nếu viết kiểu Tây
+    ("Hung Nguyen"). Không xác định được họ thì không đoán."""
+    words = name.split()
+    if fold_keep_length(words[0]) in cfg.surnames:
+        return words[-1]
+    if fold_keep_length(words[-1]) in cfg.surnames:
+        return words[0]
+    return None
+
+
+def _given_name_spans(
+    text: str, names: list[str], cfg: _Config, protected: list[tuple[int, int]]
+) -> list[tuple[int, int]]:
+    """Tên gọi đứng một mình ("Hùng phụ trách mentoring", "Thanks to Hung").
+
+    Che khi chữ viết hoa, đúng dấu (chữ không dấu "Hung" cũng tính, trừ given_name_ascii_skip),
+    không dính chữ hoa liền trước/sau trong cùng cụm ("Trần Duy Hưng", "Hà Nội", "Minh Khai"),
+    không phải địa danh và không nằm trong kỹ năng.
+    """
+    givens = {}
+    for name in names:
+        given = _given_name(name, cfg)
+        if given and len(given) >= 2 and not _is_place(given, cfg):
+            givens[fold_keep_length(given)] = unicodedata.normalize("NFC", given).lower()
+    if not givens:
+        return []
+    words = list(_WORD.finditer(text))
+
+    def capitalized_neighbour(i: int, j: int) -> bool:
+        if not 0 <= j < len(words):
+            return False
+        left, right = (words[j], words[i]) if j < i else (words[i], words[j])
+        same_phrase = _SAME_PHRASE_GAP.fullmatch(text[left.end() : right.start()])
+        return bool(same_phrase) and words[j].group()[0].isupper()
+
+    spans = []
+    for i, m in enumerate(words):
+        w = m.group()
+        key = fold_keep_length(w)
+        if key not in givens or not w[0].isupper():
+            continue
+        lower = unicodedata.normalize("NFC", w).lower()
+        ascii_form = lower == key
+        if ascii_form and key in cfg.given_ascii_skip:
+            continue
+        if not ascii_form and lower != givens[key]:  # "Hưng" ≠ "Hùng"
+            continue
+        if capitalized_neighbour(i, i - 1) or capitalized_neighbour(i, i + 1):
+            continue
+        if _overlaps((m.start(), m.end()), protected):
+            continue
+        spans.append((m.start(), m.end()))
+    return spans
+
+
 # ----------------------------------------------------------------------------- API
 
 
@@ -428,6 +490,9 @@ def redact(text: str, *, known_names: tuple[str, ...] | list[str] = ()) -> Redac
         ("PERSON", s, e, "propagate")
         for s, e in _propagate_names(text, names)
         if all(w[0].isupper() for w in text[s:e].split())  # "Cổng thanh toán" không phải tên
+    ]
+    found += [
+        ("PERSON", s, e, "given_name") for s, e in _given_name_spans(text, names, cfg, skill_spans)
     ]
 
     # Link trang cá nhân tìm qua nhãn ("Portfolio: an.dev") → che mọi chỗ cùng link (CV song ngữ
