@@ -201,3 +201,48 @@ def test_title_first_job_line_company_and_contact_labels():
     ]
     sb = next(s for s in p.skills if s.skill_id == "spring_boot")
     assert sb.context == "FinTech Viet Technology JSC"
+
+
+# ---- Kỹ năng chưa chắc: tên CLB / sự kiện, ngoại ngữ không kèm trình độ, alias nhập nhằng ----
+@pytest.mark.parametrize(
+    ("text", "skills", "suggested"),
+    [
+        # Tên CLB / sự kiện: không tự gắn, đưa vào gợi ý
+        ("HOẠT ĐỘNG\nThành viên Câu lạc bộ tiếng Nhật (2020 – 2022)\n", set(),
+         {("japanese", "org_name")}),
+        ("ACTIVITIES\nMember of HUST Japanese Club\nVolunteer at Korean Culture Festival\n", set(),
+         {("japanese", "org_name"), ("korean", "org_name")}),
+        ("ACTIVITIES\nMember of Japanese Software Engineers Club - Expertise Department\n", set(),
+         {("japanese", "org_name")}),
+        ("HOẠT ĐỘNG\nTrưởng ban truyền thông CLB Tiếng Anh FEC\n", set(),
+         {("english", "org_name")}),
+        # Có bằng chứng thật ở mục khác: là kỹ năng, không hỏi lại
+        ("HOẠT ĐỘNG\nThành viên Python Club\n\nKỸ NĂNG\nPython, SQL\n", {"python", "sql"}, set()),
+        # Kỹ năng sau dấu phân cách không thuộc tên CLB
+        ("HOẠT ĐỘNG\nTrưởng CLB Lập trình PTIT: dạy Python cho 50 thành viên\n", {"python"}, set()),
+        ("DỰ ÁN\nĐóng góp cho cộng đồng mã nguồn mở Django\n", {"django"}, set()),
+        # Ngoại ngữ ngoài mục Ngoại ngữ / Chứng chỉ / Kỹ năng cần dấu hiệu trình độ
+        ("MỤC TIÊU\nMuốn làm việc trong môi trường dùng tiếng Anh\n", set(),
+         {("english", "language_no_proficiency")}),
+        ("NGOẠI NGỮ\nTiếng Nhật N2\n", {"japanese"}, set()),
+        ("KINH NGHIỆM\nCông ty X | Dev | 2021 – 2023\n- Phiên dịch tiếng Nhật cho khách hàng\n",
+         {"japanese"}, set()),
+        # Alias nhập nhằng không có ngữ cảnh: bỏ hẳn, không gợi ý
+        ("KINH NGHIỆM\nCông ty X | DevOps | 2021 – 2023\n- Vận hành server ở site N2 và N3\n",
+         {"devops"}, set()),
+        ("KINH NGHIỆM\nCông ty ABC | Dev | 2023 – 2024\n- Phối hợp với đội BrSE của khách hàng\n",
+         set(), set()),
+    ],
+)  # fmt: skip
+def test_doubtful_skills_become_suggestions(text, skills, suggested):
+    p = _profile("Nguyễn Văn A\n\n" + text)
+    assert {s.skill_id for s in p.skills} == skills
+    assert {(s.skill_id, s.reason) for s in p.suggested_skills} == suggested
+
+
+def test_suggestions_not_saved_to_db():
+    p = _profile("Nguyễn Văn A\n\nHOẠT ĐỘNG\nThành viên Câu lạc bộ tiếng Nhật\n")
+    sug = p.suggested_skills[0]
+    assert sug.evidence[slice(*sug.highlight)].lower() == "tiếng nhật"
+    _, rows = to_db_rows(p, {"japanese": 1})
+    assert rows == []

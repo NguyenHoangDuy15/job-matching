@@ -1,7 +1,7 @@
 # Hồ sơ CV (S3-D04, US-12): mức bằng chứng, câu trích, số năm kinh nghiệm, chức danh mong muốn.
 # Dùng bởi cvparser.dates và cvparser.profile. Đổi file này thì tăng `version`.
 
-version: cv-profile-2
+version: cv-profile-3
 
 # Mức bằng chứng theo section (cvparser.sections). Section không có ở đây → bỏ qua kỹ năng.
 evidence_level:
@@ -62,3 +62,31 @@ internship_words: [thuc tap, thuc tap sinh, tts, intern, internship, trainee, si
 school_words: [dai hoc, hoc vien, truong, cao dang, university, academy, institute, college,
   school, bachelor, b sc, b.sc, bsc, b.eng, beng, master, m.sc, msc, cu nhan, thac si, tien si,
   ky su, chuyen nganh, nganh, major, degree, gpa]
+
+# ---- Kỹ năng chưa chắc: không tự gắn, trả về profile.suggested_skills để người dùng tự chọn ----
+# Tên kỹ năng nằm trong tên tổ chức / sự kiện ("Câu lạc bộ tiếng Nhật", "HUST Japanese Club",
+# "Korean Culture Festival"): tham gia CLB không chứng minh biết kỹ năng. Xét tối đa
+# org_context_window từ ngay trước / ngay sau kỹ năng, dừng ở dấu phân cách (, ; : | ( ) – •).
+# So khớp trên chữ đã bỏ dấu, chữ thường.
+org_context_words: [cau lac bo, clb, club, hoi sinh vien, cong dong, community, society,
+  association, le hoi, festival, cuoc thi, contest, olympic, doi tuyen]
+org_context_window: 4
+
+# Ngoại ngữ: ngoài các mục dưới đây, chỉ tự gắn khi cùng dòng có dấu hiệu trình độ / dùng thật
+# ("Phiên dịch tiếng Nhật cho khách hàng", "Giao tiếp tiếng Anh tốt"); không có → gợi ý.
+language_skills: [english, japanese, korean, chinese]
+language_sections: [languages, certifications, skills]
+proficiency_words: [jlpt, ielts, toeic, toefl, topik, hsk, vstep, chung chi, certificate,
+  giao tiep, thanh thao, luu loat, fluent, fluency, proficient, proficiency, business level,
+  doc hieu, doc viet, nghe noi, doc tai lieu, phien dich, bien dich, dich thuat, dich tai lieu,
+  translate, translation, translator, interpreter, interpreting, native, ban ngu, intermediate,
+  advanced, upper, beginner, co ban, trung cap, cao cap, n1, n2, n3, n4, n5, a2, b1, b2, c1, c2,
+  reading, writing, speaking, listening]
+
+# Alias ngắn / nhập nhằng phía CV: chỉ nhận khi cùng dòng có từ ngữ cảnh, hoặc nằm trong
+# language_sections; không thì BỎ hẳn ("site N2 và N3", "phối hợp với đội BrSE").
+# Chỉ áp dụng khi đọc CV: config/skills.yaml (dùng chung cho JD) giữ nguyên.
+alias_requires_context:
+  japanese:
+    terms: [n1, n2, n3, bse, brse]
+    context: [jlpt, tieng nhat, japanese, nihongo, nhat ngu]
