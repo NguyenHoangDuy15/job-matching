@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { CvOriginal } from "@/components/cv/cv-original";
 import { ParsePending } from "@/components/cv/parse-pending";
 import { SkillConfirmForm } from "@/components/cv/skill-confirm-form";
 import { PageShell } from "@/components/home-cards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { requireAccess } from "@/lib/auth";
-import { isUuid } from "@/lib/cv";
+import { cvExtension, isUuid } from "@/lib/cv";
 import type { CvSkill, EvidenceLevel, TaxonomySkill } from "@/lib/cv-profile";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = { title: "Xác nhận hồ sơ CV" };
 // S3-H02, S3-H03 · US-12 · docs/ui/wireframe_cv.png (màn 3). Chỉ người tìm việc (proxy chặn vai trò khác).
 // Đọc: api.v_my_cvs, api.v_my_cv_skills, api.v_skills; lưu: api.confirm_cv_profile (migration 0010).
 // RLS chỉ cho thấy CV của chính mình, nên cv_id của người khác ra 404.
+// File CV gốc (PDF xem cạnh danh sách kỹ năng, DOCX chỉ tải về) đi qua route ../tep (signed URL 5 phút).
 
 const TITLE = "Kiểm tra lại những gì hệ thống đọc được";
 
@@ -115,18 +117,38 @@ export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]
     aliases: r.aliases ?? [],
   }));
 
+  const pdf = cvExtension(cv.data.mime) === "pdf";
+  const form = (
+    <SkillConfirmForm
+      cvId={cvId}
+      initialSkills={initialSkills}
+      taxonomy={skillTaxonomy}
+      initialYears={cv.data.years_exp == null ? null : Number(cv.data.years_exp)}
+      initialTitle={cv.data.target_title}
+      confirmedLabel={cv.data.profile_confirmed_at ? formatTime(cv.data.profile_confirmed_at) : null}
+    />
+  );
+
+  // DOCX: không xem được trong trình duyệt, chỉ có ô tải về nên giữ một cột.
+  if (!pdf) {
+    return (
+      <PageShell title={TITLE}>
+        <div className="grid max-w-3xl gap-4">
+          <p className="text-sm text-muted-foreground">{uploaded}</p>
+          <CvOriginal cvId={cvId} fileLabel={fileLabel} pdf={false} />
+          {form}
+        </div>
+      </PageShell>
+    );
+  }
+
+  // PDF: desktop 2 cột (kỹ năng | CV gốc, CV dính theo khi cuộn); mobile xếp dọc, CV ở dưới.
   return (
     <PageShell title={TITLE}>
-      <div className="grid max-w-3xl gap-4">
-        <p className="text-sm text-muted-foreground">{uploaded}</p>
-        <SkillConfirmForm
-          cvId={cvId}
-          initialSkills={initialSkills}
-          taxonomy={skillTaxonomy}
-          initialYears={cv.data.years_exp == null ? null : Number(cv.data.years_exp)}
-          initialTitle={cv.data.target_title}
-          confirmedLabel={cv.data.profile_confirmed_at ? formatTime(cv.data.profile_confirmed_at) : null}
-        />
+      <p className="text-sm text-muted-foreground">{uploaded}</p>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="min-w-0">{form}</div>
+        <CvOriginal cvId={cvId} fileLabel={fileLabel} pdf className="min-w-0 lg:sticky lg:top-4" />
       </div>
     </PageShell>
   );
