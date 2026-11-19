@@ -17,19 +17,20 @@ Kế hoạch 8 sprint: issue trên GitHub theo milestone S1–S8 (story `US-xx`,
 ## Kiến trúc
 
 ```
-GitHub Actions (02:00)                         Supabase (Postgres 16 + pgvector + Auth)
+GitHub Actions + runner TopCV                  Supabase (Postgres 16 + pgvector + Auth)
 ┌────────────────────────────────────┐        ┌──────────────────────────────────────┐
 │ ① tỷ giá  ingestion.fx             │──────▶ │ ref     từ điển: 34 tỉnh, kỹ năng,    │
 │ ② crawl   ingestion.crawl (JSON-LD)│        │         tỷ giá                         │
 │   chuẩn hóa: 34 tỉnh, lương VND,   │──────▶ │ raw     bản gốc từng lượt crawl        │
-│ ③ kỹ năng + mức  skillkit.levels   │        │ core    jobs, job_locations, job_skills│
-└────────────────────────────────────┘        │ app     người dùng, CV, HR (RLS)       │
-                                               │ api     view + RPC cho web             │
-Next.js trên Cloudflare (apps/web) ──────────▶ │ ops / mart / eval                      │
+│   khử trùng chính xác + gần trùng  │        │ core    jobs, job_locations, job_skills│
+│ ③ kỹ năng + mức  skillkit.levels   │        │ app     người dùng, CV, HR (RLS)       │
+│ ④ vector hóa  bge-m3 (job_chunks)  │        │ api     view + RPC cho web             │
+└────────────────────────────────────┘        │ ops / mart / eval                      │
+Next.js trên Cloudflare (apps/web) ──────────▶ │ web đọc qua schema api                 │
                                                └──────────────────────────────────────┘
 ```
 
-Chi tiết stack và lý do chọn: `docs/adr/003-stack.md` và `docs/architecture/`.
+Chi tiết stack và lý do chọn: `docs/adr/003-stack.md` và `docs/architecture/`. Sơ đồ đầy đủ các đường nạp tin, khử trùng và lịch chạy (Sprint 3): `docs/architecture/ingestion.md`.
 
 ## Đang chạy được (Sprint 2)
 
@@ -113,6 +114,8 @@ uv run python scripts/check_job_skills.py --merge <file_người_1.csv> <file_ng
 ```
 
 Chạy tự động 02:00 mỗi đêm bằng GitHub Actions (S2-T05, `.github/workflows/crawl-daily.yml`); cài secret, chạy tay và nghiệm thu: `docs/deploy/crawl-job.md`.
+
+Khử trùng (kiểm tra hằng ngày, chạy tay, duyệt hàng chờ admin, tách tin gộp nhầm): `docs/runbook/dedup.md`.
 
 TopCV dùng self-hosted Windows runner để giữ SQLite/profile cục bộ và tránh chạy từ IP cloud. Workflow,
 bootstrap checkpoint, secret và cách bật/tắt lịch nằm tại `docs/deploy/topcv-self-hosted.md`.
