@@ -124,6 +124,36 @@ def test_name_found_once_is_masked_everywhere():
     assert out.count("[HỌ_TÊN]") == 4
 
 
+def test_given_name_alone_is_masked():
+    text = (
+        "NGUYỄN VĂN HÙNG\nKINH NGHIỆM\n"
+        "- Hùng phụ trách mentoring; anh Hùng viết tài liệu. Thanks to Hung for the review.\n"
+    )
+    out = redact(text).text
+    assert "hung" not in fold_keep_length(out)
+    assert out.count("[HỌ_TÊN]") == 4
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Văn phòng ở đường Trần Duy Hưng, Hà Nội",  # dấu khác: Hưng ≠ Hùng
+        "Văn phòng ở đường Phạm Hùng",  # dính chữ hoa liền trước: tên đường
+        "Dự án Hùng Vương Plaza",  # dính chữ hoa liền sau
+        "Viết API bằng Python, Django",
+    ],
+)
+def test_given_name_not_masked_inside_other_names(line):
+    out = redact(f"Nguyễn Văn Hùng\nKINH NGHIỆM\n{line}").text
+    assert out.split("\n")[2] == line
+
+
+def test_given_name_like_english_word_kept_when_alone():
+    out = redact("Trần An\nKINH NGHIỆM\nAn experienced developer.\nTôi là An.").text
+    assert "An experienced developer." in out
+    assert "Tôi là [HỌ_TÊN]." in out
+
+
 def test_known_names_from_account():
     out = redact(
         "KINH NGHIỆM\nNgười phụ trách: anh Bình\nCảm ơn Trần Văn Bình",

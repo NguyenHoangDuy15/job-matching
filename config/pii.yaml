@@ -2,7 +2,7 @@
 # So khớp không dấu, chữ thường (skillkit.sections.fold) trừ khi ghi khác.
 # Đổi file này thì tăng `version`: worker biết các CV cũ cần che lại.
 
-version: pii-2
+version: pii-3
 
 # Nhãn thay thế trong văn bản đã che (DB app.cvs.text_redacted và mọi thứ gửi ra ngoài).
 placeholders:
@@ -55,6 +55,12 @@ not_name_words: [cong ty, tnhh, co phan, tap doan, ngan hang, dai hoc, cao dang,
 # Ghi CÓ DẤU. Dòng có dấu: chỉ chặn khi đúng chữ có dấu này. Dòng không dấu ("VO DUC QUAN"):
 # chỉ chặn khi từ đứng đầu dòng (địa danh mở đầu bằng "Quận", "Phường"…; tên mở đầu bằng họ).
 place_words: [quận, huyện, phường, tỉnh, đường, trường, viện, phố]
+
+# Tên gọi (chữ cuối của họ tên) đứng một mình: "Hùng phụ trách mentoring" → che. Chỉ che khi viết
+# hoa, không dính chữ hoa liền trước/sau ("Trần Duy Hưng", "Hà Nội" giữ nguyên) và đúng dấu.
+# Tên gọi không dấu trùng từ tiếng Anh hay gặp ở đầu câu thì KHÔNG che khi đứng một mình
+# ("An experienced developer", "Long-term"); vẫn che qua họ tên đầy đủ và "Tôi là An".
+given_name_ascii_skip: [an, long, my, hang, sang, ban, tan, son]
 
 # Chữ trên dòng đầu CV cho thấy đó là chức danh / tiêu đề, không phải tên người.
 title_words: [developer, engineer, designer, analyst, tester, manager, lead, leader, intern,
