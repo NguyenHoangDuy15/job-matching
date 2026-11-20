@@ -115,7 +115,7 @@ uv run python scripts/check_job_skills.py --merge <file_người_1.csv> <file_ng
 
 Chạy tự động 02:00 mỗi đêm bằng GitHub Actions (S2-T05, `.github/workflows/crawl-daily.yml`); cài secret, chạy tay và nghiệm thu: `docs/deploy/crawl-job.md`.
 
-Khử trùng (kiểm tra hằng ngày, chạy tay, duyệt hàng chờ admin, tách tin gộp nhầm): `docs/runbook/dedup.md`.
+Khử trùng (luật trùng chính xác / gần trùng, câu SQL kiểm tra): `docs/runbook/dedup.md`.
 
 TopCV dùng self-hosted Windows runner để giữ SQLite/profile cục bộ và tránh chạy từ IP cloud. Workflow,
 bootstrap checkpoint, secret và cách bật/tắt lịch nằm tại `docs/deploy/topcv-self-hosted.md`.
