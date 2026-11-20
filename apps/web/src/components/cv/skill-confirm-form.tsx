@@ -20,8 +20,10 @@ import {
   searchSkills,
   sortSkills,
   splitEvidence,
+  SUGGEST_REASON_TEXT,
   type CvSkill,
   type EvidenceLevel,
+  type SuggestedSkill,
   type TaxonomySkill,
 } from "@/lib/cv-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -41,6 +43,7 @@ export function SkillConfirmForm({
   initialYears,
   initialTitle,
   confirmedLabel,
+  suggestions = [],
 }: {
   cvId: string;
   initialSkills: CvSkill[];
@@ -49,6 +52,8 @@ export function SkillConfirmForm({
   initialTitle: string | null;
   /** Lần lưu gần nhất (profile_confirmed_at, đã định dạng ở server); null = chưa xác nhận. */
   confirmedLabel: string | null;
+  /** Kỹ năng gợi ý "Bạn có biết …?" (app.cvs.suggested_skills, 0016), đã bỏ kỹ năng có trong hồ sơ. */
+  suggestions?: SuggestedSkill[];
 }) {
   const router = useRouter();
   const fieldId = useId();
@@ -57,6 +62,7 @@ export function SkillConfirmForm({
   const [yearsText, setYearsText] = useState(() => formatYears(initialYears));
   const [titleText, setTitleText] = useState(initialTitle ?? "");
   const [lastSaved, setLastSaved] = useState(confirmedLabel);
+  const [ticked, setTicked] = useState<ReadonlySet<number>>(() => new Set());
   const [saved, setSaved] = useState(() => sortSkills(initialSkills));
   const [skills, setSkills] = useState(saved);
   const [removed, setRemoved] = useState<CvSkill[]>([]);
@@ -68,7 +74,10 @@ export function SkillConfirmForm({
   const years = parseYears(yearsText, savedYears != null);
   // So theo giá trị, không theo chữ: gõ "1.5" khi đã lưu 1,5 không tính là thay đổi.
   const profileDirty = !years.ok || years.value !== savedYears || cleanTitle(titleText) !== savedTitle;
-  const dirty = hasChanges(saved, skills) || profileDirty;
+  // Gợi ý người dùng đã tự thêm bằng ô tìm kỹ năng thì ẩn đi, không hỏi lại.
+  const shownSuggestions = suggestions.filter((g) => !skills.some((s) => s.skillId === g.skillId));
+  const tickedSuggestions = shownSuggestions.filter((g) => ticked.has(g.skillId));
+  const dirty = hasChanges(saved, skills) || profileDirty || tickedSuggestions.length > 0;
   const aliasesById = useMemo(() => new Map(taxonomy.map((t) => [t.id, t.aliases])), [taxonomy]);
 
   // Rời trang (đóng tab, tải lại) khi chưa lưu: trình duyệt hỏi lại.
@@ -111,16 +120,29 @@ export function SkillConfirmForm({
         p_cv_id: cvId,
         p_years_exp: years.value, // null = giữ nguyên (chỉ khi CV chưa có số năm)
         p_target_title: title, // chuỗi rỗng = xóa chức danh
-        p_skills: confirmPayload(skills),
+        // Gợi ý được tick gửi như kỹ năng mới: DB lưu user_added (nhãn "Tự thêm").
+        p_skills: [...confirmPayload(skills), ...tickedSuggestions.map((g) => ({ skill_id: g.skillId }))],
       });
     if (rpcError) {
       setError(confirmErrorMessage(rpcError));
       setSaving(false);
       return;
     }
-    const confirmed = skills.map((s) => ({ ...s, confirmed: true }));
+    const confirmed = sortSkills([
+      ...skills.map((s) => ({ ...s, confirmed: true })),
+      ...tickedSuggestions.map((g) => ({
+        skillId: g.skillId,
+        slug: g.slug,
+        name: g.name,
+        level: "user_added" as const,
+        evidence: null,
+        years: null,
+        confirmed: true,
+      })),
+    ]);
     setSaved(confirmed);
     setSkills(confirmed);
+    setTicked(new Set());
     setRemoved([]);
     const newYears = years.value ?? savedYears;
     setSavedYears(newYears);
@@ -271,6 +293,51 @@ export function SkillConfirmForm({
         )}
         <SkillPicker taxonomy={taxonomy} excludeIds={new Set(skills.map((s) => s.skillId))} onPick={add} />
       </LevelSection>
+
+      {shownSuggestions.length > 0 && (
+        <section aria-labelledby="suggest-title" className="grid gap-3 rounded-lg border border-dashed p-4">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <h2 id="suggest-title" className="font-semibold">
+              Bạn có biết những kỹ năng này không?
+            </h2>
+            <span className="rounded-full bg-muted px-2 text-xs font-medium">{shownSuggestions.length}</span>
+            <span className="text-sm text-muted-foreground">
+              CV có nhắc tới nhưng chưa đủ bằng chứng. Tick nếu bạn có kỹ năng này, kỹ năng sẽ được lưu với nhãn
+              &quot;Tự thêm&quot;.
+            </span>
+          </div>
+          <ul className="grid gap-2">
+            {shownSuggestions.map((g) => (
+              <li key={g.skillId}>
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-muted/50">
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4"
+                    checked={ticked.has(g.skillId)}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setTicked((prev) => {
+                        const next = new Set(prev);
+                        if (on) next.add(g.skillId);
+                        else next.delete(g.skillId);
+                        return next;
+                      });
+                      setSavedOk(false);
+                    }}
+                  />
+                  <span className="grid min-w-0 gap-1">
+                    <span className="font-medium">{g.name}</span>
+                    <span className="text-xs text-muted-foreground">{SUGGEST_REASON_TEXT[g.reason]}</span>
+                    {g.evidence && (
+                      <Evidence text={g.evidence} terms={[g.name, ...(aliasesById.get(g.skillId) ?? [])]} />
+                    )}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {removed.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
