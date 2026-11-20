@@ -11,6 +11,7 @@ import {
   normalize,
   parseErrorMessage,
   parseYears,
+  resolveSuggestions,
   searchSkills,
   sortSkills,
   splitEvidence,
@@ -122,4 +123,28 @@ test("hiện số năm và làm sạch chức danh", () => {
   assert.equal(cleanTitle("  Backend   Developer  "), "Backend Developer");
   assert.equal(cleanTitle("   "), "");
   assert.equal(cleanTitle("a".repeat(250)).length, 200);
+});
+
+test("gợi ý 'Bạn có biết …?': đổi slug sang mã số, bỏ phần tử sai, trùng hoặc đã có trong hồ sơ", () => {
+  const taxonomy: TaxonomySkill[] = [
+    { id: 57, slug: "japanese", name: "Tiếng Nhật", aliases: [] },
+    { id: 58, slug: "english", name: "Tiếng Anh", aliases: [] },
+    { id: 59, slug: "korean", name: "Tiếng Hàn", aliases: [] },
+  ];
+  const raw = [
+    { skill_id: "japanese", name: "Tiếng Nhật", reason: "org_name", evidence: "Thành viên Câu lạc bộ tiếng Nhật" },
+    { skill_id: "japanese", name: "Tiếng Nhật", reason: "org_name", evidence: "lặp lại" },
+    { skill_id: "english", reason: "language_no_proficiency", evidence: "  " },
+    { skill_id: "korean", reason: "org_name" },
+    { skill_id: "khong_co", reason: "org_name" },
+    { skill_id: "english", reason: "ly_do_la" },
+    null,
+    "japanese",
+  ];
+  assert.deepEqual(resolveSuggestions(raw, taxonomy, new Set([59])), [
+    { skillId: 57, slug: "japanese", name: "Tiếng Nhật", reason: "org_name", evidence: "Thành viên Câu lạc bộ tiếng Nhật" },
+    { skillId: 58, slug: "english", name: "Tiếng Anh", reason: "language_no_proficiency", evidence: null },
+  ]);
+  assert.deepEqual(resolveSuggestions(null, taxonomy, new Set()), []);
+  assert.deepEqual(resolveSuggestions({}, taxonomy, new Set()), []);
 });

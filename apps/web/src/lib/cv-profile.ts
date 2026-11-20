@@ -183,3 +183,53 @@ export function formatYears(value: number | null): string {
 export function cleanTitle(input: string): string {
   return input.replace(/\s+/g, " ").trim().slice(0, MAX_TITLE);
 }
+
+// --- Kỹ năng gợi ý "Bạn có biết …?" (#678, migration 0016) --------------------------------
+
+export type SuggestReason = "org_name" | "language_no_proficiency";
+
+/** Gợi ý đã đổi slug sang mã số ref.skills.id, sẵn để gửi confirm_cv_profile như kỹ năng tự thêm. */
+export type SuggestedSkill = {
+  skillId: number;
+  slug: string;
+  name: string;
+  reason: SuggestReason;
+  evidence: string | null;
+};
+
+export const SUGGEST_REASON_TEXT: Record<SuggestReason, string> = {
+  org_name: "Tìm thấy trong tên câu lạc bộ / sự kiện, bạn có biết kỹ năng này không?",
+  language_no_proficiency: "CV có nhắc tới ngoại ngữ này nhưng chưa ghi trình độ.",
+};
+
+/**
+ * Đọc app.cvs.suggested_skills (jsonb, phần tử {skill_id: slug, name, reason, evidence, ...}):
+ * bỏ phần tử sai dạng, slug không có trong từ điển, reason lạ, gợi ý trùng, và kỹ năng đã có
+ * trong hồ sơ (người dùng đã tick lần trước hoặc tự thêm).
+ */
+export function resolveSuggestions(
+  raw: unknown,
+  taxonomy: TaxonomySkill[],
+  existingIds: ReadonlySet<number>,
+): SuggestedSkill[] {
+  if (!Array.isArray(raw)) return [];
+  const bySlug = new Map(taxonomy.map((t) => [t.slug, t]));
+  const seen = new Set<number>();
+  const out: SuggestedSkill[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const { skill_id, reason, evidence } = item as Record<string, unknown>;
+    if (typeof skill_id !== "string" || (reason !== "org_name" && reason !== "language_no_proficiency")) continue;
+    const skill = bySlug.get(skill_id);
+    if (!skill || existingIds.has(skill.id) || seen.has(skill.id)) continue;
+    seen.add(skill.id);
+    out.push({
+      skillId: skill.id,
+      slug: skill.slug,
+      name: skill.name,
+      reason,
+      evidence: typeof evidence === "string" && evidence.trim() ? evidence : null,
+    });
+  }
+  return out;
+}

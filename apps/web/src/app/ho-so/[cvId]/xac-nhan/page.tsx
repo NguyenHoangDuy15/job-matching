@@ -7,7 +7,7 @@ import { PageShell } from "@/components/home-cards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { requireAccess } from "@/lib/auth";
 import { cvExtension, isUuid } from "@/lib/cv";
-import type { CvSkill, EvidenceLevel, TaxonomySkill } from "@/lib/cv-profile";
+import { resolveSuggestions, type CvSkill, type EvidenceLevel, type TaxonomySkill } from "@/lib/cv-profile";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Xác nhận hồ sơ CV" };
@@ -38,6 +38,7 @@ type CvRow = {
   years_exp: number | string | null; // numeric của Postgres có thể về dạng chuỗi
   target_title: string | null;
   profile_confirmed_at: string | null;
+  suggested_skills: unknown; // jsonb, 0016: [{skill_id: slug, name, reason, evidence, ...}]
 };
 
 function formatTime(iso: string): string {
@@ -60,7 +61,7 @@ export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]
   const api = (await createClient()).schema("api");
   const cv = await api
     .from("v_my_cvs")
-    .select("id, mime, parse_status, created_at, original_name, years_exp, target_title, profile_confirmed_at")
+    .select("id, mime, parse_status, created_at, original_name, years_exp, target_title, profile_confirmed_at, suggested_skills")
     .eq("id", cvId)
     .maybeSingle<CvRow>();
   if (cv.error) return <NotReady text="Chưa đọc được CV của bạn, hãy tải lại trang." />;
@@ -126,6 +127,11 @@ export default async function ConfirmCvPage({ params }: PageProps<"/ho-so/[cvId]
       initialYears={cv.data.years_exp == null ? null : Number(cv.data.years_exp)}
       initialTitle={cv.data.target_title}
       confirmedLabel={cv.data.profile_confirmed_at ? formatTime(cv.data.profile_confirmed_at) : null}
+      suggestions={resolveSuggestions(
+        cv.data.suggested_skills,
+        skillTaxonomy,
+        new Set(initialSkills.map((s) => s.skillId)),
+      )}
     />
   );
 
