@@ -937,6 +937,54 @@ exception when others then
 end $$;
 reset role;
 
+-- Test nhóm 5g (#678, migration 0016): lưu kỹ năng gợi ý của CV, đọc qua api.v_my_cvs
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+-- slug lạ và reason lạ bị bỏ; name lấy từ ref.skills; câu trích cắt còn 400 ký tự
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer',
+  '[{"skill_id":"python","evidence_level":"strong","evidence":"Python"}]', 'test',
+  jsonb_build_array(
+    jsonb_build_object('skill_id', 'japanese', 'name', 'sai tên', 'reason', 'org_name',
+                       'evidence', 'Thành viên Câu lạc bộ tiếng Nhật', 'highlight', jsonb_build_array(22, 32),
+                       'section', 'activities'),
+    jsonb_build_object('skill_id', 'khong-co-slug-nay', 'reason', 'org_name', 'evidence', 'x'),
+    jsonb_build_object('skill_id', 'java', 'reason', 'ly-do-la', 'evidence', 'x'),
+    jsonb_build_object('skill_id', 'english', 'reason', 'language_no_proficiency',
+                       'evidence', repeat('a', 500), 'section', 'summary')));
+insert into results select 'save_cv_profile stores filtered suggested_skills',
+  string_agg((x ->> 'skill_id') || ':' || (x ->> 'name') || ':' || (x ->> 'reason'), ',' order by o),
+  'japanese:Tiếng Nhật:org_name,english:Tiếng Anh:language_no_proficiency'
+  from api.v_my_cvs v, jsonb_array_elements(v.suggested_skills) with ordinality as e(x, o)
+ where v.id = current_setting('test.cv_a')::uuid;
+insert into results select 'suggested evidence capped at 400 chars, highlight kept',
+  (select max(length(x ->> 'evidence')) from jsonb_array_elements(suggested_skills) x)::text || '|' ||
+  (suggested_skills -> 0 -> 'highlight')::text, '400|[22, 32]'
+  from api.v_my_cvs where id = current_setting('test.cv_a')::uuid;
+insert into results select 'suggestions are not saved as cv_skills', count(*)::text, '0'
+  from app.cv_skills s join ref.skills r on r.id = s.skill_id
+ where s.cv_id = current_setting('test.cv_a')::uuid and r.slug in ('japanese', 'english');
+-- Gọi kiểu cũ 7 tham số (API chưa cập nhật) và tham số không phải mảng: gợi ý về []
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer', '[]', 'test');
+insert into results select 'old 7-arg save resets suggestions', suggested_skills::text, '[]'
+  from app.cvs where id = current_setting('test.cv_a')::uuid;
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer', '[]', 'test',
+  '{"skill_id":"japanese"}');
+insert into results select 'non-array suggestions stored as []', suggested_skills::text, '[]'
+  from app.cvs where id = current_setting('test.cv_a')::uuid;
+select api.claim_cv_parse(current_setting('test.cv_a')::uuid);
+select api.save_cv_profile(current_setting('test.cv_a')::uuid, 't', '{}', 2, 'Backend Developer', '[]', 'test',
+  '[{"skill_id":"japanese","reason":"org_name","evidence":"CLB tiếng Nhật"}]');
+reset role;
+-- Seeker B không thấy gợi ý trong CV của seeker A
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'other seeker cannot read suggestions', count(*)::text, '0'
+  from api.v_my_cvs where id = current_setting('test.cv_a')::uuid;
+reset role;
+
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
