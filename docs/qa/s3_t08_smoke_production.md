@@ -80,8 +80,20 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST "$A/cv/parse"
 curl -s -D - -o /dev/null -X OPTIONS -H "Origin: $W" -H "Access-Control-Request-Method: POST" "$A/cv/parse"
 ```
 
-SQL của D4, D6, D7: mục 2b của `docs/runbook/dedup.md` (PR S3-T10); D4 cùng cách tính với `REMAINING_SQL` trong `src/ingestion/dedup_pg.py`. D5: `ingestion.near_dedup.find_near_duplicates`
-trên `ingestion.dedup_pg.load_open_docs`, kết nối `read_only`.
+D4 cùng cách tính với `REMAINING_SQL` trong `src/ingestion/dedup_pg.py`. D5: `ingestion.near_dedup.find_near_duplicates`
+trên `ingestion.dedup_pg.load_open_docs`, kết nối `read_only`. D6, D7:
+
+```sql
+-- D6: chuỗi gộp; tin đã gộp chưa đóng hoặc còn giữ nguồn (cả ba phải bằng 0)
+select count(*) from core.jobs d join core.jobs k on k.id = d.duplicate_of
+ where k.duplicate_of is not null;
+select count(*) from core.jobs where duplicate_of is not null and status <> 'closed';
+select count(*) from core.jobs d
+ where d.duplicate_of is not null
+   and exists (select 1 from core.job_sources s where s.job_id = d.id);
+-- D7: nguồn chưa có url_norm
+select count(*) from core.job_sources where url_norm is null;
+```
 
 ## 4. Vấn đề phát hiện
 
@@ -91,4 +103,4 @@ trên `ingestion.dedup_pg.load_open_docs`, kết nối `read_only`.
 | V2 | **Cần báo ở review** | `topcv-self-hosted`: mọi lượt theo lịch đều **skipped** (31 lượt, gần nhất 19/11 05:35 VN) vì chưa bật `vars.TOPCV_SCHEDULE_ENABLED`. Không có crawl hằng giờ nào, nên **S3-T07 (theo dõi 24 giờ crawl hằng giờ) chưa làm được** | Actions → topcv-self-hosted; `ops.crawl_runs` không có dòng `hourly` | Bật variable sau khi runner self-hosted sẵn sàng, rồi mới bắt đầu tính 24 giờ cho S3-T07 |
 | V3 | Nhỏ | Link tin đã gộp trả **HTTP 200** rồi chuyển trang bằng JavaScript (`NEXT_REDIRECT` trong luồng RSC), không phải 307. Người dùng vẫn đến đúng tin; công cụ không chạy JS (bot, `curl`, xem trước link) thì thấy "Không tìm thấy". Trang tin không tồn tại cũng trả 200 thay vì 404. Nguyên nhân có thể là `viec-lam/[id]/loading.tsx` làm trang stream trước khi kịp đổi status | `curl -D -` trả `HTTP/2 200`, thân trang có `NEXT_REDIRECT;replace;/viec-lam/6ce616bc-…;307` | Không chặn review. Mở issue cho web (Thịnh) |
 | V4 | Thông tin | `/match/jobs` trên Render chưa bật: `/health` có `"matcher": null` vì chưa đặt `MATCHER_DATABASE_URL` | `src/api/main.py` (`setup_matcher`) | Việc của S4, không thuộc review Sprint 3 |
-| V5 | Thông tin | 17 cặp nghi trùng đang chờ admin, web chưa có màn duyệt | `core.dedup_candidates` | Duyệt bằng SQL Editor theo `docs/runbook/dedup.md` mục 4 |
+| V5 | Thông tin | 17 cặp nghi trùng đang chờ admin, web chưa có màn duyệt | `core.dedup_candidates` | Cần màn duyệt cho admin: `api.admin_resolve_dedup` đòi JWT vai trò admin nên không gọi được từ SQL Editor. Luật xử lý trùng: `docs/runbook/dedup.md` |
