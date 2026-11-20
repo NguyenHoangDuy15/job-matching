@@ -988,12 +988,95 @@ reset role;
 -- Test nhóm 6: Bảng tổng hợp Gold & Dọn CV quá hạn
 select mart.refresh_skill_weekly(date_trunc('week', current_date)::date);
 select mart.refresh_region_salary(current_date);
-select mart.refresh_system_daily(current_date);
+select mart.refresh_system_daily();  -- mặc định: hôm nay theo giờ Việt Nam (0017)
 insert into results select 'skill_weekly python share (2 tin mở, 1 có Python)', share::text, '0.5000'
   from mart.skill_weekly
   where skill_id = (select id from ref.skills where slug = 'python') and job_family_id = 0;
 insert into results select 'region_salary hides salary when n < 20', (p50_vnd is null)::text, 'true' from mart.region_salary where province_code=1 and job_family_id=0;
-insert into results select 'system_daily recorded logins_today', (logins_today >= 1)::text, 'true' from mart.system_daily where day = current_date;
+insert into results select 'system_daily recorded logins_today', (logins_today >= 1)::text, 'true' from mart.system_daily where day = (now() at time zone 'Asia/Ho_Chi_Minh')::date;
+
+-- (S4-T01, migration 0017) Ngày theo giờ Việt Nam, tin mới 24h, tin mở theo nguồn.
+-- Tin a: đang mở, 2 nguồn (VietnamWorks thấy 2 giờ trước, TopCV thấy 30 giờ trước)
+-- Tin b: đang mở, nguồn VietnamWorks đã ngừng đăng (is_active = false), thấy 30 giờ trước
+-- Tin c: đã đóng, nguồn TopCV thấy 1 giờ trước
+insert into core.jobs (title, title_norm, company_id, apply_url, first_seen_at) values
+  ('S4T01 tin a', 's4t01 tin a', 1, 'https://s4t01.test/a', now() - interval '2 hours'),
+  ('S4T01 tin b', 's4t01 tin b', 1, 'https://s4t01.test/b', now() - interval '30 hours'),
+  ('S4T01 tin c', 's4t01 tin c', 1, 'https://s4t01.test/c', now() - interval '1 hour');
+update core.jobs set status = 'closed', close_reason = 'gone', closed_at = now()
+ where apply_url = 'https://s4t01.test/c';
+insert into core.job_sources (source_id, source_job_id, job_id, url, first_seen_at, is_active)
+select 1, 's4t01-a', id, apply_url, now() - interval '2 hours', true
+  from core.jobs where apply_url = 'https://s4t01.test/a'
+union all
+select 4, 's4t01-a', id, apply_url || '-topcv', now() - interval '30 hours', true
+  from core.jobs where apply_url = 'https://s4t01.test/a'
+union all
+select 1, 's4t01-b', id, apply_url, now() - interval '30 hours', false
+  from core.jobs where apply_url = 'https://s4t01.test/b'
+union all
+select 4, 's4t01-c', id, apply_url, now() - interval '1 hour', true
+  from core.jobs where apply_url = 'https://s4t01.test/c';
+select mart.refresh_system_daily();
+select set_config('test.vn_day', (now() at time zone 'Asia/Ho_Chi_Minh')::date::text, false);
+insert into results select 'system_daily: VNW open (tin a; tin b nguồn ngừng đăng)', jobs_open::text, '1'
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date and source_id = 1;
+insert into results select 'system_daily: VNW new 24h (tin a; tin b > 24h)', jobs_new_24h::text, '1'
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date and source_id = 1;
+insert into results select 'system_daily: TopCV open (tin a; tin c đã đóng)', jobs_open::text, '1'
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date and source_id = 4;
+insert into results select 'system_daily: TopCV new 24h (tin c; tin a > 24h)', jobs_new_24h::text, '1'
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date and source_id = 4;
+insert into results select 'system_daily: mỗi nguồn một dòng', count(*)::text, (select count(*)::text from ops.sources)
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date;
+insert into results select 'system_daily: jobs_open = đếm tay', m.jobs_open::text,
+       (select count(*)::text from core.jobs where origin = 'crawled' and status = 'open'
+          and (valid_through is null or valid_through >= current_setting('test.vn_day')::date))
+  from mart.system_daily m where m.day = current_setting('test.vn_day')::date;
+insert into results select 'system_daily: jobs_new_24h = đếm tay', m.jobs_new_24h::text,
+       (select count(*)::text from core.jobs where origin = 'crawled'
+          and first_seen_at > m.refreshed_at - interval '24 hours' and first_seen_at <= m.refreshed_at)
+  from mart.system_daily m where m.day = current_setting('test.vn_day')::date;
+insert into results select 'system_daily: users theo vai trò = đếm tay',
+       m.users_seeker || '/' || m.users_hr || '/' || m.users_admin,
+       (select count(*) filter (where role = 'seeker' and status <> 'locked') || '/' ||
+               count(*) filter (where role = 'hr' and status = 'active') || '/' ||
+               count(*) filter (where role = 'admin' and status = 'active') from app.profiles)
+  from mart.system_daily m where m.day = current_setting('test.vn_day')::date;
+insert into results select 'system_daily: matches = đếm tay', m.matches::text,
+       (select count(*)::text from app.match_requests
+         where (created_at at time zone 'Asia/Ho_Chi_Minh')::date = m.day)
+  from mart.system_daily m where m.day = current_setting('test.vn_day')::date;
+-- Tin thấy lúc 00:30 giờ VN (= 17:30 UTC hôm trước) phải tính vào ngày VN đó:
+-- jobs_new của ngày tăng đúng 1 (cách tính theo ngày UTC cũ sẽ không tăng)
+select set_config('test.jobs_new_before', jobs_new::text, false)
+  from mart.system_daily where day = current_setting('test.vn_day')::date;
+insert into core.jobs (title, title_norm, company_id, apply_url, first_seen_at) values
+  ('S4T01 tin d', 's4t01 tin d', 1, 'https://s4t01.test/d',
+   (current_setting('test.vn_day')::date + time '00:30') at time zone 'Asia/Ho_Chi_Minh');
+select mart.refresh_system_daily(current_setting('test.vn_day')::date);
+insert into results select 'system_daily: tin 00:30 giờ VN tính vào ngày VN', jobs_new::text,
+       (current_setting('test.jobs_new_before')::int + 1)::text
+  from mart.system_daily where day = current_setting('test.vn_day')::date;
+delete from core.jobs where apply_url like 'https://s4t01.test/%';
+-- Chỉ admin đọc được bảng theo nguồn
+set role anon; set request.jwt.claims = '{}';
+do $$ begin
+  perform 1 from mart.system_daily_source;
+  insert into results values ('system_daily_source: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('system_daily_source: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+reset role;
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'system_daily_source: seeker không đọc được', count(*)::text, '0' from mart.system_daily_source;
+reset role;
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000d","user_role":"admin","account_status":"active"}';
+insert into results select 'system_daily_source: admin đọc được', count(*)::text, (select count(*)::text from ops.sources)
+  from mart.system_daily_source where day = current_setting('test.vn_day')::date;
+reset role;
 insert into results select 'purge expired hr cv', app.purge_expired_cvs()::text, '1';
 insert into results select 'purge keeps expired seeker cv (no Storage cleanup yet)', count(*)::text, '1'
   from app.cvs where storage_path = 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf';
