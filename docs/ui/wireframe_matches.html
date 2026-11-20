@@ -1,0 +1,248 @@
+<!doctype html>
+<!--
+  Nguồn của docs/ui/wireframe_matches.png (S3-H09 · US-16, US-17 · cho Sprint 4: S4-H01..H05).
+  Xuất lại PNG (PowerShell, tại thư mục gốc repo):
+    & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1640,1915 --screenshot="$PWD\docs\ui\wireframe_matches.png" "$PWD\docs\ui\wireframe_matches.html"
+  Dữ liệu trong hình là giả lập. Contract API: docs/api/match-jobs.md (POST /match/jobs).
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe Việc phù hợp với tôi: Top N, thẻ kết quả, 4 thành phần điểm</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 1915px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .wide { grid-column: 1 / -1; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .url { background: #eee; border-bottom: 1px solid #ccc; padding: 3px 12px; font: 12px Consolas, monospace; color: #555; }
+  .nav { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-bottom: 1px solid #bbb; }
+  .nav .logo { font-weight: 700; margin-right: 10px; } .nav .on { font-weight: 700; text-decoration: underline; }
+  .nav .sp { flex: 1; } .nav .user { border: 1px solid #999; border-radius: 14px; padding: 2px 10px; }
+  .main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; } h3 { margin: 0 0 3px; font-size: 13px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; } .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; background: #fff; }
+  .btn.pri { background: #333; color: #fff; } .btn.dis { border-color: #bbb; color: #bbb; }
+  .input { border: 1px solid #999; border-radius: 4px; padding: 4px 8px; background: #fff; }
+  .seg { display: inline-flex; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+  .seg span { padding: 3px 10px; border-left: 1px solid #333; } .seg span:first-child { border-left: 0; }
+  .seg .on { background: #333; color: #fff; }
+  .chip { display: inline-block; border: 1px solid #666; border-radius: 12px; padding: 1px 8px; margin: 2px 3px 2px 0; font-size: 12px; }
+  .chip.on { background: #333; color: #fff; border-color: #333; }
+  .chip.listed { border-style: dashed; color: #555; }
+  .chip.miss { border-color: #c33; color: #a22; background: #fff3f3; }
+  .tag { display: inline-block; border: 1px solid #999; border-radius: 3px; padding: 0 6px; margin-right: 3px; font-size: 11px; background: #f3f3f3; }
+  .warn { border: 1px solid #c33; color: #c33; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .err { border: 1px solid #c33; background: #fff3f3; color: #a22; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .tip { border: 1px solid #333; background: #333; color: #fff; border-radius: 4px; padding: 6px 9px; font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .card { border: 1px solid #333; border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 92px 1fr 300px; gap: 6px 16px; }
+  .score { grid-row: 1 / span 3; text-align: center; border-right: 1px solid #ddd; padding-right: 10px; }
+  .score b { display: block; font-size: 30px; line-height: 1.1; } .score .rank { font-size: 11px; color: #777; }
+  .comp { display: grid; grid-template-columns: 112px 1fr 84px; gap: 4px 6px; align-items: center; font-size: 12px; }
+  .bar { height: 9px; border: 1px solid #999; border-radius: 4px; overflow: hidden; background: #fff; }
+  .bar span { display: block; height: 100%; background: #555; }
+  .bar.na { border-style: dashed; background: repeating-linear-gradient(45deg, #fff 0 4px, #eee 4px 8px); }
+  .skel { background: #e8e8e8; border-radius: 3px; height: 10px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  ol, ul { margin: 4px 0; padding-left: 20px; }
+  .flow { display: flex; align-items: stretch; gap: 6px; }
+  .flow .st { flex: 1; border: 1px solid #333; border-radius: 4px; padding: 5px 7px; font-size: 12px; }
+  .flow .ar { align-self: center; font-size: 16px; color: #555; }
+</style>
+</head>
+<body>
+<h1>Wireframe Việc phù hợp với tôi: Top N, thẻ kết quả, 4 thành phần điểm</h1>
+<p class="sub">S3-H09 · US-16, US-17 · Cho Sprint 4 (S4-H01 trang + bộ lọc, S4-H02 thẻ kết quả, S4-H03 trạng thái, S4-H04 nối API thật, S4-H05 lưu việc + lịch sử) · Chỉ vai trò Người tìm việc (proxy đã chặn /viec-phu-hop cho vai trò khác) · Dòng xám dưới mỗi màn là API cần. Dữ liệu giả lập.</p>
+
+<div class="grid">
+
+  <!-- 1. Trang Top N -->
+  <div class="frame wide" style="height:800px">
+    <div class="title">1 · Trang Việc phù hợp với tôi — S4-H01, S4-H02, S4-H04 · US-16</div>
+    <div class="url">/viec-phu-hop?cv={cv_id}&amp;n=10&amp;tinh=1,79&amp;hinh-thuc=remote (bộ lọc nằm trên URL: F5 hoặc gửi link vẫn giữ)</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span class="on">Việc phù hợp</span><span>Việc đã lưu</span><span>Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main">
+      <h2>Việc phù hợp với tôi</h2>
+      <div class="box row" style="flex-wrap:wrap; gap:10px 18px">
+        <div>CV dùng để chấm<br><div class="input" style="width:330px">★ CV_NguyenVanMinh_Backend.pdf · 12 kỹ năng ▾</div></div>
+        <div>Số việc<br><div class="seg"><span>5</span><span class="on">10</span><span>20</span><span>50</span></div></div>
+        <div>Tỉnh / thành<br><div class="input" style="width:260px"><span class="chip on">Hà Nội ×</span><span class="chip on">TP. Hồ Chí Minh ×</span> ▾</div></div>
+        <div>Hình thức<br><span class="chip">☐ Tại văn phòng</span><span class="chip">☐ Hybrid</span><span class="chip on">☑ Từ xa</span></div>
+        <div style="align-self:end"><span class="btn pri">Tìm việc phù hợp</span></div>
+        <div class="small muted" style="flex-basis:100%">Mặc định chọn <b>CV chính</b> (★). Chỉ hiện CV đã đọc xong. Tin <b>từ xa</b> và tin <b>không ghi tỉnh</b> luôn có trong kết quả dù lọc tỉnh. Đổi CV / số việc / bộ lọc rồi bấm Tìm (không tự chấm lại mỗi lần đổi, vì giới hạn 20 lượt/phút).</div>
+      </div>
+
+      <div class="note"><b>Điểm là mức phù hợp theo công thức, không phải xác suất trúng tuyển.</b> (luôn hiện, lấy từ trường <code>note</code> của API · AC US-16)</div>
+      <div class="row small"><b style="flex:1">10 việc phù hợp nhất</b><span class="muted">chọn từ 151 tin gần với CV trong 1.435 tin đang mở · trả lời trong 0,42 giây · tin đã hết hạn / đã đóng tự bị loại</span></div>
+
+      <!-- Thẻ 1 -->
+      <div class="card">
+        <div class="score"><span class="rank">#1</span><b>86,0</b><span class="small">/ 100</span><br><span class="small muted"><u>Điểm tính thế nào?</u></span></div>
+        <div>
+          <div class="row"><h2 style="flex:1">Lập trình viên Java Backend</h2></div>
+          <div class="muted">Công ty B · Hà Nội · Hybrid · Hạn nộp 11/12/2026 (còn 21 ngày)</div>
+        </div>
+        <div class="row" style="justify-content:flex-end"><span class="btn">☆ Lưu</span><span class="btn">Xem tin</span><span class="btn pri">Ứng tuyển ở trang gốc ↗</span></div>
+        <div class="comp">
+          <span>K · Từ khóa</span><div class="bar"><span style="width:90%"></span></div><b>0,90</b>
+          <span>M · Kỹ năng</span><div class="bar"><span style="width:80%"></span></div><b>0,80</b>
+          <span>E · Ngữ nghĩa</span><div class="bar"><span style="width:85%"></span></div><b>0,85</b>
+          <span>X · Kinh nghiệm</span><div class="bar"><span style="width:100%"></span></div><b>1,00</b>
+        </div>
+        <div class="small" style="grid-column: 3; grid-row: 2 / span 2">
+          <div><b>Khớp</b> <span class="chip on">Java</span><span class="chip on">Spring Boot</span><span class="chip on">PostgreSQL</span><span class="chip listed">Docker</span><span class="chip on">Hibernate (qua Spring Data JPA)</span></div>
+          <div style="margin-top:3px"><b>CV chưa thể hiện</b> <span class="chip miss">Kafka · ưu tiên</span></div>
+          <div class="muted" style="margin-top:3px">Chip đặc = có bằng chứng trong CV · chip nét đứt = chỉ liệt kê · "(qua …)" = khớp qua kỹ năng liên quan</div>
+        </div>
+        <div class="small muted" style="grid-column: 2">Khớp 4/4 kỹ năng bắt buộc · 1/2 kỹ năng ưu tiên · đủ số năm tin yêu cầu (≥ 1 năm) · nội dung CV gần với tin này hơn 85% tin đang mở</div>
+      </div>
+
+      <!-- Thẻ 2: X null -->
+      <div class="card">
+        <div class="score"><span class="rank">#2</span><b>69,4</b><span class="small">/ 100</span><br><span class="small muted"><u>Điểm tính thế nào?</u></span></div>
+        <div>
+          <h2>Backend Developer (Node.js / Java) <span class="warn">Sắp hết hạn</span></h2>
+          <div class="muted">Công ty C · TP. Hồ Chí Minh · Từ xa · Hạn nộp 23/11/2026 (còn 3 ngày)</div>
+        </div>
+        <div class="row" style="justify-content:flex-end"><span class="btn">★ Đã lưu</span><span class="btn">Xem tin</span><span class="btn pri">Ứng tuyển ở trang gốc ↗</span></div>
+        <div class="comp">
+          <span>K · Từ khóa</span><div class="bar"><span style="width:70%"></span></div><b>0,70</b>
+          <span>M · Kỹ năng</span><div class="bar"><span style="width:60%"></span></div><b>0,60</b>
+          <span>E · Ngữ nghĩa</span><div class="bar"><span style="width:80%"></span></div><b>0,80</b>
+          <span class="muted">X · Kinh nghiệm</span><div class="bar na"></div><span class="small muted">không áp dụng</span>
+        </div>
+        <div class="small" style="grid-column: 3; grid-row: 2 / span 2">
+          <div><b>Khớp</b> <span class="chip on">Java</span><span class="chip on">REST API</span><span class="chip listed">Git</span></div>
+          <div style="margin-top:3px"><b>CV chưa thể hiện</b> <span class="chip miss">Node.js · bắt buộc</span><span class="chip miss">MongoDB · ưu tiên</span></div>
+        </div>
+        <div class="small muted" style="grid-column: 2">Khớp 2/3 kỹ năng bắt buộc · 0/1 kỹ năng ưu tiên · tin không ghi số năm kinh nghiệm · nội dung CV gần với tin này hơn 80% tin đang mở</div>
+      </div>
+
+      <!-- Thẻ 3: thu gọn -->
+      <div class="card" style="grid-template-columns: 92px 1fr 300px">
+        <div class="score" style="grid-row:auto"><span class="rank">#3</span><b>53,1</b></div>
+        <div><h2>Kỹ sư phần mềm (Fullstack)</h2><div class="muted">Công ty D · Hà Nội · Tại văn phòng · Hạn nộp 05/12/2026</div></div>
+        <div class="row" style="justify-content:flex-end"><span class="btn">☆ Lưu</span><span class="btn">Xem tin</span><span class="btn pri">Ứng tuyển ↗</span></div>
+      </div>
+      <div class="small muted">… thẻ #4 → #10 cùng mẫu. Thứ tự theo điểm giảm dần (rank của API). Mobile: điểm + tiêu đề ở trên, 4 thanh và kỹ năng xếp dọc bên dưới.</div>
+    </div>
+    <div class="api">POST /match/jobs {cv_id, top_n, filters:{provinces, work_modes}} (FastAPI · Render · Bearer JWT Supabase) · danh sách CV: api.v_my_cvs (parse_status = parsed) · tỉnh: bộ lọc của trang Việc làm</div>
+  </div>
+
+  <!-- 2. Tooltip điểm -->
+  <div class="frame" style="height:425px">
+    <div class="title">2 · "Điểm tính thế nào?" (bấm hoặc rê chuột vào điểm) — S4-H02 · US-16</div>
+    <div class="url">popover trên thẻ kết quả #2 (X = null)</div>
+    <div class="main">
+      <div class="tip">
+        <b>Điểm 69,4 = 100 × (0,28 × K + 0,39 × M + 0,33 × E)</b><br>
+        Tin này không ghi số năm kinh nghiệm nên bỏ X và chia lại trọng số của 3 phần còn lại (tổng vẫn = 1).
+      </div>
+      <table class="small">
+        <tr><th>Thành phần</th><th>Nghĩa (cho người dùng)</th><th>Trọng số gốc</th><th>Tin này</th></tr>
+        <tr><td><b>K</b> Từ khóa</td><td>CV có nhắc tới những từ quan trọng trong tin</td><td>0,25</td><td>0,28 × 0,70</td></tr>
+        <tr><td><b>M</b> Kỹ năng</td><td>Kỹ năng tin yêu cầu mà CV thể hiện, bắt buộc tính nặng hơn ưu tiên, có bằng chứng tính nặng hơn chỉ liệt kê</td><td>0,35</td><td>0,39 × 0,60</td></tr>
+        <tr><td><b>E</b> Ngữ nghĩa</td><td>Nội dung CV gần với nội dung tin tới mức nào (so bằng mô hình ngôn ngữ)</td><td>0,30</td><td>0,33 × 0,80</td></tr>
+        <tr><td><b>X</b> Kinh nghiệm</td><td>Số năm trong CV so với số năm tin yêu cầu</td><td>0,10</td><td class="muted">không áp dụng</td></tr>
+      </table>
+      <div class="small muted">Trọng số lấy từ <code>weights_used</code>, làm tròn 2 chữ số khi hiện. Thanh "không áp dụng" vẽ nét đứt, không vẽ 0 (0 nghĩa là không khớp, khác với không có dữ liệu).</div>
+      <div class="note">Câu cố định ở cuối popover: "Điểm là mức phù hợp theo công thức, không phải xác suất trúng tuyển. Sửa hồ sơ kỹ năng ở <u>Hồ sơ CV</u> để điểm sát hơn."</div>
+    </div>
+    <div class="api">components {K,M,E,X: 0–1 | null} · weights_used · config/ranker_config.yaml</div>
+  </div>
+
+  <!-- 3. Trạng thái -->
+  <div class="frame" style="height:425px">
+    <div class="title">3 · Trạng thái chờ / rỗng / lỗi — S4-H03, S4-H04 · US-16</div>
+    <div class="url">/viec-phu-hop (cùng trang, thay vùng kết quả)</div>
+    <div class="main" style="gap:7px">
+      <div class="box">
+        <h3>Đang chấm (≤ 3 giây thường gặp)</h3>
+        <div class="row"><div class="skel" style="width:60px; height:34px"></div><div style="flex:1; display:grid; gap:5px"><div class="skel" style="width:55%"></div><div class="skel" style="width:35%"></div><div class="skel"></div></div></div>
+        <div class="small muted">3 thẻ xám giữ chỗ · nút Tìm khóa · quá 5 giây hiện thêm "Hệ thống đang khởi động, có thể mất tới 1 phút…"</div>
+      </div>
+      <div class="box">
+        <h3>Chưa có CV đọc xong</h3>
+        <div class="small">"Bạn cần tải CV để nhận việc phù hợp." <span class="btn">Tải CV</span> · CV đang đọc: "CV đang được đọc, hãy đợi rồi thử lại." <span class="btn">Hồ sơ CV</span></div>
+      </div>
+      <div class="box">
+        <h3>Không có kết quả với bộ lọc</h3>
+        <div class="small">"Không có việc nào khớp với bộ lọc hiện tại." <span class="btn">Bỏ lọc tỉnh</span> <span class="btn">Bỏ lọc hình thức</span></div>
+      </div>
+      <div class="err"><b>Lỗi (giữ nguyên lựa chọn, có nút Thử lại):</b> 503 engine_warming "Hệ thống đang khởi động, thử lại sau ít phút." · 429 "Bạn thao tác quá nhanh, thử lại sau 1 phút." · hết thời gian chờ 30 giây "Chấm điểm lâu hơn bình thường." · 401 → chuyển đăng nhập, quay lại đúng trang.</div>
+      <div class="small muted">Có ít hơn N tin (ví dụ lọc hẹp): hiện "Chỉ có 4 việc phù hợp", không coi là lỗi.</div>
+    </div>
+    <div class="api">bảng lỗi ở docs/api/match-jobs.md · Server-Timing → "trả lời trong … giây"</div>
+  </div>
+
+  <!-- 4. Việc đã lưu + lịch sử -->
+  <div class="frame wide" style="height:330px">
+    <div class="title">4 · Việc đã lưu và lịch sử gợi ý — S4-H05 · US-17</div>
+    <div class="url">/viec-da-luu</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span>Việc phù hợp</span><span class="on">Việc đã lưu</span><span>Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-content:start">
+      <div style="display:grid; gap:6px">
+        <div class="row"><h2 style="flex:1">Việc đã lưu (3)</h2></div>
+        <table class="small">
+          <tr><th>Việc</th><th>Điểm lúc lưu</th><th>Hạn nộp</th><th></th></tr>
+          <tr><td><b>Backend Developer (Node.js / Java)</b><br>Công ty C · Từ xa</td><td>69,4</td><td>23/11 (còn 3 ngày)</td><td><span class="btn">Ứng tuyển ↗</span> <span class="btn">Bỏ lưu</span></td></tr>
+          <tr><td><b>Lập trình viên Java</b><br>Công ty E · Đà Nẵng</td><td>74,0</td><td>10/12</td><td><span class="btn">Ứng tuyển ↗</span> <span class="btn">Bỏ lưu</span></td></tr>
+          <tr class="muted"><td><b>Java Developer</b> <span class="warn">Đã đóng</span><br>Công ty F · Hà Nội</td><td>71,2</td><td>15/11</td><td><span class="btn dis">Ứng tuyển</span> <span class="btn">Bỏ lưu</span></td></tr>
+        </table>
+        <div class="small muted">Tin hết hạn / bị gỡ vẫn giữ trong danh sách, có nhãn Đã đóng, không cho ứng tuyển.</div>
+      </div>
+      <div style="display:grid; gap:6px">
+        <h2>10 lần gợi ý gần nhất</h2>
+        <table class="small">
+          <tr><th>Lúc</th><th>CV</th><th>Số việc · bộ lọc</th><th>Cao nhất</th><th></th></tr>
+          <tr><td>20/11 09:30</td><td>★ CV_…Backend.pdf</td><td>10 · Hà Nội, HCM · Từ xa</td><td>86,0</td><td><span class="btn">Chấm lại</span></td></tr>
+          <tr><td>19/11 21:05</td><td>CV_…Java.pdf</td><td>20 · mọi tỉnh</td><td>78,5</td><td><span class="btn">Chấm lại</span></td></tr>
+          <tr><td colspan="5" class="muted">… tối đa 10 dòng, mới nhất ở trên</td></tr>
+        </table>
+        <div class="small muted">"Chấm lại" mở /viec-phu-hop với đúng CV + bộ lọc của lần đó (kết quả có thể khác vì tin đã đổi).</div>
+      </div>
+    </div>
+    <div class="api">lưu / bỏ lưu: RPC api.* (Tùng, chưa có) · lịch sử: app.match_requests (request_id từ POST /match/jobs) qua view api.* (chưa có)</div>
+  </div>
+
+  <!-- 5. Luồng + câu hỏi -->
+  <div class="frame wide" style="height:170px">
+    <div class="title">5 · Luồng dữ liệu và câu hỏi cần chốt ở Sprint Planning 4 (23/11)</div>
+    <div class="main">
+      <div class="flow">
+        <div class="st"><b>Web: chọn CV, N, bộ lọc</b><br>CV chính mặc định · bộ lọc trên URL</div><span class="ar">→</span>
+        <div class="st"><b>POST /match/jobs</b><br>Bearer JWT · 20 lượt/phút</div><span class="ar">→</span>
+        <div class="st"><b>Ranker</b><br>K, M, E, X → H · chỉ tin đang mở</div><span class="ar">→</span>
+        <div class="st"><b>app.match_requests</b><br>ghi lịch sử (request_id)</div><span class="ar">→</span>
+        <div class="st"><b>Màn 1: Top N</b><br>thẻ, 4 thanh, kỹ năng khớp / thiếu</div><span class="ar">→</span>
+        <div class="st"><b>Lưu việc</b><br>→ Việc đã lưu (màn 4)</div>
+      </div>
+      <div class="row" style="align-items:start; gap:16px">
+        <ol class="small" style="flex:1">
+          <li><b>Tùng:</b> bảng + RPC lưu / bỏ lưu việc và view đọc 10 lần gợi ý gần nhất (match_requests) cho S4-H05: tên gì, có lưu điểm lúc lưu không?</li>
+          <li><b>Tùng:</b> danh sách tỉnh cho bộ lọc: dùng lại nguồn của trang Việc làm (mã ref.provinces.code) được không?</li>
+          <li><b>Duy:</b> "Xem tin" mở /viec-lam/{public_id} (trang chi tiết đã có) — public_id trong kết quả có luôn khác null không?</li>
+        </ol>
+        <ol class="small" start="4" style="flex:1">
+          <li><b>Duy:</b> API đang ngủ trên Render: web chờ tối đa bao lâu (đang vẽ 30 giây) và có nên gọi /health trước để đánh thức không?</li>
+          <li><b>Cả nhóm:</b> có hiện N = 50 không (API nhận, nhưng trang dài)? Có cần phân trang hay chỉ cuộn?</li>
+          <li><b>Cả nhóm:</b> CV chưa bấm "Lưu hồ sơ" (chưa xác nhận) có cho chấm không? Đang vẽ: cho chấm, hiện nhắc "Xác nhận hồ sơ để điểm sát hơn".</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
