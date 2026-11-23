@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     matcher_database_url: str = ""
     match_refresh_seconds: int = 3600  # dựng lại kho tin trong RAM
     match_rate_limit_per_minute: int = 20
+    # S4-T04: role api_metrics_writer (migration 0019). Trống = không ghi số đo độ trễ.
+    metrics_database_url: str = ""
 
     @property
     def jwks_url(self) -> str:

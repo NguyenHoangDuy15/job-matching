@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   buildAlerts,
   buildCrawlSeries,
+  buildP95Series,
   formatInt,
   formatMs,
   formatUsd,
@@ -66,6 +67,21 @@ test("buildCrawlSeries: 7 điểm kết thúc hôm nay, ngày thiếu là null",
   assert.equal(series[3].pct, 70);
   assert.equal(series[2].pct, null);
   assert.equal(series[5].pct, null);
+});
+
+test("buildP95Series: 7 điểm, ngày thiếu là null", () => {
+  const s = buildP95Series(
+    [
+      { day: "2026-11-23", p95_ms: "420" },
+      { day: "2026-11-21", p95_ms: 1500 },
+    ],
+    NOW,
+  );
+  assert.equal(s.length, 7);
+  assert.equal(s[0].day, "2026-11-17");
+  assert.equal(s[6].ms, 420);
+  assert.equal(s[4].ms, 1500);
+  assert.equal(s[5].ms, null);
 });
 
 test("buildAlerts: không có cảnh báo khi mọi thứ ổn", () => {

@@ -77,6 +77,20 @@ export function buildCrawlSeries(rows: Pick<SystemDailyRow, "day" | "crawl_succe
   return points;
 }
 
+export type P95Point = { day: string; label: string; ms: number | null };
+
+/** p95 độ trễ API (ms) 7 ngày giờ Việt Nam kết thúc ở hôm nay (S4-T04); ngày không có số đo → null. */
+export function buildP95Series(rows: Pick<SystemDailyRow, "day" | "p95_ms">[], now: Date): P95Point[] {
+  const byDay = new Map(rows.map((r) => [r.day.slice(0, 10), toNumber(r.p95_ms)]));
+  const points: P95Point[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = vnDay(new Date(now.getTime() - i * 86_400_000));
+    const [, m, d] = day.split("-");
+    points.push({ day, label: `${d}/${m}`, ms: byDay.get(day) ?? null });
+  }
+  return points;
+}
+
 export type AdminAlert = { key: string; title: string; detail: string; href?: string };
 
 /** Cảnh báo đỏ: không có dữ liệu, số liệu cũ, tỉ lệ crawl thấp, lần crawl thất bại 24h, nguồn bật mà 0 tin. */
