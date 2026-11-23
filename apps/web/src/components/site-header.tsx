@@ -13,7 +13,7 @@ const NAV: Record<Role | "guest", NavItem[]> = {
   seeker: [
     { href: "/", label: "Trang chủ" },
     { href: "/viec-lam", label: "Việc làm" },
-    { href: "/viec-phu-hop", label: "Việc phù hợp", soon: "Sprint 4" },
+    { href: "/viec-phu-hop", label: "Việc phù hợp" }, // S4-H01
     { href: "/ho-so", label: "Hồ sơ CV" }, // Hồ sơ của tôi (S3-H04)
     { href: "/ky-nang-hot", label: "Kỹ năng hot", soon: "Sprint 6" },
   ],
