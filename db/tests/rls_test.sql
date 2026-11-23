@@ -1077,6 +1077,58 @@ set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000d","user_ro
 insert into results select 'system_daily_source: admin đọc được', count(*)::text, (select count(*)::text from ops.sources)
   from mart.system_daily_source where day = current_setting('test.vn_day')::date;
 reset role;
+-- (S4-T02/T03, migration 0018) View admin: chỉ admin đọc được
+insert into ops.crawl_runs (source_id, run_type, status, started_at, finished_at, http_errors, error_sample)
+select (select id from ops.sources order by id limit 1), 'manual', 'failed',
+       now() - interval '5 minutes', now(), 3, 'HTTP 503 Service Unavailable (s4t03 test)';
+select set_config('test.run_id', id::text, false) from ops.crawl_runs where error_sample like '%(s4t03 test)';
+insert into ops.quality_reports (run_id, schema_errors, details)
+values (current_setting('test.run_id')::bigint, 2, '{"missing_title": 2}');
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000d","user_role":"admin","account_status":"active"}';
+insert into results select 'v_admin_crawl_runs: admin mở được lỗi của 1 lần chạy',
+       count(*) filter (where error_sample = 'HTTP 503 Service Unavailable (s4t03 test)'
+                          and http_errors = 3 and duration_s is not null
+                          and schema_errors = 2 and quality_details ->> 'missing_title' = '2')::text, '1'
+  from api.v_admin_crawl_runs where id = current_setting('test.run_id')::bigint;
+insert into results select 'v_admin_system_daily: admin đọc được hôm nay', (count(*) >= 1)::text, 'true'
+  from api.v_admin_system_daily where day = current_setting('test.vn_day')::date;
+insert into results select 'v_admin_system_daily_source: admin đọc đủ nguồn', count(*)::text,
+       (select count(*)::text from ops.sources)
+  from api.v_admin_system_daily_source where day = current_setting('test.vn_day')::date;
+reset role;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'v_admin_crawl_runs: seeker không đọc được', count(*)::text, '0' from api.v_admin_crawl_runs;
+insert into results select 'v_admin_system_daily: seeker không đọc được', count(*)::text, '0' from api.v_admin_system_daily;
+insert into results select 'v_admin_system_daily_source: seeker không đọc được', count(*)::text, '0'
+  from api.v_admin_system_daily_source;
+reset role;
+
+set role anon; set request.jwt.claims = '{}';
+do $$ begin
+  perform 1 from api.v_admin_crawl_runs;
+  insert into results values ('v_admin_crawl_runs: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('v_admin_crawl_runs: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+do $$ begin
+  perform 1 from api.v_admin_system_daily;
+  insert into results values ('v_admin_system_daily: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('v_admin_system_daily: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+do $$ begin
+  perform 1 from api.v_admin_system_daily_source;
+  insert into results values ('v_admin_system_daily_source: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('v_admin_system_daily_source: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+reset role;
+delete from ops.crawl_runs where id = current_setting('test.run_id')::bigint;
+
 insert into results select 'purge expired hr cv', app.purge_expired_cvs()::text, '1';
 insert into results select 'purge keeps expired seeker cv (no Storage cleanup yet)', count(*)::text, '1'
   from app.cvs where storage_path = 'u/00000000-0000-0000-0000-00000000000f/cv-b.pdf';
