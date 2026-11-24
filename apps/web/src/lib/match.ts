@@ -84,6 +84,47 @@ export function scoreOf(components: Components): number {
   return Math.round(sum * 1000) / 10;
 }
 
+// ---- Hiển thị thẻ kết quả (S4-H02, docs/ui/wireframe_matches.png màn 1–2) ----
+
+export const COMPONENT_KEYS: ComponentKey[] = ["K", "M", "E", "X"];
+
+export const COMPONENT_INFO: Record<ComponentKey, { label: string; meaning: string }> = {
+  K: { label: "Từ khóa", meaning: "CV có nhắc tới những từ quan trọng trong tin" },
+  M: {
+    label: "Kỹ năng",
+    meaning: "Kỹ năng tin yêu cầu mà CV thể hiện; bắt buộc tính nặng hơn ưu tiên, có bằng chứng nặng hơn chỉ liệt kê",
+  },
+  E: { label: "Ngữ nghĩa", meaning: "Nội dung CV gần với nội dung tin tới mức nào (so bằng mô hình ngôn ngữ)" },
+  X: { label: "Kinh nghiệm", meaning: "Số năm kinh nghiệm trong CV so với số năm tin yêu cầu" },
+};
+
+/** Số kiểu Việt Nam: 0,9 → "0,90"; 86 → "86,0". */
+export function numberVi(n: number, digits: number): string {
+  return n.toLocaleString("vi-VN", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+/** Trọng số dùng cho thẻ: lấy weights_used của API; thiếu thì tự chia lại từ components. */
+export function displayWeights(r: Pick<MatchResult, "components" | "weights_used">): Partial<Record<ComponentKey, number>> {
+  const used = COMPONENT_KEYS.filter((k) => r.components[k] != null && typeof r.weights_used[k] === "number");
+  return used.length ? Object.fromEntries(used.map((k) => [k, r.weights_used[k] as number])) : weightsFor(r.components);
+}
+
+/** "100 × (0,28 × K + 0,39 × M + 0,33 × E)": công thức cho popover "Điểm tính thế nào?". */
+export function formulaText(weights: Partial<Record<ComponentKey, number>>): string {
+  const terms = COMPONENT_KEYS.filter((k) => weights[k] != null).map((k) => `${numberVi(weights[k] as number, 2)} × ${k}`);
+  return `100 × (${terms.join(" + ")})`;
+}
+
+/** Tên chip kỹ năng khớp: "Spark (qua PySpark)" khi khớp qua kỹ năng liên quan. */
+export function matchedLabel(s: Pick<SkillMatched, "skill" | "via">): string {
+  return s.via ? `${s.skill} (qua ${s.via})` : s.skill;
+}
+
+/** Bắt buộc trước ưu tiên, giữ thứ tự API trong cùng mức. */
+export function byLevel<T extends { level: "required" | "preferred" }>(skills: T[]): T[] {
+  return [...skills.filter((s) => s.level === "required"), ...skills.filter((s) => s.level === "preferred")];
+}
+
 // ---- URL ----
 
 export type MatchParams = {

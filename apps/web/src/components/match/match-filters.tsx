@@ -2,7 +2,8 @@
 
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
+import { useDismiss } from "@/components/match/use-dismiss";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { WORK_MODE_LABEL } from "@/lib/jobs/filters";
@@ -120,22 +121,7 @@ function ProvincePicker({ value, onChange }: { value: number[]; onChange: (v: nu
   const box = useRef<HTMLDivElement>(null);
   const q = unaccent(query);
 
-  // Bấm ra ngoài hoặc nhấn Esc thì đóng.
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(box, open, useCallback(() => setOpen(false), []));
   const visible = q
     ? PROVINCES.filter((p) => unaccent(p.name).includes(q))
     : [
