@@ -2,7 +2,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  byLevel,
   DEFAULT_TOP_N,
+  displayWeights,
+  formulaText,
+  matchedLabel,
+  numberVi,
   matchableCvs,
   matchHref,
   parseMatchParams,
@@ -84,4 +89,28 @@ test("mock theo contract: lọc tỉnh (remote / không ghi tỉnh luôn qua), l
 
   const none = mockMatchJobs({ cv_id: CV, top_n: 10, filters: { provinces: [24], work_modes: ["hybrid"] } }, today);
   assert.equal(none.results.length, 0);
+});
+
+test("thẻ kết quả: công thức, trọng số, tên chip kỹ năng, bắt buộc trước", () => {
+  assert.equal(numberVi(0.9, 2), "0,90");
+  assert.equal(numberVi(86, 1), "86,0");
+
+  const withX = { components: { K: 0.9, M: 0.8, E: 0.85, X: 1 }, weights_used: { K: 0.25, M: 0.35, E: 0.3, X: 0.1 } };
+  assert.equal(formulaText(displayWeights(withX)), "100 × (0,25 × K + 0,35 × M + 0,30 × E + 0,10 × X)");
+
+  const noX = { components: { K: 0.7, M: 0.6, E: 0.8, X: null }, weights_used: { K: 0.2778, M: 0.3889, E: 0.3333 } };
+  assert.equal(formulaText(displayWeights(noX)), "100 × (0,28 × K + 0,39 × M + 0,33 × E)");
+  // API không gửi weights_used: tự chia lại, bỏ X.
+  const w = displayWeights({ components: noX.components, weights_used: {} });
+  assert.deepEqual(Object.keys(w), ["K", "M", "E"]);
+
+  assert.equal(matchedLabel({ skill: "Spark", via: "PySpark" }), "Spark (qua PySpark)");
+  assert.equal(matchedLabel({ skill: "Python", via: null }), "Python");
+  const sorted = byLevel([
+    { skill: "Kafka", level: "preferred" as const },
+    { skill: "Java", level: "required" as const },
+    { skill: "Redis", level: "preferred" as const },
+    { skill: "SQL", level: "required" as const },
+  ]);
+  assert.deepEqual(sorted.map((s) => s.skill), ["Java", "SQL", "Kafka", "Redis"]);
 });

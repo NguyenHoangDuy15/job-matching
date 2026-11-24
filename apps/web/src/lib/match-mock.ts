@@ -81,7 +81,7 @@ function toResult(job: MockJob, index: number, today: Date): Omit<MatchResult, "
       level,
       via: skill === "Hibernate" ? "Spring Data JPA" : null,
       relation: skill === "Hibernate" ? "child" : "exact",
-      evidence: skill === "Docker" || skill === "Git" ? "listed" : "strong",
+      evidence: skill === "Docker" || skill === "Git" ? "listed" : skill === "Redis" ? "user_added" : "strong",
     }));
   const missing = (names: string[], level: SkillMissing["level"]): SkillMissing[] =>
     names.map((skill) => ({ skill_id: slug(skill), skill, level }));
@@ -94,7 +94,7 @@ function toResult(job: MockJob, index: number, today: Date): Omit<MatchResult, "
     provinces: job.provinces.map(provinceName),
     work_mode: job.mode,
     valid_through: job.daysLeft == null ? null : dateAfter(job.daysLeft, today),
-    apply_url: null,
+    apply_url: `https://example.com/viec-mau/${jobId}`, // giả: thẻ mẫu tắt link này
     score: scoreOf(components),
     components,
     weights_used: weightsFor(components),
