@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { requireAccess } from "@/lib/auth";
 import { cvLabel } from "@/lib/cv-list";
 import { matchableCvs, matchHref, parseMatchParams, pickCv, toMatchRequest } from "@/lib/match";
+import { parseSimulation } from "@/lib/match-errors";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Việc phù hợp với tôi" };
@@ -31,7 +32,9 @@ type CvRow = {
 
 export default async function MatchPage({ searchParams }: PageProps<"/viec-phu-hop">) {
   await requireAccess("/viec-phu-hop");
-  const params = parseMatchParams(await searchParams);
+  const query = await searchParams;
+  const params = parseMatchParams(query);
+  const simulate = parseSimulation(query["gia-lap"]); // S4-H03: giả lập lỗi khi đang dùng dữ liệu mẫu
 
   const api = (await createClient()).schema("api");
   const cvs = await api
@@ -97,7 +100,11 @@ export default async function MatchPage({ searchParams }: PageProps<"/viec-phu-h
           để điểm sát hơn.
         </p>
       )}
-      <MatchResults key={`r-${href}`} request={toMatchRequest(selected, cv.id)} />
+      <MatchResults
+        key={`r-${href}-${simulate ?? ""}`}
+        request={toMatchRequest(selected, cv.id)}
+        simulate={simulate}
+      />
     </PageShell>
   );
 }
