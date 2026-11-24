@@ -12,9 +12,10 @@ db/migrations/0002_fx_rates.sql.
 import gzip
 import hashlib
 import json
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -22,6 +23,7 @@ from ingestion.dedup import canonical_url, dedup_hash
 from ingestion.fx import FxRate, FxSyncResult, load_latest_pg, sync_rates_pg
 from ingestion.location import ProvinceIndex, build_index, normalize_key, normalize_location
 from ingestion.models import JobPostingRaw
+from ingestion.quality import QualityCounter, build_report
 from ingestion.salary import parse_salary, to_vnd
 from ingestion.seniority import infer_seniority, source_signals
 from ingestion.work_mode import infer_work_mode
@@ -230,6 +232,7 @@ class LocalStore:
         self.fx_rates: dict[str, FxRate] = {}
         self.out_dir = out_dir
         self._seen: set[tuple[str, str]] = set()
+        self.quality = QualityCounter()
 
     def start_run(self, source_name: str, source_id: int | None, run_type: str) -> int | None:
         return None
@@ -250,10 +253,15 @@ class LocalStore:
         ident = (posting.source, posting.source_job_id)
         result: SaveResult = "unchanged" if ident in self._seen else "new"
         self._seen.add(ident)
+        self.quality.add(row, posting, result)
         return result
 
     def finish_run(self, run_id, stats: RunStats, status: str, error: str | None) -> None:
-        return None
+        # Chạy thử không có DB: in báo cáo chất lượng ra log thay vì ghi ops.quality_reports.
+        report = build_report(self.quality, stats, datetime.now(timezone.utc))
+        logging.getLogger("ingestion.quality").info(
+            "quality %s", json.dumps(report, ensure_ascii=False, default=str)
+        )
 
     # Đóng tin (S2-T06): chạy thử không có DB nên không làm gì.
     def unseen_postings(self, run_id, limit: int) -> list[tuple[str, str]]:
@@ -292,6 +300,8 @@ class PgStore:
         self.fx_rates = self._fx_rates() if self.salary_v2 else {}
         # Tin mới / đổi nội dung trong lượt này: bước ③ gắn kỹ năng sau crawl (S2-D06).
         self.changed_job_ids: list[int] = []
+        # Đếm chất lượng tin trong lượt, ghi ops.quality_reports lúc finish_run (S4-T05).
+        self.quality = QualityCounter()
 
     # ---- đọc tham chiếu ---------------------------------------------------
     def _job_columns(self) -> set[str]:
@@ -360,6 +370,9 @@ class PgStore:
         return run_id
 
     def finish_run(self, run_id: int, stats: RunStats, status: str, error: str | None) -> None:
+        from psycopg.types.json import Jsonb
+
+        report = build_report(self.quality, stats, datetime.now(timezone.utc))
         with self.conn.transaction():
             self.conn.execute(
                 """update ops.crawl_runs
@@ -377,6 +390,32 @@ class PgStore:
                     stats.http_errors,
                     (error or "")[:2000] or None,
                     run_id,
+                ),
+            )
+            self.conn.execute(
+                """insert into ops.quality_reports
+                     (run_id, completeness, validity, uniqueness, salary_parsed_pct,
+                      province_parsed_pct, schema_errors, freshness_hours, details)
+                   values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   on conflict (run_id) do update
+                     set completeness = excluded.completeness,
+                         validity = excluded.validity,
+                         uniqueness = excluded.uniqueness,
+                         salary_parsed_pct = excluded.salary_parsed_pct,
+                         province_parsed_pct = excluded.province_parsed_pct,
+                         schema_errors = excluded.schema_errors,
+                         freshness_hours = excluded.freshness_hours,
+                         details = excluded.details""",
+                (
+                    run_id,
+                    report["completeness"],
+                    report["validity"],
+                    report["uniqueness"],
+                    report["salary_parsed_pct"],
+                    report["province_parsed_pct"],
+                    report["schema_errors"],
+                    report["freshness_hours"],
+                    Jsonb(report["details"]),
                 ),
             )
 
@@ -516,6 +555,7 @@ class PgStore:
                 )
         if result in ("new", "updated"):
             self.changed_job_ids.append(job_id)
+        self.quality.add(row, posting, result)
         return result
 
     def _match_url(self, url_norm: str) -> tuple[int, bytes | None] | None:

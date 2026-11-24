@@ -3,7 +3,16 @@ import Link from "next/link";
 import { PageShell, StatCard } from "@/components/home-cards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
-import { formatDateTimeVN, toNumber } from "@/lib/admin/crawl-runs";
+import { formatDateTimeVN, formatPct, toNumber } from "@/lib/admin/crawl-runs";
+import {
+  formatFreshness,
+  isLowQuality,
+  isStale,
+  latestReportPerSource,
+  QUALITY_REPORT_COLUMNS,
+  type QualityMetric,
+  type QualityReportRow,
+} from "@/lib/admin/quality-reports";
 import {
   type AdminAlert,
   buildAlerts,
@@ -35,7 +44,7 @@ async function loadOverview() {
   const since = new Date(now.getTime() - 24 * 3_600_000).toISOString();
   const api = (await createClient()).schema("api");
 
-  const [daily, sources, failed] = await Promise.all([
+  const [daily, sources, failed, quality] = await Promise.all([
     api
       .from("v_admin_system_daily")
       .select(SYSTEM_DAILY_COLUMNS)
@@ -56,9 +65,16 @@ async function loadOverview() {
       .order("started_at", { ascending: false })
       .limit(20)
       .returns<FailedRun[]>(),
+    api
+      .from("v_admin_crawl_runs")
+      .select(QUALITY_REPORT_COLUMNS)
+      .not("completeness", "is", null)
+      .order("started_at", { ascending: false })
+      .limit(100)
+      .returns<QualityReportRow[]>(),
   ]);
 
-  const error = daily.error ?? sources.error ?? failed.error;
+  const error = daily.error ?? sources.error ?? failed.error ?? quality.error;
   const days = daily.data ?? [];
   const latest = days[0] ?? null;
   const latestSourceDay = sources.data?.[0]?.day;
@@ -73,13 +89,14 @@ async function loadOverview() {
     sources: sourceRows,
     series: buildCrawlSeries(days, now),
     p95Series: buildP95Series(days, now),
+    quality: latestReportPerSource(quality.data ?? []),
     alerts: error ? [] : buildAlerts({ latest, sources: sourceRows, failedRuns: failed.data ?? [], now }),
   };
 }
 
 export default async function AdminHomePage() {
   await requireAccess("/admin");
-  const { error, missing, latest, sources, series, p95Series, alerts } = await loadOverview();
+  const { error, missing, latest, sources, series, p95Series, quality, alerts } = await loadOverview();
   const updated = latest?.refreshed_at ? `Cập nhật ${formatDateTimeVN(latest.refreshed_at)}` : undefined;
 
   return (
@@ -124,6 +141,7 @@ export default async function AdminHomePage() {
           <CrawlChart series={series} />
           <P95Chart series={p95Series} />
           <SourceTable sources={sources} />
+          <QualityTable reports={quality} />
         </>
       )}
 
@@ -288,6 +306,70 @@ function SourceTable({ sources }: { sources: SourceDailyRow[] }) {
           })}
         </tbody>
       </table>
+    </section>
+  );
+}
+
+const QUALITY_COLUMNS: { metric: QualityMetric; label: string }[] = [
+  { metric: "completeness", label: "Đầy đủ" },
+  { metric: "validity", label: "Hợp lệ" },
+  { metric: "uniqueness", label: "Không trùng" },
+  { metric: "salary_parsed_pct", label: "Lương chuẩn hóa" },
+  { metric: "province_parsed_pct", label: "Tỉnh/thành" },
+];
+
+const RED = "font-semibold text-red-600 dark:text-red-400";
+
+function QualityTable({ reports }: { reports: QualityReportRow[] }) {
+  return (
+    <section className="rounded-lg border">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 pt-4 pb-3">
+        <h2 className="text-sm font-medium">Chất lượng dữ liệu lần crawl gần nhất</h2>
+        <span className="text-xs text-muted-foreground">Ô đỏ: dưới ngưỡng, có lỗi schema hoặc tin mới nhất quá 48 giờ.</span>
+      </div>
+      {reports.length === 0 ? (
+        <p className="border-t px-4 py-3 text-sm text-muted-foreground">Chưa có báo cáo chất lượng.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[880px] text-sm">
+            <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 font-medium">Nguồn</th>
+                <th className="px-3 py-2 font-medium">Lần chạy</th>
+                {QUALITY_COLUMNS.map((c) => (
+                  <th key={c.metric} className="px-3 py-2 text-right font-medium">
+                    {c.label}
+                  </th>
+                ))}
+                <th className="px-3 py-2 text-right font-medium">Lỗi schema</th>
+                <th className="px-3 py-2 text-right font-medium">Độ mới</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map((r) => (
+                <tr key={r.source_id} className="border-t">
+                  <td className="px-3 py-2 font-medium">{r.source_name}</td>
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums">{formatDateTimeVN(r.started_at)}</td>
+                  {QUALITY_COLUMNS.map((c) => (
+                    <td
+                      key={c.metric}
+                      className={cn("px-3 py-2 text-right tabular-nums", isLowQuality(c.metric, r[c.metric]) && RED)}
+                    >
+                      {formatPct(r[c.metric])}
+                    </td>
+                  ))}
+                  <td className={cn("px-3 py-2 text-right tabular-nums", (r.schema_errors ?? 0) > 0 && RED)}>
+                    {formatInt(r.schema_errors)}
+                  </td>
+                  <td className={cn("px-3 py-2 text-right tabular-nums", isStale(r.freshness_hours) && RED)}>
+                    {formatFreshness(r.freshness_hours)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
