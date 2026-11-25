@@ -35,7 +35,7 @@ def recorder():
         delattr(app.state, "metrics")
 
 
-def test_records_match_request_with_role(make_client, recorder):
+def test_records_match_request_with_role(make_client, recorder):  # noqa: F811
     client, _ = make_client()
     assert _post(client).status_code == 200
     assert len(recorder.rows) == 1
@@ -45,21 +45,21 @@ def test_records_match_request_with_role(make_client, recorder):
     assert isinstance(latency_ms, int) and latency_ms >= 0
 
 
-def test_role_from_token_and_errors_recorded(make_client, recorder):
+def test_role_from_token_and_errors_recorded(make_client, recorder):  # noqa: F811
     client, _ = make_client()
     _post(client, tok=token(user_role="hr"))
     client.post("/match/jobs", json={"cv_id": "x", "top_n": 5})  # không đăng nhập
     assert [(r[2], r[3]) for r in recorder.rows] == [(200, "hr"), (401, None)]
 
 
-def test_path_template_has_no_ids(make_client, recorder):
+def test_path_template_has_no_ids(make_client, recorder):  # noqa: F811
     client, _ = make_client()
     client.get("/khong-co-route/123")
     assert recorder.rows[0][0] == "GET /khong-co-route/123"[:200]  # 404: không có mẫu, dùng path
     assert recorder.rows[0][2] == 404
 
 
-def test_health_and_options_skipped(make_client, recorder):
+def test_health_and_options_skipped(make_client, recorder):  # noqa: F811
     client, _ = make_client()
     client.get("/health")
     client.options(
@@ -69,7 +69,7 @@ def test_health_and_options_skipped(make_client, recorder):
     assert recorder.rows == []
 
 
-def test_unhandled_error_recorded_as_500(make_client, recorder):
+def test_unhandled_error_recorded_as_500(make_client, recorder):  # noqa: F811
     client, _ = make_client()
 
     @app.get("/__boom")
@@ -83,10 +83,12 @@ def test_unhandled_error_recorded_as_500(make_client, recorder):
         assert r.status_code == 500
         assert recorder.rows[-1][:1] == ("GET /__boom",) and recorder.rows[-1][2] == 500
     finally:
-        app.router.routes[:] = [rt for rt in app.router.routes if getattr(rt, "path", "") != "/__boom"]
+        app.router.routes[:] = [
+            rt for rt in app.router.routes if getattr(rt, "path", "") != "/__boom"
+        ]
 
 
-def test_recorder_failure_does_not_break_request(make_client):
+def test_recorder_failure_does_not_break_request(make_client):  # noqa: F811
     class Broken:
         def record(self, *a):
             raise RuntimeError("db down")
