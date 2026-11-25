@@ -18,7 +18,16 @@ import { createClient } from "@/lib/supabase/client";
  * `simulate`: giả lập lỗi ở lần gọi đầu (?gia-lap=503…), bấm Thử lại thì có kết quả.
  * Nguồn: API thật bằng JWT phiên hiện tại (S4-H04), máy chưa đặt NEXT_PUBLIC_CV_API_URL thì dữ liệu mẫu.
  */
-export function MatchResults({ request, simulate }: { request: MatchRequest; simulate: Simulation | null }) {
+export function MatchResults({
+  request,
+  simulate,
+  savedIds,
+}: {
+  request: MatchRequest;
+  simulate: Simulation | null;
+  /** public_id các tin đã lưu (S4-H05), để thẻ hiện ★ Đã lưu. */
+  savedIds: string[];
+}) {
   const [attempt, setAttempt] = useState(0);
   const [outcome, setOutcome] = useState<MatchOutcome | null>(null);
   const [slow, setSlow] = useState(false);
@@ -85,7 +94,11 @@ export function MatchResults({ request, simulate }: { request: MatchRequest; sim
           <ol className="grid gap-3">
             {data.results.map((r) => (
               <li key={r.job_id}>
-                <MatchCard result={r} sample={source === "mock"} />
+                <MatchCard
+                  result={r}
+                  sample={source === "mock"}
+                  saved={r.public_id != null && savedIds.includes(r.public_id)}
+                />
               </li>
             ))}
           </ol>

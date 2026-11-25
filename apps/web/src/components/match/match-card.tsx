@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useId, useRef, useState } from "react";
+import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { useDismiss } from "@/components/match/use-dismiss";
 import { buttonVariants } from "@/components/ui/button";
 import { WORK_MODE_LABEL, type WorkMode } from "@/lib/jobs/filters";
@@ -25,8 +26,9 @@ import { cn } from "@/lib/utils";
  * Thẻ một việc phù hợp (S4-H02 · US-16 · docs/ui/wireframe_matches.png màn 1–2):
  * điểm H + popover "Điểm tính thế nào?", 4 thanh K/M/E/X, kỹ năng khớp / CV chưa thể hiện,
  * hạn nộp, Xem tin, Ứng tuyển ở trang gốc. `sample` = dữ liệu mẫu: tắt các link.
+ * Nút Lưu (S4-H05): `saved` = tin đã có trong Việc đã lưu lúc tải trang.
  */
-export function MatchCard({ result: r, sample }: { result: MatchResult; sample: boolean }) {
+export function MatchCard({ result: r, sample, saved }: { result: MatchResult; sample: boolean; saved: boolean }) {
   const mode = r.work_mode !== "unknown" && r.work_mode in WORK_MODE_LABEL ? WORK_MODE_LABEL[r.work_mode as WorkMode] : null;
   const meta = [r.company, r.provinces.join(", ") || null, mode].filter(Boolean);
   const expiring = isExpiringSoon(r.valid_through);
@@ -58,6 +60,7 @@ export function MatchCard({ result: r, sample }: { result: MatchResult; sample: 
       </div>
 
       <div className="flex flex-wrap content-start gap-2 sm:col-start-2 lg:col-start-3 lg:row-start-1 lg:justify-end">
+        {r.public_id && <SaveJobButton publicId={r.public_id} initialSaved={saved} disabled={sample} />}
         {sample || !r.public_id ? (
           <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "opacity-50")} title="Dữ liệu mẫu">
             Xem tin
