@@ -41,7 +41,9 @@ def row_of(p: JobPostingRaw) -> JobRow:
 
 def fake_row(**cols) -> JobRow:
     base = {"title": "Dev", "jd_text": "mô tả", "apply_url": "https://x/1"}
-    return JobRow(columns=base | cols, company_name="ABC", province_codes=(1,), address_raw="Hà Nội")
+    return JobRow(
+        columns=base | cols, company_name="ABC", province_codes=(1,), address_raw="Hà Nội"
+    )
 
 
 def test_counts_complete_valid_salary_province():
@@ -140,7 +142,13 @@ def test_empty_run_has_no_ratios_and_counts_schema_errors():
     stats.skip("no_title")
     stats.skip("bad_json")
     report = build_report(QualityCounter(), stats, NOW)
-    for key in ("completeness", "validity", "uniqueness", "salary_parsed_pct", "province_parsed_pct"):
+    for key in (
+        "completeness",
+        "validity",
+        "uniqueness",
+        "salary_parsed_pct",
+        "province_parsed_pct",
+    ):
         assert report[key] is None
     assert report["freshness_hours"] is None
     assert report["schema_errors"] == 3

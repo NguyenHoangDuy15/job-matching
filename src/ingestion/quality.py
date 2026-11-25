@@ -15,7 +15,7 @@ Tỉ lệ là phân số 0–1, 4 chữ số (cột numeric(5,4)); lượt khôn
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
@@ -70,7 +70,11 @@ class QualityCounter:
             self.province_parsed += 1
         else:
             for loc in row.unmatched_locations or ((row.address_raw,) if row.address_raw else ()):
-                if loc and loc not in self.unmatched_locations and len(self.unmatched_locations) < MAX_SAMPLES:
+                if (
+                    loc
+                    and loc not in self.unmatched_locations
+                    and len(self.unmatched_locations) < MAX_SAMPLES
+                ):
                     self.unmatched_locations.append(loc)
 
         posted = _as_date(cols.get("posted_at"))
@@ -133,7 +137,7 @@ def freshness_hours(newest: date | None, now: datetime) -> float | None:
     if newest is None:
         return None
     start = datetime.combine(newest, time.min, tzinfo=VN_TZ)
-    now = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+    now = now if now.tzinfo else now.replace(tzinfo=UTC)
     hours = max((now - start).total_seconds() / 3600, 0.0)
     return round(min(hours, 999_999.99), 2)  # numeric(8,2)
 

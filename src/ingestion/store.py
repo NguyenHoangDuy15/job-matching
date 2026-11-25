@@ -15,7 +15,7 @@ import json
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -258,7 +258,7 @@ class LocalStore:
 
     def finish_run(self, run_id, stats: RunStats, status: str, error: str | None) -> None:
         # Chạy thử không có DB: in báo cáo chất lượng ra log thay vì ghi ops.quality_reports.
-        report = build_report(self.quality, stats, datetime.now(timezone.utc))
+        report = build_report(self.quality, stats, datetime.now(UTC))
         logging.getLogger("ingestion.quality").info(
             "quality %s", json.dumps(report, ensure_ascii=False, default=str)
         )
@@ -372,7 +372,7 @@ class PgStore:
     def finish_run(self, run_id: int, stats: RunStats, status: str, error: str | None) -> None:
         from psycopg.types.json import Jsonb
 
-        report = build_report(self.quality, stats, datetime.now(timezone.utc))
+        report = build_report(self.quality, stats, datetime.now(UTC))
         with self.conn.transaction():
             self.conn.execute(
                 """update ops.crawl_runs
