@@ -10,6 +10,7 @@
 """
 
 import base64
+import contextlib
 import json
 import logging
 import queue
@@ -102,10 +103,8 @@ class MetricsRecorder:
             self.dropped += len(rows)
             log.warning("không ghi được %d số đo: %s", len(rows), exc)
             if self._conn is not None:
-                try:
+                with contextlib.suppress(Exception):
                     self._conn.close()
-                except Exception:  # noqa: BLE001
-                    pass
             self._conn = None
 
     def _run(self) -> None:
@@ -119,10 +118,8 @@ class MetricsRecorder:
         if self._thread is not None:
             self._thread.join(timeout)
         if self._conn is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._conn.close()
-            except Exception:  # noqa: BLE001
-                pass
 
 
 class MetricsMiddleware:
@@ -161,7 +158,10 @@ class MetricsMiddleware:
             latency_ms = round((time.perf_counter() - started) * 1000)
             headers = dict(scope.get("headers") or [])
             recorder.record(
-                endpoint_of(scope), latency_ms, status, role_from_auth(headers.get(b"authorization"))
+                endpoint_of(scope),
+                latency_ms,
+                status,
+                role_from_auth(headers.get(b"authorization")),
             )
         except Exception:  # noqa: BLE001 - đo lỗi không được làm hỏng request
             log.exception("lỗi ghi số đo")
