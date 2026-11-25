@@ -53,7 +53,9 @@ export function homeFor(role: Role): string {
 export function allowedRolesFor(pathname: string): Role[] | null {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return ["admin"];
   if (pathname === "/hr" || pathname.startsWith("/hr/")) return ["hr"];
-  if (pathname.startsWith("/ho-so") || pathname.startsWith("/viec-phu-hop")) return ["seeker"];
+  if (pathname.startsWith("/ho-so") || pathname.startsWith("/viec-phu-hop") || pathname.startsWith("/viec-da-luu")) {
+    return ["seeker"];
+  }
   return null;
 }
 

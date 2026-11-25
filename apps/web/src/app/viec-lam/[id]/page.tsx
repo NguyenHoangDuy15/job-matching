@@ -3,17 +3,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { SaveJobButton } from "@/components/jobs/save-job-button";
 import { buttonVariants } from "@/components/ui/button";
+import { getSession } from "@/lib/auth";
 import { getJobDetail, getJobRedirect, jdSections, type JobDetail, type JobSkill } from "@/lib/jobs/detail";
 import { LEVEL_LABEL, WORK_MODE_LABEL } from "@/lib/jobs/filters";
 import { JobProvenance } from "@/components/jobs/job-provenance";
 import { daysLeft, daysLeftLabel, formatDay, formatSalary, salaryFull } from "@/lib/jobs/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 // S2-H04 (trang) + S2-H05 (hạn nộp, độ mới, nguồn) · US-06 · docs/ui/wireframe_jobs.png (màn 3).
 // S3-H05 · US-14: tin gộp từ nhiều nguồn hiện "Có trên N trang" (JobProvenance); link cũ của tin
 // đã bị gộp chuyển sang tin được giữ lại (api.job_redirect). Khách và mọi vai trò đều xem được.
+// S4-H05 · US-17: người tìm việc đã đăng nhập thấy thêm nút ☆ Lưu (api.v_my_saved_jobs, api.save_job).
 
 // generateMetadata và trang cùng cần dữ liệu: cache() để chỉ gọi DB một lần mỗi request.
 const loadJob = cache(getJobDetail);
@@ -57,10 +61,11 @@ export default async function JobDetailPage({ params }: PageProps<"/viec-lam/[id
 
   const { job, skills, complete } = result;
   const sections = jdSections(job);
+  const saved = await savedState(id);
 
   return (
     <Shell>
-      <JobHeader job={job} />
+      <JobHeader job={job} publicId={id} saved={saved} />
       <SkillTags skills={skills} />
 
       {sections.length > 0 ? (
@@ -105,7 +110,20 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function JobHeader({ job }: { job: JobDetail }) {
+/** null = không hiện nút Lưu (khách, HR, admin, tài khoản chưa hoạt động). Lỗi đọc thì coi như chưa lưu. */
+async function savedState(publicId: string): Promise<boolean | null> {
+  const session = await getSession();
+  if (session?.role !== "seeker" || session.status !== "active") return null;
+  const { data, error } = await (await createClient())
+    .schema("api")
+    .from("v_my_saved_jobs")
+    .select("public_id")
+    .eq("public_id", publicId)
+    .maybeSingle();
+  return !error && data != null;
+}
+
+function JobHeader({ job, publicId, saved }: { job: JobDetail; publicId: string; saved: boolean | null }) {
   const meta = [
     job.company_name,
     job.provinces.length ? job.provinces.join(", ") : null,
@@ -167,6 +185,7 @@ function JobHeader({ job }: { job: JobDetail }) {
 
       <div className="flex flex-wrap gap-2">
         {job.apply_url && <ApplyLink url={job.apply_url} />}
+        {saved != null && <SaveJobButton publicId={publicId} initialSaved={saved} size="default" />}
         <span
           className={cn(buttonVariants({ variant: "outline" }), "pointer-events-none opacity-50")}
           aria-disabled="true"

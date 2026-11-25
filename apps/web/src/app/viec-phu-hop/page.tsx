@@ -37,10 +37,15 @@ export default async function MatchPage({ searchParams }: PageProps<"/viec-phu-h
   const simulate = parseSimulation(query["gia-lap"]); // S4-H03: giả lập lỗi khi đang dùng dữ liệu mẫu
 
   const api = (await createClient()).schema("api");
-  const cvs = await api
-    .from("v_my_cvs")
-    .select("id, mime, original_name, parse_status, is_primary, created_at, profile_confirmed_at")
-    .returns<CvRow[]>();
+  const [cvs, saved] = await Promise.all([
+    api
+      .from("v_my_cvs")
+      .select("id, mime, original_name, parse_status, is_primary, created_at, profile_confirmed_at")
+      .returns<CvRow[]>(),
+    // S4-H05: tin đã lưu để thẻ hiện ★ Đã lưu. Lỗi thì coi như chưa lưu tin nào, không chặn trang.
+    api.from("v_my_saved_jobs").select("public_id").returns<{ public_id: string }[]>(),
+  ]);
+  const savedIds = saved.error ? [] : (saved.data ?? []).map((s) => s.public_id);
 
   if (cvs.error) {
     return (
@@ -104,6 +109,7 @@ export default async function MatchPage({ searchParams }: PageProps<"/viec-phu-h
         key={`r-${href}-${simulate ?? ""}`}
         request={toMatchRequest(selected, cv.id)}
         simulate={simulate}
+        savedIds={savedIds}
       />
     </PageShell>
   );
