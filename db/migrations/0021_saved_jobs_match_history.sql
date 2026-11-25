@@ -1,5 +1,5 @@
 -- =====================================================================================
---  Migration 0020 — Việc đã lưu + lịch sử gợi ý của người tìm việc (S4-H05)
+--  Migration 0021 — Việc đã lưu + lịch sử gợi ý của người tìm việc (S4-H05)
 --  Web chỉ đọc/ghi qua schema api:
 --    1. api.v_my_saved_jobs     : việc đã lưu của mình, kèm cờ tin còn mở hay đã đóng.
 --    2. api.save_job(p_job_id)  : lưu một tin (gọi lại nhiều lần vẫn chỉ một dòng).
