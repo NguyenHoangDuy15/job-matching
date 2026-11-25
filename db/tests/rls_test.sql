@@ -1151,7 +1151,7 @@ insert into results select 'job_redirect: unknown id -> null',
   coalesce(api.job_redirect(gen_random_uuid())::text, 'null'), 'null';
 reset role;
 
--- Test nhóm 7 (S4-H05, migration 0020): việc đã lưu + lịch sử gợi ý của người tìm việc
+-- Test nhóm 7 (S4-H05, migration 0021): việc đã lưu + lịch sử gợi ý của người tìm việc
 -- Tin 1 đang mở; tin 2 status open nhưng quá hạn nộp (valid_through = hôm qua); tin 3 là JD của HR.
 select set_config('test.job2_pid', public_id::text, false) from core.jobs where id = 2;
 select set_config('test.hr_pid',   public_id::text, false) from core.jobs where id = 3;
