@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Việc phù hợp với tôi" };
 
 // S4-H01 · US-16 · docs/ui/wireframe_matches.png (màn 1). Chỉ người tìm việc (proxy chặn vai trò khác).
-// Danh sách CV: api.v_my_cvs (RLS chỉ trả CV của mình). Kết quả: lib/match-source.ts (mock, S4-H04 nối API).
+// Danh sách CV: api.v_my_cvs (RLS chỉ trả CV của mình). Kết quả: lib/match-source.ts (API thật, S4-H04).
 // Lựa chọn nằm trên URL: /viec-phu-hop?cv=<uuid>&n=10&tinh=1,79&hinh-thuc=remote
 
 const TITLE = "Việc phù hợp với tôi";

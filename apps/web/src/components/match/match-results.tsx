@@ -8,7 +8,7 @@ import { setMatchBusy } from "@/components/match/use-match-busy";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { clearFilterHrefs, numberVi, SCORE_DISCLAIMER, type MatchRequest } from "@/lib/match";
 import { loginHref, SLOW_HINT_MS, type MatchError, type Simulation } from "@/lib/match-errors";
-import { fetchMatches, type MatchOutcome } from "@/lib/match-source";
+import { fetchMatches, type MatchAuth, type MatchOutcome } from "@/lib/match-source";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
  * Trang cha đặt `key` theo URL: đổi lựa chọn là component mới, tự gọi lại.
  * Thẻ chi tiết: match-card.tsx (S4-H02). Trạng thái chờ / rỗng / lỗi: S4-H03 (wireframe_matches màn 3).
  * `simulate`: giả lập lỗi ở lần gọi đầu (?gia-lap=503…), bấm Thử lại thì có kết quả.
+ * Nguồn: API thật bằng JWT phiên hiện tại (S4-H04), máy chưa đặt NEXT_PUBLIC_CV_API_URL thì dữ liệu mẫu.
  */
 export function MatchResults({
   request,
@@ -35,7 +36,7 @@ export function MatchResults({
     const ctrl = new AbortController();
     const slowTimer = setTimeout(() => setSlow(true), SLOW_HINT_MS);
     setMatchBusy(true);
-    fetchMatches(request, { signal: ctrl.signal, simulate: attempt === 0 ? simulate : null })
+    fetchMatches(request, { signal: ctrl.signal, simulate: attempt === 0 ? simulate : null, auth: browserAuth() })
       .then(setOutcome, () => {})
       .finally(() => {
         clearTimeout(slowTimer);
@@ -57,12 +58,12 @@ export function MatchResults({
   if (!outcome) return <MatchLoading slow={slow} />;
   if (!outcome.ok) return <MatchErrorBox key={attempt} error={outcome.error} onRetry={retry} />;
 
-  const { data, source } = outcome;
+  const { data, source, elapsedMs } = outcome;
   return (
     <section aria-label="Việc phù hợp" className="grid gap-3">
       {source === "mock" && (
         <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Đang hiện <b>dữ liệu mẫu</b> để dựng giao diện. Kết quả thật có khi nối API chấm điểm (S4-H04).
+          Đang hiện <b>dữ liệu mẫu</b>: máy này chưa đặt địa chỉ API chấm điểm (NEXT_PUBLIC_CV_API_URL).
         </p>
       )}
       <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
@@ -80,8 +81,10 @@ export function MatchResults({
                 : `Chỉ có ${data.results.length} việc phù hợp`}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Chọn từ {numberVi(data.candidates, 0)} tin gần với CV trong {numberVi(data.corpus_size, 0)} tin đang mở ·
-              trả lời trong {numberVi(data.latency_ms / 1000, 2)} giây
+              Chọn từ {numberVi(data.candidates, 0)} tin gần với CV trong {numberVi(data.corpus_size, 0)} tin đang mở ·{" "}
+              <span title={`Máy chủ chấm điểm mất ${numberVi(data.latency_ms / 1000, 2)} giây, phần còn lại là đường truyền`}>
+                trả lời trong {numberVi(elapsedMs / 1000, 1)} giây (máy chủ chấm {numberVi(data.latency_ms / 1000, 2)} giây)
+              </span>
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -103,6 +106,15 @@ export function MatchResults({
       )}
     </section>
   );
+}
+
+/** JWT của phiên đăng nhập trên trình duyệt; `refresh` dùng khi API báo token hết hạn (401). */
+function browserAuth(): MatchAuth {
+  const supabase = createClient();
+  return {
+    token: async () => (await supabase.auth.getSession()).data.session?.access_token ?? null,
+    refresh: async () => (await supabase.auth.refreshSession()).data.session?.access_token ?? null,
+  };
 }
 
 /** 3 thẻ xám cùng dáng thẻ kết quả; quá 5 giây báo có thể máy chủ đang khởi động. */
