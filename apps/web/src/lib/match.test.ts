@@ -169,3 +169,80 @@ test("giả lập: lần đầu trả lỗi, không giả lập thì ra dữ li�
   const good = await fetchMatches(req);
   assert.equal(good.ok && good.data.results.length, 5);
 });
+
+// ---- S4-H04: gọi API thật (fetch giả) ----
+
+const API = "https://api.test";
+const REQ = { cv_id: CV, top_n: 10 as const, filters: { provinces: [79], work_modes: ["remote" as const] } };
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+const auth = (token: string | null, fresh: string | null = null) => ({
+  token: async () => token,
+  refresh: async () => fresh,
+});
+
+test("API thật: gửi JWT + đúng body, trả nguồn api kèm thời gian chờ", async () => {
+  const calls: { url: string; init: RequestInit }[] = [];
+  const body = mockMatchJobs(REQ, new Date("2026-11-25T00:00:00Z"));
+  const fetchImpl = (async (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    return json(200, body);
+  }) as typeof fetch;
+  const out = await fetchMatches(REQ, { apiUrl: API, auth: auth("tok"), fetchImpl });
+  assert.equal(out.ok && out.source, "api");
+  assert.equal(out.ok && out.data.results.length, body.results.length);
+  assert.ok(out.ok && out.elapsedMs >= 0);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, `${API}/match/jobs`);
+  assert.equal((calls[0].init.headers as Record<string, string>).Authorization, "Bearer tok");
+  assert.deepEqual(JSON.parse(String(calls[0].init.body)), REQ);
+});
+
+test("API thật: 401 thì làm mới phiên rồi gửi lại một lần", async () => {
+  const tokens: string[] = [];
+  const fetchImpl = (async (_url: string, init: RequestInit) => {
+    const t = (init.headers as Record<string, string>).Authorization;
+    tokens.push(t);
+    return t === "Bearer moi" ? json(200, mockMatchJobs(REQ)) : json(401, { error: "unauthorized" });
+  }) as typeof fetch;
+  const ok = await fetchMatches(REQ, { apiUrl: API, auth: auth("cu", "moi"), fetchImpl });
+  assert.equal(ok.ok, true);
+  assert.deepEqual(tokens, ["Bearer cu", "Bearer moi"]);
+
+  const still = await fetchMatches(REQ, { apiUrl: API, auth: auth("cu", null), fetchImpl });
+  assert.equal(!still.ok && still.error.code, "unauthorized");
+
+  let called = false;
+  const none = await fetchMatches(REQ, {
+    apiUrl: API,
+    auth: auth(null),
+    fetchImpl: (async () => ((called = true), json(200, {}))) as typeof fetch,
+  });
+  assert.equal(!none.ok && none.error.code, "unauthorized");
+  assert.equal(called, false);
+});
+
+test("API thật: lỗi HTTP, sai dạng, hết giờ, mất mạng, trang hủy", async () => {
+  const reply = (r: Response | (() => Promise<Response>)) =>
+    (typeof r === "function" ? r : async () => r) as unknown as typeof fetch;
+  const run = (fetchImpl: typeof fetch, extra = {}) => fetchMatches(REQ, { apiUrl: API, auth: auth("t"), fetchImpl, ...extra });
+
+  const off = await run(reply(json(503, { error: "matcher_not_configured" })));
+  assert.equal(!off.ok && off.error.code, "matcher_not_configured");
+  const rate = await run(reply(json(429, { error: "rate_limited" })));
+  assert.equal(!rate.ok && rate.error.waitSeconds, 60);
+  const bad = await run(reply(json(200, { hello: 1 })));
+  assert.equal(!bad.ok && bad.error.code, "unknown");
+  const net = await run(reply(() => Promise.reject(new TypeError("Failed to fetch"))));
+  assert.equal(!net.ok && net.error.code, "network");
+
+  const hang = ((_u: string, init: RequestInit) =>
+    new Promise<Response>((_res, rej) => init.signal?.addEventListener("abort", () => rej(new Error("aborted"))))) as typeof fetch;
+  const slow = await run(hang, { timeoutMs: 30 });
+  assert.equal(!slow.ok && slow.error.code, "timeout");
+
+  const ctrl = new AbortController();
+  const pending = run(hang, { signal: ctrl.signal });
+  ctrl.abort();
+  await assert.rejects(pending);
+});
