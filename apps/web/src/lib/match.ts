@@ -67,6 +67,9 @@ export type MatchResponse = {
 
 export const BASE_WEIGHTS: Record<ComponentKey, number> = { K: 0.25, M: 0.35, E: 0.3, X: 0.1 };
 
+/** Câu bắt buộc hiện trên trang (US-16). API gửi trong `note`; thiếu thì dùng câu này. */
+export const SCORE_DISCLAIMER = "Điểm là mức phù hợp theo công thức, không phải xác suất trúng tuyển.";
+
 /** Bỏ thành phần null rồi chia lại trọng số cho tổng = 1 (giống weights_used của API). */
 export function weightsFor(components: Components): Partial<Record<ComponentKey, number>> {
   const keys = (Object.keys(BASE_WEIGHTS) as ComponentKey[]).filter((k) => components[k] != null);
@@ -175,6 +178,20 @@ export function matchHref(p: MatchParams): string {
 
 export function toMatchRequest(p: MatchParams, cvId: string): MatchRequest {
   return { cv_id: cvId, top_n: p.topN, filters: { provinces: p.provinces, work_modes: p.modes } };
+}
+
+/** Link bỏ từng bộ lọc khi không có kết quả (S4-H03). Không lọc gì thì không có link. */
+export function clearFilterHrefs(req: MatchRequest): { provinces?: string; modes?: string } {
+  const p: MatchParams = {
+    cvId: req.cv_id,
+    topN: req.top_n,
+    provinces: req.filters.provinces,
+    modes: req.filters.work_modes,
+  };
+  return {
+    provinces: p.provinces.length ? matchHref({ ...p, provinces: [] }) : undefined,
+    modes: p.modes.length ? matchHref({ ...p, modes: [] }) : undefined,
+  };
 }
 
 // ---- Chọn CV ----

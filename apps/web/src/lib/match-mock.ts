@@ -3,6 +3,7 @@
 // lọc tỉnh (tin remote / không ghi tỉnh luôn qua), lọc hình thức, sắp theo điểm, cắt top_n.
 import { provinceName } from "./jobs/provinces.ts";
 import {
+  SCORE_DISCLAIMER,
   scoreOf,
   weightsFor,
   type Components,
@@ -51,7 +52,7 @@ const JOBS: MockJob[] = [
 ];
 
 export const MOCK_CORPUS_SIZE = 1435;
-const NOTE = "Điểm là mức phù hợp theo công thức, không phải xác suất trúng tuyển.";
+const NOTE = SCORE_DISCLAIMER;
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 

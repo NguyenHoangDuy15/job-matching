@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 import { useDismiss } from "@/components/match/use-dismiss";
+import { useMatchBusy } from "@/components/match/use-match-busy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { WORK_MODE_LABEL } from "@/lib/jobs/filters";
@@ -26,6 +27,7 @@ export function MatchFilters({ params, cvs }: { params: MatchParams & { cvId: st
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState(params);
+  const busy = useMatchBusy(); // vùng kết quả đang chấm: khóa nút Tìm (S4-H03)
   const changed = matchHref(draft) !== matchHref(params);
 
   function submit(e: React.FormEvent) {
@@ -100,8 +102,8 @@ export function MatchFilters({ params, cvs }: { params: MatchParams & { cvId: st
       </fieldset>
 
       <div className="grid content-end gap-1">
-        <Button type="submit" disabled={pending} className="h-8">
-          {pending ? "Đang tìm…" : "Tìm việc phù hợp"}
+        <Button type="submit" disabled={pending || busy} className="h-8">
+          {pending ? "Đang tìm…" : busy ? "Đang chấm…" : "Tìm việc phù hợp"}
         </Button>
       </div>
 

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   byLevel,
+  clearFilterHrefs,
   DEFAULT_TOP_N,
   displayWeights,
   formulaText,
@@ -16,7 +17,9 @@ import {
   toMatchRequest,
   weightsFor,
 } from "./match.ts";
+import { loginHref, matchError, matchErrorFromHttp, parseSimulation } from "./match-errors.ts";
 import { MOCK_CORPUS_SIZE, mockMatchJobs } from "./match-mock.ts";
+import { fetchMatches } from "./match-source.ts";
 
 const CV = "2f0c1d2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f";
 
@@ -113,4 +116,56 @@ test("thẻ kết quả: công thức, trọng số, tên chip kỹ năng, bắt
     { skill: "SQL", level: "required" as const },
   ]);
   assert.deepEqual(sorted.map((s) => s.skill), ["Java", "SQL", "Kafka", "Redis"]);
+});
+
+test("lỗi chấm điểm: đổi mã HTTP theo bảng lỗi, cho Thử lại đúng chỗ", () => {
+  assert.equal(matchErrorFromHttp(401, { error: "unauthorized" }).code, "unauthorized");
+  assert.equal(matchErrorFromHttp(404, null).code, "cv_not_found");
+  assert.equal(matchErrorFromHttp(409, { error: "cv_not_parsed" }).code, "cv_not_parsed");
+  assert.equal(matchErrorFromHttp(422, { detail: [] }).code, "bad_request");
+  assert.equal(matchErrorFromHttp(502, { error: "supabase_error" }).code, "supabase_error");
+  assert.equal(matchErrorFromHttp(503, { error: "engine_warming" }).code, "engine_warming");
+  assert.equal(matchErrorFromHttp(503, { error: "matcher_not_configured" }).code, "matcher_not_configured");
+  assert.equal(matchErrorFromHttp(500, "lỗi lạ").code, "unknown");
+
+  const rate = matchErrorFromHttp(429, { error: "rate_limited" });
+  assert.equal(rate.retry, true);
+  assert.equal(rate.waitSeconds, 60);
+  assert.equal(matchError("unauthorized").retry, false);
+  assert.equal(matchError("matcher_not_configured").retry, false);
+  assert.equal(matchError("cv_not_parsed").action?.href, "/ho-so");
+  for (const code of ["engine_warming", "timeout", "network", "supabase_error"] as const) {
+    assert.equal(matchError(code).retry, true, code);
+  }
+});
+
+test("401: quay lại đúng trang, bỏ tham số giả lập để không lặp", () => {
+  assert.equal(loginHref("/viec-phu-hop"), "/dang-nhap?next=%2Fviec-phu-hop");
+  const href = loginHref("/viec-phu-hop", "?n=20&tinh=1,79&gia-lap=401");
+  assert.equal(decodeURIComponent(href.split("next=")[1]), "/viec-phu-hop?n=20&tinh=1,79");
+  assert.equal(parseSimulation("503"), "engine_warming");
+  assert.equal(parseSimulation(["cham"]), "slow");
+  assert.equal(parseSimulation("toString"), null);
+  assert.equal(parseSimulation(undefined), null);
+});
+
+test("rỗng: link bỏ từng bộ lọc, giữ CV và số việc", () => {
+  const req = { cv_id: CV, top_n: 20 as const, filters: { provinces: [24], work_modes: ["hybrid" as const] } };
+  assert.deepEqual(clearFilterHrefs(req), {
+    provinces: `/viec-phu-hop?cv=${CV}&n=20&hinh-thuc=hybrid`,
+    modes: `/viec-phu-hop?cv=${CV}&n=20&tinh=24`,
+  });
+  assert.deepEqual(clearFilterHrefs({ ...req, filters: { provinces: [], work_modes: [] } }), {
+    provinces: undefined,
+    modes: undefined,
+  });
+});
+
+test("giả lập: lần đầu trả lỗi, không giả lập thì ra dữ liệu mẫu", async () => {
+  const req = { cv_id: CV, top_n: 5 as const, filters: { provinces: [], work_modes: [] } };
+  const bad = await fetchMatches(req, { simulate: "engine_warming" });
+  assert.equal(bad.ok, false);
+  assert.equal(!bad.ok && bad.error.code, "engine_warming");
+  const good = await fetchMatches(req);
+  assert.equal(good.ok && good.data.results.length, 5);
 });
