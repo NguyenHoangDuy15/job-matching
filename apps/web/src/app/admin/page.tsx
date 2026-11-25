@@ -8,6 +8,7 @@ import {
   type AdminAlert,
   buildAlerts,
   buildCrawlSeries,
+  buildP95Series,
   CRAWL_SUCCESS_THRESHOLD,
   type CrawlPoint,
   FAILED_RUN_COLUMNS,
@@ -15,6 +16,7 @@ import {
   formatInt,
   formatMs,
   formatUsd,
+  type P95Point,
   SOURCE_DAILY_COLUMNS,
   type SourceDailyRow,
   SYSTEM_DAILY_COLUMNS,
@@ -70,13 +72,14 @@ async function loadOverview() {
     latest,
     sources: sourceRows,
     series: buildCrawlSeries(days, now),
+    p95Series: buildP95Series(days, now),
     alerts: error ? [] : buildAlerts({ latest, sources: sourceRows, failedRuns: failed.data ?? [], now }),
   };
 }
 
 export default async function AdminHomePage() {
   await requireAccess("/admin");
-  const { error, missing, latest, sources, series, alerts } = await loadOverview();
+  const { error, missing, latest, sources, series, p95Series, alerts } = await loadOverview();
   const updated = latest?.refreshed_at ? `Cập nhật ${formatDateTimeVN(latest.refreshed_at)}` : undefined;
 
   return (
@@ -119,6 +122,7 @@ export default async function AdminHomePage() {
           </div>
 
           <CrawlChart series={series} />
+          <P95Chart series={p95Series} />
           <SourceTable sources={sources} />
         </>
       )}
@@ -210,6 +214,41 @@ function CrawlChart({ series }: { series: CrawlPoint[] }) {
             </li>
           );
         })}
+      </ol>
+    </section>
+  );
+}
+
+function P95Chart({ series }: { series: P95Point[] }) {
+  const max = Math.max(1, ...series.map((p) => p.ms ?? 0));
+  return (
+    <section className="rounded-lg border p-4">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-medium">Thời gian phản hồi p95 7 ngày</h2>
+        <span className="text-xs text-muted-foreground">Mọi request API, theo ngày giờ Việt Nam.</span>
+      </div>
+      <ol className="flex h-40 items-end gap-2">
+        {series.map((p) => (
+          <li key={p.day} className="flex h-full flex-1 flex-col justify-end">
+            {p.ms === null ? (
+              <div className="h-px bg-border" title={`${p.label}: không có số đo`} />
+            ) : (
+              <div
+                className="rounded-t bg-sky-500"
+                style={{ height: `${Math.max(2, (p.ms / max) * 100)}%` }}
+                title={`${p.label}: ${formatMs(p.ms)}`}
+              />
+            )}
+          </li>
+        ))}
+      </ol>
+      <ol className="mt-2 flex gap-2 text-center text-xs">
+        {series.map((p) => (
+          <li key={p.day} className="flex-1">
+            <div className="tabular-nums">{formatMs(p.ms)}</div>
+            <div className="text-muted-foreground">{p.label}</div>
+          </li>
+        ))}
       </ol>
     </section>
   );

@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 
 from api.cv import router as cv_router
 from api.match import router as match_router
+from api.metrics import MetricsMiddleware, MetricsRecorder
 from api.settings import get_settings
 from api.worker import ParsePool
 
@@ -33,8 +34,11 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=warm, daemon=True).start()  # không chặn cổng mở (Cloud Run/HF đợi)
     if not hasattr(app.state, "match_engine"):  # test có thể gắn sẵn kho tin giả
         setup_matcher(app, settings)
+    if not hasattr(app.state, "metrics"):  # S4-T04; test gắn sẵn bộ ghi giả
+        app.state.metrics = MetricsRecorder(settings.metrics_database_url)
     yield
     app.state.pool.close()
+    app.state.metrics.close()
 
 
 def setup_matcher(app: FastAPI, settings) -> None:
@@ -69,6 +73,7 @@ app.add_middleware(
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+app.add_middleware(MetricsMiddleware)  # thêm sau cùng = bọc ngoài cùng, đo cả thời gian CORS
 app.include_router(cv_router)
 app.include_router(match_router)
 
