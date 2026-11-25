@@ -1151,6 +1151,124 @@ insert into results select 'job_redirect: unknown id -> null',
   coalesce(api.job_redirect(gen_random_uuid())::text, 'null'), 'null';
 reset role;
 
+-- Test nhóm 7 (S4-H05, migration 0020): việc đã lưu + lịch sử gợi ý của người tìm việc
+-- Tin 1 đang mở; tin 2 status open nhưng quá hạn nộp (valid_through = hôm qua); tin 3 là JD của HR.
+select set_config('test.job2_pid', public_id::text, false) from core.jobs where id = 2;
+select set_config('test.hr_pid',   public_id::text, false) from core.jobs where id = 3;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'save_job: lưu mới trả true', api.save_job(current_setting('test.keep_pid')::uuid)::text, 'true';
+insert into results select 'save_job: lưu lại trả false (không nhân đôi)', api.save_job(current_setting('test.keep_pid')::uuid)::text, 'false';
+insert into results select 'save_job: tin quá hạn vẫn lưu được', api.save_job(current_setting('test.job2_pid')::uuid)::text, 'true';
+-- Tin đã gộp: lưu public_id cũ → lưu tin được giữ lại (đã lưu ở trên nên false)
+insert into results select 'save_job: tin đã gộp lưu vào tin giữ lại', api.save_job(current_setting('test.dup_pid')::uuid)::text, 'false';
+insert into results select 'v_my_saved_jobs: 2 tin, cờ mở/đóng đúng',
+  string_agg(title || ':' || is_open::text, ',' order by title),
+  'Java Backend Developer:false,Lập trình viên Python (Data Engineer):true'
+  from api.v_my_saved_jobs;
+insert into results select 'v_my_saved_jobs: có công ty, hạn nộp, saved_at',
+  bool_and(company_name = 'FPT Software' and valid_through is not null and saved_at is not null)::text, 'true'
+  from api.v_my_saved_jobs;
+do $$
+declare
+  v_state text;
+  v_case  record;
+begin
+  for v_case in
+    select * from (values
+      ('save_job: JD của HR bị từ chối', current_setting('test.hr_pid')::uuid),
+      ('save_job: tin không tồn tại bị từ chối', gen_random_uuid())
+    ) t(name, pid)
+  loop
+    begin
+      perform api.save_job(v_case.pid);
+      insert into results values (v_case.name, 'saved', 'P0002');
+    exception when others then
+      get stacked diagnostics v_state = returned_sqlstate;
+      insert into results values (v_case.name, v_state, 'P0002');
+    end;
+  end loop;
+end $$;
+insert into results select 'unsave_job: bỏ lưu trả true', api.unsave_job(current_setting('test.job2_pid')::uuid)::text, 'true';
+insert into results select 'unsave_job: bỏ lần nữa trả false', api.unsave_job(current_setting('test.job2_pid')::uuid)::text, 'false';
+insert into results select 'v_my_saved_jobs: còn 1 tin sau khi bỏ lưu', count(*)::text, '1' from api.v_my_saved_jobs;
+
+-- Lịch sử: lượt Top N ghi ở nhóm 5f (1 kết quả, x null)
+insert into results select 'v_my_match_history: lượt 5f có kết quả theo rank',
+  concat_ws('|', top_n, filters ->> 'provinces', result_count, results -> 0 ->> 'rank',
+            results -> 0 ->> 'public_id', results -> 0 ->> 'score_h', coalesce(results -> 0 ->> 'x', 'null')),
+  concat_ws('|', 10, '[1]', 1, 1, current_setting('test.keep_pid'), '82.40', 'null')
+  from api.v_my_match_history where id = current_setting('test.match_id')::bigint;
+reset role;
+
+-- Người khác không thấy dữ liệu của A
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000f","user_role":"seeker","account_status":"active"}';
+insert into results select 'v_my_saved_jobs: seekerB không thấy tin A đã lưu', count(*)::text, '0' from api.v_my_saved_jobs;
+insert into results select 'unsave_job: seekerB không bỏ lưu được tin của A',
+  api.unsave_job(current_setting('test.keep_pid')::uuid)::text, 'false';
+insert into results select 'v_my_match_history: seekerB không thấy lượt của A', count(*)::text, '0'
+  from api.v_my_match_history where id = current_setting('test.match_id')::bigint;
+reset role;
+
+-- Chỉ 10 lượt gần nhất (seed bằng superuser như worker), lượt hr_rank không lẫn vào
+insert into app.match_requests (kind, requester_id, cv_id, top_n, weights, engine_version, created_at)
+select 'seeker_topn', '00000000-0000-0000-0000-00000000000a', current_setting('test.cv_a')::uuid, 5, '{}', 'test',
+       now() + make_interval(mins => g)
+  from generate_series(1, 11) g;
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"active"}';
+insert into results select 'v_my_match_history: tối đa 10 lượt, mới nhất trước, lượt rỗng có results []',
+  count(*)::text || '|' || (array_agg(result_count order by created_at desc))[1]::text || '|'
+    || (array_agg(results::text order by created_at desc))[1]
+    || '|' || bool_and(id <> current_setting('test.match_id')::bigint)::text,
+  '10|0|[]|true'
+  from api.v_my_match_history;
+reset role;
+
+-- Tài khoản bị khóa và anon bị chặn
+update app.profiles set status = 'locked' where user_id = '00000000-0000-0000-0000-00000000000a';
+set role authenticated;
+set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a","user_role":"seeker","account_status":"locked"}';
+do $$
+declare v_state text;
+begin
+  perform api.save_job(current_setting('test.keep_pid')::uuid);
+  insert into results values ('save_job: tài khoản bị khóa bị chặn', 'saved', '42501');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('save_job: tài khoản bị khóa bị chặn', v_state, '42501');
+end $$;
+insert into results select 'v_my_saved_jobs + history: tài khoản bị khóa thấy 0 dòng',
+  (select count(*) from api.v_my_saved_jobs)::text || '|' || (select count(*) from api.v_my_match_history)::text, '0|0';
+reset role;
+update app.profiles set status = 'active' where user_id = '00000000-0000-0000-0000-00000000000a';
+
+set role anon; set request.jwt.claims = '{}';
+do $$
+declare v_state text;
+begin
+  perform api.save_job(current_setting('test.keep_pid')::uuid);
+  insert into results values ('save_job: anon không gọi được', 'called', '42501');
+exception when others then
+  get stacked diagnostics v_state = returned_sqlstate;
+  insert into results values ('save_job: anon không gọi được', v_state, '42501');
+end $$;
+do $$ begin
+  perform 1 from api.v_my_saved_jobs;
+  insert into results values ('v_my_saved_jobs: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('v_my_saved_jobs: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+do $$ begin
+  perform 1 from api.v_my_match_history;
+  insert into results values ('v_my_match_history: anon không có quyền', 'đọc được', 'bị chặn');
+exception when insufficient_privilege then
+  insert into results values ('v_my_match_history: anon không có quyền', 'bị chặn', 'bị chặn');
+end $$;
+reset role;
+
 -- In bảng kết quả và dừng CI nếu có bất kỳ test nào FAIL
 select test, got, expected, case when got = expected then 'PASS' else 'FAIL' end as status from results;
 
