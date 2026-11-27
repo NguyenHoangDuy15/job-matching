@@ -156,6 +156,8 @@ Số liệu lúc soạn (26/11 sáng): 1.466 tin đang mở; API nạp kho 1.466
 
 ## 6. Góp ý trong buổi review (cho S4-H07, S4-D09, S4-T08)
 
-| #   | Góp ý | Phần | Người xử lý | Trạng thái |
-| --- | ----- | ---- | ----------- | ---------- |
-|     |       |      |             |            |
+Buổi review 26/11 không có góp ý phần giao diện: S4-H07 đóng mà không có thay đổi code.
+
+| #   | Góp ý          | Phần      | Người xử lý | Trạng thái |
+| --- | -------------- | --------- | ----------- | ---------- |
+| –   | Không có góp ý | Giao diện | Thịnh       | Đóng       |
