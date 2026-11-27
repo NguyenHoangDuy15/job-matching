@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Wireframe Chấm độ khớp CV với một tin + bảng kỹ năng còn thiếu (S4-H08)</title>
+<!--
+  S4-H08 · US-20, US-21 · cho Sprint 5 (S5-H01 → S5-H06).
+  Xuất PNG: Edge headless, cửa sổ 1640 × chiều cao body
+  msedge --headless --disable-gpu --hide-scrollbars --window-size=1640,2205 --screenshot=wireframe_match_jd.png file:///…/wireframe_match_jd.html
+-->
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1640px; height: 2205px; padding: 24px; background: #fff;
+         font: 13px/1.35 "Segoe UI", Arial, sans-serif; color: #222; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 16px; color: #666; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .frame { border: 2px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .wide { grid-column: 1 / -1; }
+  .frame > .title { background: #333; color: #fff; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .url { background: #eee; border-bottom: 1px solid #ccc; padding: 3px 12px; font: 12px Consolas, monospace; color: #555; }
+  .nav { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-bottom: 1px solid #bbb; }
+  .nav .logo { font-weight: 700; margin-right: 10px; } .nav .on { font-weight: 700; text-decoration: underline; }
+  .nav .sp { flex: 1; } .nav .user { border: 1px solid #999; border-radius: 14px; padding: 2px 10px; }
+  .main { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .api { border-top: 1px dashed #999; padding: 5px 12px; font: 12px Consolas, monospace; color: #444; background: #fafafa; }
+  h2 { margin: 0; font-size: 16px; } h3 { margin: 0 0 3px; font-size: 13px; }
+  .box { border: 1px solid #999; border-radius: 4px; padding: 8px; }
+  .muted { color: #777; } .small { font-size: 11px; }
+  .btn { white-space: nowrap; display: inline-block; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; background: #fff; }
+  .btn.pri { background: #333; color: #fff; } .btn.dis { border-color: #bbb; color: #bbb; }
+  .input { border: 1px solid #999; border-radius: 4px; padding: 4px 8px; background: #fff; }
+  .tabs { display: flex; border-bottom: 2px solid #333; }
+  .tabs span { padding: 5px 14px; border: 1px solid #999; border-bottom: 0; border-radius: 4px 4px 0 0; margin-right: 4px; background: #f3f3f3; }
+  .tabs .on { background: #333; color: #fff; border-color: #333; font-weight: 600; }
+  .chip { display: inline-block; border: 1px solid #666; border-radius: 12px; padding: 1px 8px; margin: 2px 3px 2px 0; font-size: 12px; }
+  .chip.on { background: #333; color: #fff; border-color: #333; }
+  .chip.listed { border-style: dashed; color: #555; }
+  .chip.miss { border-color: #c33; color: #a22; background: #fff3f3; }
+  .tag { display: inline-block; border: 1px solid #999; border-radius: 3px; padding: 0 6px; margin-right: 3px; font-size: 11px; background: #f3f3f3; }
+  .req { display: inline-block; border: 1px solid #c33; color: #a22; border-radius: 3px; padding: 0 5px; font-size: 11px; font-weight: 600; }
+  .pref { display: inline-block; border: 1px solid #999; color: #555; border-radius: 3px; padding: 0 5px; font-size: 11px; }
+  .warn { border: 1px solid #c33; color: #c33; border-radius: 3px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .err { border: 1px solid #c33; background: #fff3f3; color: #a22; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .note { background: #fff7cc; border: 1px solid #e0c64a; border-radius: 4px; padding: 5px 8px; font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .score { text-align: center; border-right: 1px solid #ddd; padding-right: 14px; }
+  .score b { display: block; font-size: 40px; line-height: 1.05; }
+  .comp { display: grid; grid-template-columns: 118px 170px 92px 1fr; gap: 5px 10px; align-items: center; font-size: 12px; }
+  .bar { height: 9px; border: 1px solid #999; border-radius: 4px; overflow: hidden; background: #fff; }
+  .bar span { display: block; height: 100%; background: #555; }
+  .bar.na { border-style: dashed; background: repeating-linear-gradient(45deg, #fff 0 4px, #eee 4px 8px); }
+  .skel { background: #e8e8e8; border-radius: 3px; height: 10px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  tr.grp td { background: #f6f6f6; font-weight: 700; }
+  tr.grp.miss td { background: #fff3f3; color: #a22; }
+  .q { font-style: italic; color: #333; } .q b { font-style: normal; background: #fff1a8; }
+  .mkt { display: inline-block; width: 60px; height: 8px; border: 1px solid #999; vertical-align: middle; margin-right: 4px; }
+  .mkt span { display: block; height: 100%; background: #777; }
+  ol, ul { margin: 4px 0; padding-left: 20px; }
+  .flow { display: flex; align-items: stretch; gap: 6px; }
+  .flow .st { flex: 1; border: 1px solid #333; border-radius: 4px; padding: 5px 7px; font-size: 12px; }
+  .flow .ar { align-self: center; font-size: 16px; color: #555; }
+</style>
+</head>
+<body>
+<h1>Wireframe Chấm độ khớp CV với một tin + bảng kỹ năng còn thiếu</h1>
+<p class="sub">S4-H08 · US-20, US-21 · Cho Sprint 5 (S5-H01 trang nhập, S5-H02 báo cáo điểm, S5-H03 bảng kỹ năng, S5-H04 nối API thật, S5-H05 lịch sử, S5-H06 nút vào trang) · Chỉ vai trò Người tìm việc · Dòng xám dưới mỗi màn là API cần. Dữ liệu giả lập. Cùng công thức với Việc phù hợp: cùng tin, cùng CV phải ra cùng điểm (S5-D01).</p>
+
+<div class="grid">
+
+  <!-- 1. Trang nhập -->
+  <div class="frame wide" style="height:465px">
+    <div class="title">1 · Trang Chấm độ khớp: chọn tin / dán văn bản / tải file + chọn CV — S5-H01, S5-H06 · US-20</div>
+    <div class="url">/cham-do-khop?tin={public_id}&amp;cv={cv_id} (mở từ trang chi tiết tin hoặc thẻ Việc phù hợp thì tab "Chọn tin" đã chọn sẵn tin đó)</div>
+    <div class="nav"><span class="logo">JobMatch</span><span>Trang chủ</span><span>Việc làm</span><span>Việc phù hợp</span><span class="on">Chấm độ khớp</span><span>Việc đã lưu</span><span>Hồ sơ CV</span><span class="sp"></span><span class="user">minh@… · Người tìm việc ▾</span></div>
+    <div class="main">
+      <h2>Chấm độ khớp CV với một tin tuyển dụng</h2>
+      <div class="row" style="align-items:start; gap:18px">
+        <div style="flex:1.45; display:grid; gap:8px">
+          <div class="tabs"><span class="on">① Chọn tin trên JobMatch</span><span>② Dán nội dung JD</span><span>③ Tải file JD</span></div>
+          <div class="input muted">🔍 Tìm theo chức danh, công ty… (chỉ tin đang mở)</div>
+          <div class="box" style="display:grid; gap:5px">
+            <div class="small muted">Đã chọn</div>
+            <div class="row"><b>Backend Developer (Java)</b><span class="muted">· Công ty C · Hà Nội · Hybrid · hạn 12/12</span><span class="sp" style="flex:1"></span><span class="btn">Đổi tin</span></div>
+          </div>
+          <div class="small muted">Gợi ý nhanh: <span class="tag">Việc đã lưu (3)</span><span class="tag">Top N lần gần nhất (10)</span><span class="tag">Vừa xem</span></div>
+          <div class="row" style="gap:12px; align-items:start">
+            <div class="box" style="flex:1"><h3>② Dán nội dung JD</h3>
+              <div class="input muted" style="height:62px">Dán toàn bộ mô tả công việc, yêu cầu, quyền lợi…</div>
+              <div class="small muted">1.240 / 20.000 ký tự · tối thiểu 200 ký tự · không cần dán thông tin liên hệ</div></div>
+            <div class="box" style="flex:1"><h3>③ Tải file JD</h3>
+              <div class="input muted" style="height:62px; text-align:center; padding-top:20px">Kéo thả hoặc chọn file · PDF, DOCX ≤ 5 MB</div>
+              <div class="small muted">Kiểm byte đầu tệp như tải CV · file ảnh scan báo không đọc được chữ</div></div>
+          </div>
+        </div>
+        <div style="flex:1; display:grid; gap:8px">
+          <div>CV dùng để chấm<br><div class="input">★ CV_NguyenVanMinh_Backend.pdf · 12 kỹ năng ▾</div></div>
+          <div class="small muted">Mặc định CV chính, chỉ CV đã đọc xong. CV chưa xác nhận hồ sơ: hiện nhắc "Xác nhận hồ sơ để điểm sát hơn".</div>
+          <div><span class="btn pri">Chấm độ khớp</span> <span class="small muted">khóa tới khi đủ tin / văn bản / file + CV</span></div>
+          <div class="note">Văn bản JD bạn dán chỉ dùng để chấm và lưu vào lịch sử của bạn, không đăng lên trang Việc làm.</div>
+          <div class="box small"><b>Vào trang từ đâu (S5-H06)</b>
+            <ul>
+              <li>Trang chi tiết tin: nút <span class="btn">Chấm độ khớp với CV</span> (đang mờ, Sprint 5 bật) → <code>?tin=</code></li>
+              <li>Thẻ Việc phù hợp: link <u>Xem chi tiết điểm</u> → <code>?tin=&amp;cv=</code></li>
+              <li>Menu "Chấm độ khớp" → trang trống, tab ① </li>
+              <li>Khách bấm nút → đăng nhập rồi quay lại đúng tin</li>
+            </ul></div>
+        </div>
+      </div>
+    </div>
+    <div class="api">POST /match/single-jd (Duy S5-D01): {cv_id, job_public_id} | {cv_id, jd_text} | multipart {cv_id, file} · Bearer JWT · tìm tin: api.search_jobs (đã có)</div>
+  </div>
+
+  <!-- 2. Báo cáo điểm -->
+  <div class="frame wide" style="height:420px">
+    <div class="title">2 · Kết quả: điểm tổng, 4 thành phần có giải thích, cảnh báo khi thiếu thành phần — S5-H02, S5-H04 · US-20</div>
+    <div class="url">/cham-do-khop/{request_id} (kết quả có địa chỉ riêng: F5, gửi link hoặc mở lại từ lịch sử đều ra đúng kết quả lúc chấm)</div>
+    <div class="main">
+      <div class="row" style="align-items:baseline">
+        <h2>Backend Developer (Java)</h2><span class="muted">· Công ty C · Hà Nội · Hybrid · hạn 12/12 (còn 15 ngày)</span>
+        <span style="flex:1"></span><span class="small muted">CV: ★ CV_NguyenVanMinh_Backend.pdf · chấm lúc 09:42 27/11 · trả lời trong 1,4 giây</span>
+      </div>
+      <div class="row" style="align-items:stretch; gap:16px">
+        <div class="score" style="width:120px">
+          <b>79,7</b><span class="muted">/ 100</span><br><u class="small">Điểm tính thế nào?</u>
+          <div class="small muted" style="margin-top:6px">Ở Việc phù hợp tin này cũng 79,7</div>
+        </div>
+        <div style="flex:1; display:grid; gap:6px">
+          <div class="comp">
+            <b>K · Từ khóa</b><div class="bar"><span style="width:82%"></span></div><span>0,82</span>
+            <span>JD có 14 từ khóa quan trọng, CV nhắc 11 · cao hơn 82% tin đang mở</span>
+            <b>M · Kỹ năng</b><div class="bar"><span style="width:71%"></span></div><span>0,71</span>
+            <span>Khớp 4/5 kỹ năng bắt buộc (thiếu <b>Kafka</b>), 2/4 ưu tiên · 4 có bằng chứng, 1 chỉ liệt kê</span>
+            <b>E · Ngữ nghĩa</b><div class="bar"><span style="width:88%"></span></div><span>0,88</span>
+            <span>Nội dung CV gần với JD này hơn 88% tin đang mở</span>
+            <b class="muted">X · Kinh nghiệm</b><div class="bar na"></div><span class="muted">không áp dụng</span>
+            <span class="muted">JD không ghi số năm kinh nghiệm</span>
+          </div>
+          <div class="err"><b>Điểm chỉ dựa trên 3/4 thành phần:</b> JD không ghi số năm kinh nghiệm nên bỏ X và chia lại trọng số (K 0,28 · M 0,39 · E 0,33, tổng vẫn bằng 1).
+            Các cảnh báo khác có thể gặp: "JD chỉ nêu 2 kỹ năng, M kém tin cậy" · "JD dán vào ngắn, nên dán đủ phần Yêu cầu" · "CV chưa xác nhận hồ sơ".</div>
+          <div class="note">Điểm là mức phù hợp theo công thức, không phải xác suất trúng tuyển. Sửa hồ sơ kỹ năng ở <u>Hồ sơ CV</u> để điểm sát hơn.</div>
+        </div>
+        <div class="box" style="width:300px; display:grid; gap:6px; align-content:start">
+          <h3>Tóm tắt kỹ năng (bảng ở màn 3)</h3>
+          <div><span class="chip miss">Còn thiếu 3</span> 1 bắt buộc</div>
+          <div><span class="chip listed">Chưa thể hiện rõ 2</span></div>
+          <div><span class="chip on">Có bằng chứng 4</span></div>
+          <div class="row" style="flex-wrap:wrap; gap:6px; margin-top:4px">
+            <span class="btn">☆ Lưu việc</span><span class="btn">Xem tin</span><span class="btn pri">Ứng tuyển ở trang gốc ↗</span>
+          </div>
+          <div class="row" style="gap:6px"><span class="btn">Chấm với CV khác</span><span class="btn">Chấm tin khác</span></div>
+          <div class="small muted">JD dán / tải file: không có Lưu việc, Xem tin, Ứng tuyển (không phải tin trên JobMatch).</div>
+        </div>
+      </div>
+    </div>
+    <div class="api">response: score, components {K,M,E,X}, weights_used, explanation từng thành phần, warnings[], gap {missing, weak, strong} (giống /match/jobs + phần gap) · ghi app.match_requests kind = seeker_single</div>
+  </div>
+
+  <!-- 3. Bảng kỹ năng -->
+  <div class="frame wide" style="height:480px">
+    <div class="title">3 · Bảng kỹ năng 3 nhóm, đoạn trích JD – CV song song, % thị trường — S5-H03 · US-21 (cùng trang màn 2, cuộn xuống)</div>
+    <div class="main">
+      <div class="row"><h2>So kỹ năng JD với CV</h2><span class="small muted">· bắt buộc còn thiếu luôn ở đầu · rê chuột lên % để xem tuần và số tin</span>
+        <span style="flex:1"></span><span class="small">Lọc: <span class="tag">Tất cả 9</span><span class="tag">Chỉ bắt buộc 5</span></span></div>
+      <table style="font-size:12px">
+        <tr><th style="width:150px">Kỹ năng</th><th style="width:78px">JD yêu cầu</th><th>Trong JD</th><th>Trong CV của bạn</th><th style="width:150px">Thị trường (Backend)</th><th style="width:190px">Làm gì tiếp</th></tr>
+        <tr class="grp miss"><td colspan="6">Còn thiếu (3): CV chưa có kỹ năng này hoặc kỹ năng liên quan</td></tr>
+        <tr><td><b>Kafka</b></td><td><span class="req">bắt buộc</span></td><td class="q">"…xây dựng hệ thống xử lý sự kiện với <b>Kafka</b> hoặc RabbitMQ…"</td><td class="muted">Không thấy trong CV</td><td><span class="mkt"><span style="width:31%"></span></span>31% tin</td><td class="small">Đã dùng thật? <u>Thêm vào Hồ sơ CV</u> (nhãn Tự thêm)</td></tr>
+        <tr><td><b>AWS</b></td><td><span class="pref">ưu tiên</span></td><td class="q">"…ưu tiên có kinh nghiệm triển khai trên <b>AWS</b>…"</td><td class="muted">Không thấy trong CV</td><td><span class="mkt"><span style="width:38%"></span></span>38% tin</td><td class="small"><u>Thêm vào Hồ sơ CV</u></td></tr>
+        <tr><td><b>Kubernetes</b></td><td><span class="pref">ưu tiên</span></td><td class="q">"…biết <b>Kubernetes</b> là lợi thế."</td><td class="muted">Không thấy trong CV</td><td><span class="mkt"><span style="width:24%"></span></span>24% tin</td><td class="small"><u>Thêm vào Hồ sơ CV</u></td></tr>
+        <tr class="grp"><td colspan="6">Có nhưng chưa thể hiện rõ (2): CV chỉ liệt kê, bạn tự thêm, hoặc khớp qua kỹ năng liên quan</td></tr>
+        <tr><td><b>Docker</b> <span class="chip listed">chỉ liệt kê</span></td><td><span class="req">bắt buộc</span></td><td class="q">"…đóng gói và triển khai dịch vụ bằng <b>Docker</b>…"</td><td class="q">"Kỹ năng: Java, Spring, <b>Docker</b>, Git" <span class="small muted">(mục Kỹ năng)</span></td><td><span class="mkt"><span style="width:52%"></span></span>52% tin</td><td class="small">Thêm 1 câu vào Kinh nghiệm/Dự án để thành "có bằng chứng"</td></tr>
+        <tr><td><b>Hibernate</b> <span class="chip listed">qua Spring Data JPA</span></td><td><span class="pref">ưu tiên</span></td><td class="q">"…thành thạo <b>Hibernate</b>/JPA…"</td><td class="q">"…dùng <b>Spring Data JPA</b> cho lớp truy cập dữ liệu…" <span class="small muted">(Dự án)</span></td><td><span class="mkt"><span style="width:27%"></span></span>27% tin</td><td class="small">Tính một phần điểm (kỹ năng con)</td></tr>
+        <tr class="grp"><td colspan="6">Có bằng chứng (4)</td></tr>
+        <tr><td><b>Java</b></td><td><span class="req">bắt buộc</span></td><td class="q">"…tối thiểu kinh nghiệm <b>Java</b> 8+…"</td><td class="q">"…phát triển API thanh toán bằng <b>Java</b> 17…" <span class="small muted">(Kinh nghiệm)</span></td><td><span class="mkt"><span style="width:61%"></span></span>61% tin</td><td></td></tr>
+        <tr><td><b>Spring Boot</b></td><td><span class="req">bắt buộc</span></td><td class="q">"…xây dựng microservice với <b>Spring Boot</b>…"</td><td class="q">"…tách 3 dịch vụ <b>Spring Boot</b>…" <span class="small muted">(Dự án)</span></td><td><span class="mkt"><span style="width:47%"></span></span>47% tin</td><td></td></tr>
+        <tr><td colspan="6" class="small muted">… PostgreSQL (bắt buộc), REST API (ưu tiên). Đoạn trích CV lấy từ văn bản đã che PII (Sprint 3), tên kỹ năng tô vàng. Mobile: mỗi kỹ năng thành một thẻ, JD trên, CV dưới.</td></tr>
+      </table>
+      <div class="small muted">% thị trường = tỉ lệ tin đang mở cùng nhóm nghề có yêu cầu kỹ năng (mart.skill_weekly.share, tuần gần nhất). JD dán vào không rõ nhóm nghề thì so với mọi tin IT và ghi rõ "mọi nhóm nghề".</div>
+    </div>
+    <div class="api">gap: [{skill_id, skill, level, group: missing|weak|strong, via, evidence, jd_snippet, cv_snippet, cv_section, market_share, family}] (Duy S5-D02) · lưu app.match_results.gap</div>
+  </div>
+
+  <!-- 4. Trạng thái -->
+  <div class="frame" style="height:425px">
+    <div class="title">4 · Trạng thái chờ / lỗi nhập / lỗi API — S5-H01, S5-H04 · US-20</div>
+    <div class="url">/cham-do-khop (cùng trang, thay vùng kết quả)</div>
+    <div class="main" style="gap:7px">
+      <div class="box">
+        <h3>Đang chấm (mục tiêu ≤ 10 giây)</h3>
+        <div class="row small"><span class="chip on">✓ Đọc JD</span><span class="chip on">✓ Trích kỹ năng</span><span class="chip">Chấm điểm…</span><span class="chip">So kỹ năng</span></div>
+        <div class="row"><div class="skel" style="width:70px; height:40px"></div><div style="flex:1; display:grid; gap:5px"><div class="skel"></div><div class="skel" style="width:70%"></div><div class="skel" style="width:85%"></div></div></div>
+        <div class="small muted">Nút Chấm khóa · JD lạ (từ điển bắt &lt; 3 kỹ năng) dùng AI bổ sung, có thể lâu hơn: hiện "Đang đọc kỹ JD này…" · quá 5 giây hiện thêm câu máy chủ đang khởi động như Việc phù hợp</div>
+      </div>
+      <div class="err"><b>Lỗi nhập (báo ngay dưới ô, chưa gọi API):</b> JD dưới 200 ký tự "Hãy dán đủ phần mô tả và yêu cầu" · quá 20.000 ký tự · file không phải PDF/DOCX hoặc &gt; 5 MB · ảnh đổi đuôi .pdf</div>
+      <div class="err"><b>Lỗi sau khi đọc:</b> file scan "Không đọc được chữ, hãy dán nội dung JD" · không nhận ra kỹ năng IT nào "JD này có phải tin IT? Thử dán phần Yêu cầu" · tin đã đóng (mở link cũ) "Tin đã đóng, bạn vẫn có thể dán nội dung JD để chấm"</div>
+      <div class="err"><b>Lỗi API (dùng lại bảng lỗi S4-H03, có Thử lại, giữ nguyên nội dung đã nhập):</b> 503 đang khởi động · 429 quá nhanh (đếm ngược) · hết 30 giây · 401 → đăng nhập rồi quay lại</div>
+      <div class="small muted">Chưa có CV đọc xong: giống Việc phù hợp, "Bạn cần tải CV để chấm độ khớp" + Tải CV.</div>
+    </div>
+    <div class="api">bảng lỗi /match/single-jd (thêm: 413 file quá lớn, 422 jd_too_short, 422 no_skills, 422 unreadable_file)</div>
+  </div>
+
+  <!-- 5. Lịch sử -->
+  <div class="frame" style="height:425px">
+    <div class="title">5 · Lịch sử chấm, mở lại kết quả cũ — S5-H05 · US-20</div>
+    <div class="url">/cham-do-khop (dưới ô nhập) · mở lại: /cham-do-khop/{request_id}</div>
+    <div class="main">
+      <h2>10 lần chấm gần nhất</h2>
+      <table style="font-size:12px">
+        <tr><th style="width:84px">Lúc</th><th>Tin / JD</th><th style="width:118px">CV</th><th style="width:48px">Điểm</th><th style="width:72px"></th></tr>
+        <tr><td>09:42 27/11</td><td>Backend Developer (Java) · Công ty C</td><td>★ CV_…Backend</td><td><b>79,7</b></td><td><span class="btn">Mở lại</span></td></tr>
+        <tr><td>21:10 26/11</td><td><span class="tag">JD dán</span> "Senior Java Engineer – Fintech…"</td><td>★ CV_…Backend</td><td><b>71,2</b></td><td><span class="btn">Mở lại</span></td></tr>
+        <tr><td>20:55 26/11</td><td><span class="tag">File</span> JD_DataEngineer.pdf</td><td>CV_…Data</td><td><b>64,0</b></td><td><span class="btn">Mở lại</span></td></tr>
+        <tr><td>18:03 25/11</td><td>Java Developer · Công ty F <span class="tag">Đã đóng</span></td><td>★ CV_…Backend</td><td><b>74,5</b></td><td><span class="btn">Mở lại</span></td></tr>
+        <tr><td colspan="5" class="small muted">… tối đa 10 dòng, mới nhất ở trên</td></tr>
+      </table>
+      <div class="note"><b>Mở lại</b> hiện đúng kết quả lúc chấm (điểm, 4 thành phần, bảng kỹ năng), có dòng "Kết quả lúc 09:42 27/11" và nút <b>Chấm lại</b> để chấm với kho tin và hồ sơ hiện tại.</div>
+      <div class="small muted">Lịch sử Việc phù hợp (Top N) vẫn ở trang Việc đã lưu (S4-H05); trang này chỉ hiện lần chấm một tin.</div>
+    </div>
+    <div class="api">view 10 lần seeker_single gần nhất (kèm results + gap) — Tùng: dùng lại api.v_my_match_history thêm cột kind hay view mới?</div>
+  </div>
+
+  <!-- 6. Luồng + câu hỏi -->
+  <div class="frame wide" style="height:200px">
+    <div class="title">6 · Luồng dữ liệu và câu hỏi cần chốt ở Sprint Planning 5 (30/11)</div>
+    <div class="main">
+      <div class="flow">
+        <div class="st"><b>Web: tin / văn bản / file + CV</b><br>CV chính mặc định · ?tin= từ trang tin</div><span class="ar">→</span>
+        <div class="st"><b>POST /match/single-jd</b><br>Bearer JWT · chung giới hạn lượt?</div><span class="ar">→</span>
+        <div class="st"><b>Đọc JD</b><br>làm sạch, tách section, trích kỹ năng (từ điển → AI khi &lt; 3)</div><span class="ar">→</span>
+        <div class="st"><b>Ranker + gap</b><br>K, M, E, X theo phân vị kho · 3 nhóm · share</div><span class="ar">→</span>
+        <div class="st"><b>app.match_requests</b><br>kind seeker_single · match_results.gap</div><span class="ar">→</span>
+        <div class="st"><b>Màn 2–3</b><br>điểm, cảnh báo, bảng kỹ năng</div><span class="ar">→</span>
+        <div class="st"><b>Lịch sử</b><br>mở lại (màn 5)</div>
+      </div>
+      <div class="row" style="align-items:start; gap:16px">
+        <ol class="small" style="flex:1">
+          <li><b>Duy:</b> tin có sẵn thì web gửi <code>job_public_id</code> (API tự lấy JD) hay luôn gửi văn bản? File: web gửi multipart hay API nhận đường dẫn Storage như đọc CV?</li>
+          <li><b>Duy:</b> 3 nhóm vẽ là Còn thiếu / Chưa thể hiện rõ (chỉ liệt kê, tự thêm, qua kỹ năng liên quan) / Có bằng chứng: đúng ý S5-D02 chưa? Đoạn trích JD/CV dài bao nhiêu?</li>
+          <li><b>Duy:</b> % thị trường: JD dán vào thì đoán nhóm nghề hay dùng "mọi nhóm nghề" (job_family_id = 0)? Lấy tuần gần nhất của mart.skill_weekly?</li>
+        </ol>
+        <ol class="small" start="4" style="flex:1">
+          <li><b>Tùng:</b> view lịch sử chấm lẻ cho S5-H05; JD dán vào có lưu nguyên văn không (đang vẽ: chỉ lưu vào lịch sử của chính người dùng, RLS) và giữ bao lâu?</li>
+          <li><b>Tùng:</b> mart.skill_weekly đã được refresh hằng tuần trên Supabase chưa (cần cho cột % thị trường)?</li>
+          <li><b>Cả nhóm:</b> chấm lẻ có tính chung 20 lượt/phút với Top N không? Menu thêm mục "Chấm độ khớp" hay chỉ vào từ trang tin và thẻ Top N?</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
